@@ -25,3 +25,5 @@ NestTrader_i.c
 #logs
 errorLog.txt
 
+# ignore line ending conversions
+* -crlf

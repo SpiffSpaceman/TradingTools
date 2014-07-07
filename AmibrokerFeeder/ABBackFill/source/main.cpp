@@ -8,6 +8,8 @@
 #include <iostream>
  
 // TODO
+    // post message on number of lines read + AB database path 
+
     // EOD Convert bars to 1 min
         // Read bars and construct 1 min bars 
         // OR - Use $TICKMODE 1 for EOD VWAP/DT IMPORT - this will delete todays tick data, replacing it with 1 min bars takn from NEST

@@ -265,8 +265,7 @@ void Worker::amibrokerPoller(){
 
         if( !new_bars.empty() ){                                           // (C) Write to csv    and Send to Amibroker
             writeCsv( new_bars );
-            amibroker->import();                                            
-            amibroker->refreshAll();
+            amibroker->import();            
         }
         new_bars.clear();
     }
