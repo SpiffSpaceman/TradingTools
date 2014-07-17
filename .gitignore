@@ -27,3 +27,6 @@ errorLog.txt
 
 # ignore line ending conversions
 * -crlf
+
+# ignore tutorial pdf
+*.pdf
