@@ -1,5 +1,5 @@
-#ifndef  NESTRTD_MISC_UTIL_H
-#define  NESTRTD_MISC_UTIL_H
+#ifndef  RTDMAN_MISC_UTIL_H
+#define  RTDMAN_MISC_UTIL_H
   
 #include <string>
 #include <vector>
@@ -14,8 +14,8 @@ public:
     static double          getDouble( const VARIANT &var );
     static std::string     getString( const VARIANT &var );
 
-    static std::string     getINIString( const char * key, const char *app_name="NestRTD" );
-    static int             getINIInt   ( const char * key, const char *app_name="NestRTD" );
+    static std::string     getINIString( const char * key, const char *app_name="RTDMan" );
+    static int             getINIInt   ( const char * key, const char *app_name="RTDMan" );
 
     static void            splitString( const std::string & string,  char seperator, std::vector<std::string> &output );
 

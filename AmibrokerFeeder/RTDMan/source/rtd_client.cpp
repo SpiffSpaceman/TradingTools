@@ -45,7 +45,7 @@ RTDClient::RTDClient( const std::string &server_prog_id ) : is_NOW(false) {
     hr = CoCreateInstance(classid, NULL, CLSCTX_LOCAL_SERVER, __uuidof(IScripRTD), (LPVOID*) &comObjectScripRTD );
                                                                             // Get COM Object for IScripRTD interface
     if ( FAILED( hr ) ){        
-        throw( server_prog_id + " - IScripRTD object creation error. Nest down?"  );
+        throw( server_prog_id + " - IScripRTD object creation error. RTD Server down?"  );
     }
     
     CComObject<CallbackImpl>::CreateInstance(&callback);                    // Create Callback Object

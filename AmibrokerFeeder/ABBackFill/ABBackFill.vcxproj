@@ -39,16 +39,16 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir)\include;$(SolutionDir)\NestRTD\include;$(IncludePath)</IncludePath>
-    <SourcePath>$(ProjectDir)\source;$(SolutionDir)\NestRTD\source;$(SourcePath)</SourcePath>
+    <IncludePath>$(ProjectDir)\include;$(SolutionDir)\RTDMan\include;$(IncludePath)</IncludePath>
+    <SourcePath>$(ProjectDir)\source;$(SolutionDir)\RTDMan\source;$(SourcePath)</SourcePath>
     <ExtensionsToDeleteOnClean>
     </ExtensionsToDeleteOnClean>
     <OutDir>$(SolutionDir)$(Configuration)\ABBackFill\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(ProjectDir)\include;$(SolutionDir)\NestRTD\include;$(IncludePath)</IncludePath>
-    <SourcePath>$(ProjectDir)\source;$(SolutionDir)\NestRTD\source;$(SourcePath)</SourcePath>
+    <IncludePath>$(ProjectDir)\include;$(SolutionDir)\RTDMan\include;$(IncludePath)</IncludePath>
+    <SourcePath>$(ProjectDir)\source;$(SolutionDir)\RTDMan\source;$(SourcePath)</SourcePath>
     <ExtensionsToDeleteOnClean>
     </ExtensionsToDeleteOnClean>
     <OutDir>$(SolutionDir)$(Configuration)\ABBackFill\</OutDir>
@@ -128,16 +128,16 @@ del *.bat</Command>
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\NestRTD\source\amibroker_feed.cpp" />
-    <ClCompile Include="..\NestRTD\source\misc_util.cpp" />
+    <ClCompile Include="..\RTDMan\source\amibroker_feed.cpp" />
+    <ClCompile Include="..\RTDMan\source\misc_util.cpp" />
     <ClCompile Include="source\main.cpp" />
     <ClCompile Include="source\reader.cpp" />
     <ClCompile Include="source\settings.cpp" />
     <ClCompile Include="source\stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\NestRTD\include\amibroker_feed.h" />
-    <ClInclude Include="..\NestRTD\include\misc_util.h" />
+    <ClInclude Include="..\RTDMan\include\amibroker_feed.h" />
+    <ClInclude Include="..\RTDMan\include\misc_util.h" />
     <ClInclude Include="include\reader.h" />
     <ClInclude Include="include\settings.h" />
     <ClInclude Include="include\stdafx.h" />

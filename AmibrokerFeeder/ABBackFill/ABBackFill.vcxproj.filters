@@ -27,10 +27,10 @@
     <ClCompile Include="source\stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\NestRTD\source\amibroker_feed.cpp">
+    <ClCompile Include="..\RTDMan\source\amibroker_feed.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\NestRTD\source\misc_util.cpp">
+    <ClCompile Include="..\RTDMan\source\misc_util.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\reader.cpp">
@@ -47,10 +47,10 @@
     <ClInclude Include="include\targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\NestRTD\include\amibroker_feed.h">
+    <ClInclude Include="..\RTDMan\include\amibroker_feed.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\NestRTD\include\misc_util.h">
+    <ClInclude Include="..\RTDMan\include\misc_util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\reader.h">

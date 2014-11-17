@@ -1,5 +1,5 @@
-#ifndef NESTRTD_RTD_CALLBACK_H
-#define NESTRTD_RTD_CALLBACK_H
+#ifndef RTDMAN_RTD_CALLBACK_H
+#define RTDMAN_RTD_CALLBACK_H
 
 #include "NestTrader_h.h"
 

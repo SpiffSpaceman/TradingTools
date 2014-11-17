@@ -1,1 +1,0 @@
-start /HIGH NestRTD.exe

@@ -1,5 +1,5 @@
-#ifndef NESTRTD_SETTINGS_H
-#define NESTRTD_SETTINGS_H
+#ifndef RTDMAN_SETTINGS_H
+#define RTDMAN_SETTINGS_H
 
 #include <string>
 #include <vector>

@@ -7,23 +7,13 @@
 
 
 // TODO
-    // Option to filter based on start time and end time + today
-    // 1. Nest RTD Server stops updating (in Excel too) Nifty Index after restarting Feeder few times.
-    // 2. Nest sometimes starts giving 30 max scrip error - Maybe caused by disconnects?
-    // NOW - take topics from settings instead of hardcoding "MktWatch" based on server prog id?
-    // Add option to input arg to override any setting	
-
-
-    // Check direct call using ADK
-        // No need for csv, O/H/L/C bar etc 
-        // http://www.amibroker.com/devlog/2006/12/15/amibroker-development-kit-adk-for-cc-now-available-to-everyone/
-        // Alternately check using quotations api
-            // http://www.traderji.com/intraday/93428-nestrtd-nest-now-amibroker-feeder-free-open-source-gpl-19.html#post981458
-
+    // Check direct call using quotations api - No need for csv, ram drive
     // Check for memory leaks in COM calls/callbacks - esp SAFEARRAY/BSTR/VARIANT/COM input/output
         // https://vld.codeplex.com/
         // https://stackoverflow.com/questions/2820223/visual-c-memory-leak-detection
     // Profile - very sleepy
+
+
 
 
 

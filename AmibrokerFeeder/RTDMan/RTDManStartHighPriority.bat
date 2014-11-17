@@ -1,0 +1,1 @@
+start /HIGH RTDMan.exe

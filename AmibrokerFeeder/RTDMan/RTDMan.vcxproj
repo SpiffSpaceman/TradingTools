@@ -13,7 +13,8 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{FEDD8D47-810A-4EF4-86DD-FF5BD1358A72}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>NestRTD</RootNamespace>
+    <RootNamespace>RTDMan</RootNamespace>
+    <ProjectName>RTDMan</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -41,13 +42,13 @@
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>$(ProjectDir)\include;$(IncludePath)</IncludePath>
     <SourcePath>$(ProjectDir)\source;$(SourcePath)</SourcePath>
-    <OutDir>$(SolutionDir)$(Configuration)\NestRTD\</OutDir>
+    <OutDir>$(SolutionDir)$(Configuration)\RTDMan\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>$(ProjectDir)\include;$(IncludePath)</IncludePath>
     <SourcePath>$(ProjectDir)\source;$(SourcePath)</SourcePath>
-    <OutDir>$(SolutionDir)$(Configuration)\NestRTD\</OutDir>
+    <OutDir>$(SolutionDir)$(Configuration)\RTDMan\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -85,17 +86,21 @@ del *.bat</Command>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <PreBuildEvent>
-      <Command>cd $(OutputPath)\NestRTD\
+      <Command>cd $(OutputPath)\RTDMan\
+
 del *.ini
+
 del *.txt
+
 del *.format
+
 del *.bat</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="settings.ini" />
     <None Include="rtd.format" />
-    <None Include="NestRTDStartHighPriority.bat" />
+    <None Include="RTDManStartHighPriority.bat" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="settings.ini">
@@ -108,7 +113,7 @@ del *.bat</Command>
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="NestRTDStartHighPriority.bat">
+    <Content Include="RTDManStartHighPriority.bat">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

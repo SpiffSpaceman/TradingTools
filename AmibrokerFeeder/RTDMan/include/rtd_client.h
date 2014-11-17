@@ -1,5 +1,5 @@
-#ifndef NESTRTD_RTDCLIENT_H
-#define NESTRTD_RTDCLIENT_H
+#ifndef RTDMAN_RTDCLIENT_H
+#define RTDMAN_RTDCLIENT_H
 
 #include "NestTrader_h.h"
 #include "rtd_callback.h"
@@ -23,7 +23,7 @@ public:
     std::map<long,CComVariant>*  readNewData();           // Returns Map of Topic id and Topic Value
 
 private: 
-    IScripRTD                    *comObjectScripRTD;      // NEST RTD COM object - Nest.ScripRTD for Interface IScripRTD
+    IScripRTD                    *comObjectScripRTD;      // RTD COM object
     CComObject<CallbackImpl>     *callback;               // Callback Object - Implementation of IRTDUpdateEvent
     std::set<long>                connected_topics;
 

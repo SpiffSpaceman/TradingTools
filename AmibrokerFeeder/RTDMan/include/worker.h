@@ -1,5 +1,5 @@
-#ifndef NESTRTD_WORKER_H
-#define NESTRTD_WORKER_H
+#ifndef RTDMAN_WORKER_H
+#define RTDMAN_WORKER_H
 
 #include "rtd_client.h"
 #include "amibroker_feed.h"
