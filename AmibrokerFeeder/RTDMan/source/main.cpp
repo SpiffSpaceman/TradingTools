@@ -1,13 +1,28 @@
 // main.cpp : Defines the entry point for the console application.
 
 #include "stdafx.h"
-#include "misc_util.h"
+#include "util.h"
 
 #include <iostream>
 
 
-// TODO
-    // Check direct call using quotations api - No need for csv, ram drive
+// TODO 	
+    // Bell 
+        // Change wav + in project 
+	// Bug - Negative Volume ? 
+		// Atleast set volume to 0. Currently check for ==0 but not <0
+		// Maybe Current Volume not set - Not passed by RTD? 
+	// Change month in future / options scrips if cannot connect + detect last thrusday has passed + check current date month + setting to enable 
+
+
+	// Check direct call using quotations api - No need for csv, ram drive 		
+	// Automated Backfill - Keep Count for each Bar for each Scrip, compare with some sort of average/config. Also check for time diff 
+		// Use RTD or try to create simple exe without gui - backfill from nestplus DataTable without fronting application 
+		// Autoit can do it - but also look for alternatives? AHK?  
+		// Option to backfill without changing volume  ( esp if some updates already exist in the bar )
+	
+	    
+	
     // Check for memory leaks in COM calls/callbacks - esp SAFEARRAY/BSTR/VARIANT/COM input/output
         // https://vld.codeplex.com/
         // https://stackoverflow.com/questions/2820223/visual-c-memory-leak-detection
@@ -44,10 +59,10 @@ int _tmain(int argc, _TCHAR* argv[]){
         worker->poll();
     }
     catch( const std::string msg ){
-        MiscUtil::printException(msg);
+        Util::printException(msg);
     }
     catch( const char *msg ){
-        MiscUtil::printException(msg);
+        Util::printException(msg);
     }
 
     return 0;

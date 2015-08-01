@@ -17,11 +17,12 @@
 
 
 #include "worker.h"
-#include "misc_util.h"
-#include "amibroker_feed.h"
+#include "util.h"
+#include "amibroker.h"
 
 #include <windows.h> 
 #include <process.h>
+#include <mmsystem.h>
 
 #include <iostream>
 #include <sstream>
@@ -31,14 +32,17 @@
 /**
  * Read Scrips and setup DS. Start Timers and start AB thread
  */
-Worker::Worker(){
+Worker::Worker():
+    is_rtd_started(false),
+    rtd_inactive_count(0)
+{
                                                                            // _T()  - character set Neutral
     Event_RTD_Update = CreateEvent( NULL, false, FALSE, _T("RTD_UPDATE") );// Manual Reset = false - Event resets to nonsignaled on 1 wait release
     Event_StopNow    = CreateEvent( NULL, true,  FALSE, NULL );                // Initialize state to FALSE. Read data only after callback
     Event_Stopped    = CreateEvent( NULL, true,  FALSE, NULL );
     AB_timer         = CreateWaitableTimer( NULL, false,NULL );
 
-    today_date       = MiscUtil::getTime("%Y%m%d");                        // Get todays date - yyyymmdd
+    today_date       = Util::getTime("%Y%m%d");                        // Get todays date - yyyymmdd
 
     settings.loadSettings();
 
@@ -57,6 +61,7 @@ Worker::Worker(){
     
     InitializeCriticalSection( &lock );
     _beginthread( threadEntryDummy, 0, this );                             // Start Amibroker Poller Thread
+    
 }
 
 
@@ -145,11 +150,14 @@ void Worker::poll(){
     }
 }
 
+
 /**
  * Read TopicId-Value data from COM and update Current Bar
  **/
 void Worker::processRTDData( const std::map<long,CComVariant>* data ){
-                
+    
+    notifyActive();
+
     for( auto i=data->begin(), end=data->end() ;  i!=end ; ++i  ){
             
         const long   topic_id     = i->first;
@@ -163,7 +171,7 @@ void Worker::processRTDData( const std::map<long,CComVariant>* data ){
 
         switch( field_id ){                        
             case LTP :{
-                double      ltp      = MiscUtil::getDouble( topic_value );
+                double      ltp      = Util::getDouble( topic_value );
                 ScripState *_current = & current[script_id];
 
                 _current->ltp = ltp;
@@ -173,7 +181,7 @@ void Worker::processRTDData( const std::map<long,CComVariant>* data ){
                 break ;    
             }
             case VOLUME_TODAY :{  
-                long long vol_today          = MiscUtil::getLong  ( topic_value );
+                long long vol_today          = Util::getLong  ( topic_value );
                 current[script_id].vol_today = vol_today;
 
                 if( vol_today !=0  &&  previous[script_id].vol_today == 0  ){
@@ -181,8 +189,8 @@ void Worker::processRTDData( const std::map<long,CComVariant>* data ){
                 }
                 break ;
             }
-            case LTT  :  current[script_id].ltt  = MiscUtil::getString( topic_value ); break ;            
-            case OI   :  current[script_id].oi   = MiscUtil::getLong  ( topic_value ); break ;
+            case LTT  :  current[script_id].ltt  = Util::getString( topic_value ); break ;            
+            case OI   :  current[script_id].oi   = Util::getLong  ( topic_value ); break ;
         }
 
         LeaveCriticalSection( &lock ) ;
@@ -235,7 +243,7 @@ void Worker::amibrokerPoller(){
               )    continue;                                               //    NEST RTD sends all fields even if unconnected field (ex B/A) changes    
                                     
             std::string bar_ltt;                                           // Use ltt if present else use current time  
-            !_current->ltt.empty()  ? bar_ltt = _current->ltt : bar_ltt = MiscUtil::getTime( settings.time_format.c_str() );
+            !_current->ltt.empty()  ? bar_ltt = _current->ltt : bar_ltt = Util::getTime( "%H:%M:%S" );
             
             if(  bar_ltt == _prev->last_bar_ltt  ){                        // IF LTT is same as previous LTT of this scrip ( but data is different )
                 continue;                                                  //   skip to avoid overwrite with same timestamp
@@ -261,9 +269,11 @@ void Worker::amibrokerPoller(){
         }
         LeaveCriticalSection( &lock );
     // Shared data access end
-
-
-        if( !new_bars.empty() ){                                           // (C) Write to csv    and Send to Amibroker
+        
+        if( new_bars.empty() ){                                           // Notify if RTD inactive  
+            notifyInactive();
+        }
+        else{                                                             // (C) Write to csv    and Send to Amibroker
             writeCsv( new_bars );
             amibroker->import();            
         }
@@ -271,6 +281,36 @@ void Worker::amibrokerPoller(){
     }
 }
  
+void Worker::notifyActive(){
+    rtd_inactive_count = 0 ;
+    
+    if( !is_rtd_started ){
+        is_rtd_started = true;
+
+        std::cout << "RTD Active" << "\t\t\t\t\t\t\t" << "\r";       // Status in Console
+        std::flush(std::cout);         
+    }
+}
+void Worker::notifyInactive(){
+       
+    if( settings.bell_wait_time <= 0 )
+        return;    
+
+    rtd_inactive_count++;
+
+    if( rtd_inactive_count >= settings.bell_wait_time ){                    // Wait time up?
+        
+        rtd_inactive_count = 0; 
+
+        std::cout << "RTD Inactive : " <<  Util::getTime() << "\r"   ;       // Status in Console
+        std::flush(std::cout);         
+
+        if( is_rtd_started ){        
+            PlaySound( L"NotifyBell.wav" , NULL, SND_FILENAME | SND_ASYNC);                            
+            is_rtd_started     = false;                                     // Play only Once
+        }
+    }    
+}
 
 void Worker::writeCsv( const std::vector<ScripBar> & bars ){
     

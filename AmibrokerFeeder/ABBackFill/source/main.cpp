@@ -3,10 +3,11 @@
 
 #include "settings.h"
 #include "reader.h"
-#include "amibroker_feed.h"
-#include "misc_util.h"
+#include "amibroker.h"
+#include "util.h"
 #include <iostream>
           
+// TODO - Delete data in between start and end time - Also take care of start time - ZT : 09:16 = First bar
 
 int _tmain(int argc, _TCHAR* argv[]){
 
@@ -41,10 +42,10 @@ int _tmain(int argc, _TCHAR* argv[]){
         std::cout << "Done" << std::endl ;
     }    
     catch( const std::string msg ){    
-        MiscUtil::printException( msg );
+        Util::printException( msg );
     }
     catch( const char *msg ){    
-        MiscUtil::printException( msg );
+        Util::printException( msg );
     }
 
     return 0;

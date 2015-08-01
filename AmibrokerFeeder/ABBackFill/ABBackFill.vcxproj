@@ -128,16 +128,16 @@ del *.bat</Command>
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\RTDMan\source\amibroker_feed.cpp" />
-    <ClCompile Include="..\RTDMan\source\misc_util.cpp" />
+    <ClCompile Include="..\RTDMan\source\amibroker.cpp" />
+    <ClCompile Include="..\RTDMan\source\util.cpp" />
     <ClCompile Include="source\main.cpp" />
     <ClCompile Include="source\reader.cpp" />
     <ClCompile Include="source\settings.cpp" />
     <ClCompile Include="source\stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\RTDMan\include\amibroker_feed.h" />
-    <ClInclude Include="..\RTDMan\include\misc_util.h" />
+    <ClInclude Include="..\RTDMan\include\amibroker.h" />
+    <ClInclude Include="..\RTDMan\include\util.h" />
     <ClInclude Include="include\reader.h" />
     <ClInclude Include="include\settings.h" />
     <ClInclude Include="include\stdafx.h" />

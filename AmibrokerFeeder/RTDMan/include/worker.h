@@ -2,7 +2,7 @@
 #define RTDMAN_WORKER_H
 
 #include "rtd_client.h"
-#include "amibroker_feed.h"
+#include "amibroker.h"
 #include "settings.h"
 
 #include <string>
@@ -39,12 +39,17 @@ private:
     HANDLE                               Event_StopNow;                     // This will be used to stop AB thread 
     HANDLE                               Event_Stopped;                     // This will be fired after thread is done    
     
+    bool                                 is_rtd_started;                    // Indicates whether RTD has started sending data   
+    int                                  rtd_inactive_count;                // No of 'BarPeriod' for which RTD is inactive ( since last time it was active)     
 
     void        loadSettings    ();    
     void        processRTDData  ( const std::map<long,CComVariant>* data );
     static void threadEntryDummy( void* _this);                             // Entry Point for Amibroker Feeder thread
     void        amibrokerPoller ();                                             // Fetches Bar data and feeds to Amibroker
     void        writeCsv        ( const std::vector<ScripBar> & bars  );        // This thread uses members - current , previous, settings
+    void        notifyActive    ();
+    void        notifyInactive  ();                                         // Ring Bell if RTD Inactive    
+    
     Worker( const Worker& );                                                // Disable copy
     Worker operator=(const Worker& );
 

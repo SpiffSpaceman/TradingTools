@@ -17,7 +17,7 @@
 
 
 #include "rtd_client.h"
-#include "misc_util.h"
+#include "util.h"
 
 #include <atlbase.h>
 #include <atlsafe.h> 
@@ -32,7 +32,7 @@
 **/
 RTDClient::RTDClient( const std::string &server_prog_id ) : is_NOW(false) {
     
-    is_NOW  =  MiscUtil::isStringEqualIC( server_prog_id, "NOW.ScripRTD" ) ;
+    is_NOW  =  Util::isStringEqualIC( server_prog_id, "NOW.ScripRTD" ) ;
 
     USES_CONVERSION;
     LPOLESTR   progid  =  A2OLE( server_prog_id.c_str() );
@@ -62,10 +62,10 @@ RTDClient::~RTDClient(){
         stopServer();
     }
     catch( const std::string msg ){    
-        MiscUtil::printException(msg);
+        Util::printException(msg);
     }
     catch( const char *msg ){    
-        MiscUtil::printException(msg);
+        Util::printException(msg);
     }
     
     if(comObjectScripRTD){
@@ -174,7 +174,7 @@ std::map<long,CComVariant>* RTDClient::readNewData(){
         index[1] = i;
         CComVariant topic_id_var;
         data.MultiDimGetAt( index, topic_id_var);         
-        long topic_id = (long)MiscUtil::getLong( topic_id_var );
+        long topic_id = (long)Util::getLong( topic_id_var );
         
         index[0] = 1;
         index[1] = i;
@@ -183,7 +183,7 @@ std::map<long,CComVariant>* RTDClient::readNewData(){
                 
         
         if( output->count(topic_id) != 0  && (*output)[topic_id] != topic_data_var  ){            
-            std::cout << "Duplicate:";  MiscUtil::printVariant((*output)[topic_id]); std::cout << "-";  MiscUtil::printVariant(topic_data_var);
+            std::cout << "Duplicate:";  Util::printVariant((*output)[topic_id]); std::cout << "-";  Util::printVariant(topic_data_var);
             std::cout << std::endl;
             //abort();                                           // If exists - we can have multiple topic values in same call => use vector
         }

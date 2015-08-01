@@ -10,8 +10,8 @@ public:
     void loadSettings();
 
     std::string rtd_server_prog_id;
-    int         bar_period;                                               // In milliseconds
-    std::string time_format;
+    int         bar_period;                                               // In milliseconds    
+    int         bell_wait_time;                                           // No of bar_periods
     std::string csv_path;                                                 // path for csv file to be sent to Amibroker - Use ram drive
     std::string ab_db_path;
         

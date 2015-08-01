@@ -1,4 +1,4 @@
-#include "misc_util.h"
+#include "util.h"
 
 #include <windows.h> 
 #include <atlconv.h>
@@ -10,7 +10,7 @@
 #include <ctime>
 
 
- void MiscUtil::printVariant( const VARIANT &var ){
+ void Util::printVariant( const VARIANT &var ){
     if( var.vt == VT_I4  ){                    // Long        
         std::cout << var.lVal; 
     }
@@ -23,7 +23,7 @@
 } 
   
 // 'Index Value' Field is sent by NEST as BSTR instead of double - so just make generic getters and handle all types
-long long MiscUtil::getLong( const VARIANT &var ){
+long long Util::getLong( const VARIANT &var ){
     long long output = 0; 
 
     if( var.vt == VT_I4  ){                    // Long
@@ -38,7 +38,7 @@ long long MiscUtil::getLong( const VARIANT &var ){
     return  output;
 }
 
-double MiscUtil::getDouble( const VARIANT &var ){
+double Util::getDouble( const VARIANT &var ){
     double output = 0; 
 
     if( var.vt == VT_I4  ){                    // Long        
@@ -53,7 +53,7 @@ double MiscUtil::getDouble( const VARIANT &var ){
     return  output;
 }
 
-std::string MiscUtil::getString( const VARIANT &var ){
+std::string Util::getString( const VARIANT &var ){
     std::string output;
 
     if( var.vt == VT_I4  ){                    // Long        
@@ -70,7 +70,7 @@ std::string MiscUtil::getString( const VARIANT &var ){
 } 
 
 
-std::string MiscUtil::getINIString( const char * key, const char *app_name){
+std::string Util::getINIString( const char * key, const char *app_name){
         
     char buffer[512];
     GetPrivateProfileStringA( app_name, key, "", buffer, 512,".\\settings.ini");
@@ -78,13 +78,13 @@ std::string MiscUtil::getINIString( const char * key, const char *app_name){
     return std::string(buffer);
 }
 
-int MiscUtil::getINIInt( const char * key, const char *app_name ){
+int Util::getINIInt( const char * key, const char *app_name ){
             
     return GetPrivateProfileIntA( app_name, key, 0  , ".\\settings.ini");        
 }
 
 
-void MiscUtil::splitString( const std::string & string , char seperator,  std::vector<std::string> &output ){
+void Util::splitString( const std::string & string , char seperator,  std::vector<std::string> &output ){
     
     if( ! output.empty() ){
         output.clear();
@@ -99,7 +99,7 @@ void MiscUtil::splitString( const std::string & string , char seperator,  std::v
 }
 
 
-std::string  MiscUtil::getTime( const char *format ){
+std::string  Util::getTime( const char *format ){
         
     std::time_t  raw = std::time(0);    
     std::tm      local;
@@ -112,7 +112,7 @@ std::string  MiscUtil::getTime( const char *format ){
 } 
 
 
-void MiscUtil::trimString( std::string  &string  ){
+void Util::trimString( std::string  &string  ){
 
     size_t begin = string.find_first_not_of(" \t\r\n");
     if (begin == std::string::npos){                            // Empty Line
@@ -126,7 +126,7 @@ void MiscUtil::trimString( std::string  &string  ){
     string = string.substr(begin, length);
 }
 
-void MiscUtil::replaceTabsWithSpace( std::string & string  ){
+void Util::replaceTabsWithSpace( std::string & string  ){
     
     size_t size = string.size();
     
@@ -137,7 +137,7 @@ void MiscUtil::replaceTabsWithSpace( std::string & string  ){
 }
 
 // If folder does not exist, create it. Abort if failed
-void MiscUtil::createDirectory( std::string & dir  ){
+void Util::createDirectory( const std::string & dir  ){
         
     if( !CreateDirectoryA( dir.c_str(), NULL)  &&  ERROR_ALREADY_EXISTS != GetLastError()  ){
         DWORD                error = GetLastError();
@@ -147,7 +147,7 @@ void MiscUtil::createDirectory( std::string & dir  ){
 }
 
 
-void MiscUtil::printException( std::string msg ){
+void Util::printException( const std::string &msg ){
     
     std::cout << msg << std::endl;
 
@@ -159,10 +159,9 @@ void MiscUtil::printException( std::string msg ){
 }
 
 // Compare strings ignoring case
-bool MiscUtil::isStringEqualIC(std::string str1 , std::string str2 ){
+bool Util::isStringEqualIC(std::string str1 , std::string str2 ){
     std::transform(str1.begin(), str1.end(), str1.begin(), ::tolower);
     std::transform(str2.begin(), str2.end(), str2.begin(), ::tolower);
 
     return str1 == str2 ;
-}
-
+} 

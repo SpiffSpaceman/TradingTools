@@ -1,4 +1,4 @@
-NestRTD
+RTDMan
 =======
 
 **C++ RTD client for Nest/NOW. Feeds Amibroker.  
@@ -16,7 +16,7 @@ Also included is a backfill tool to import VWAP statistics / Nest Plus Data tabl
 #### Instructions        
     1. Setup Amibroker DB (intraday settings) and Nest as explained in josh1 RTNOW instructions  
     2. Copy rtd.format, backfill.format to AmiBroker\Formats  
-    3. Read and Setup settings.ini in NestRTD / ABBackFill    
+    3. Read and Setup settings.ini in RTDMan / ABBackFill    
          For 'Now' make sure to change RTDServerProgID value to Now.ScripRTD along with scrip ids / field ids    
     4. Once setup is done, run the exe ( For Backfill, Fill the data in VWAP.txt/DataTable.txt first )  
 

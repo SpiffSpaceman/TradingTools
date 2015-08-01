@@ -17,7 +17,7 @@
 
 
 #include "reader.h"
-#include "misc_util.h"
+#include "util.h"
 
 #include <iostream>
 #include <sstream>
@@ -44,19 +44,19 @@ bool Reader::parseVWAPToCsv(  const std::string &vwap_file, const std::string &c
         setUpOutputStream( csv_file_path );
     }
 
-    std::string               today_date = MiscUtil::getTime("%Y%m%d");        // Get todays date - yyyymmdd
+    std::string               today_date = Util::getTime("%Y%m%d");        // Get todays date - yyyymmdd
     std::string               line;
     std::string               scrip_name;
     std::vector<std::string>  split;
 
     while( std::getline( fin, line  ) ){
                 
-        MiscUtil::trimString( line );                                          // Remove leading and trailing spaces
-        MiscUtil::replaceTabsWithSpace(line);                                  // Replace Tabs with space
+        Util::trimString( line );                                          // Remove leading and trailing spaces
+        Util::replaceTabsWithSpace(line);                                  // Replace Tabs with space
 
         if( line.empty() ) continue;                                           // Ignore Empty lines
                 
-        MiscUtil::splitString( line , '=', split ) ;                           // Check for Scrip Name
+        Util::splitString( line , '=', split ) ;                           // Check for Scrip Name
         if( split.size() == 2 && split[0] == "name" ){
             scrip_name = split[1];
             continue;
@@ -66,7 +66,7 @@ bool Reader::parseVWAPToCsv(  const std::string &vwap_file, const std::string &c
             throw "Scrip Name not Found";
         }        
         
-        MiscUtil::splitString( line , ' ', split ) ;                           // Data. Expected format is 
+        Util::splitString( line , ' ', split ) ;                           // Data. Expected format is 
                                                                                // "09:15:00 AM 6447.00 6465.00 6439.55 6444.40 318900"    
         if( split.size() != 7  ){                                              // Time AM/PM O H L C V            
             std::stringstream msg;  
@@ -80,10 +80,12 @@ bool Reader::parseVWAPToCsv(  const std::string &vwap_file, const std::string &c
         if( am_pm == "PM" || am_pm == "pm" ){                                    
             changeHHFrom12To24( time );    
         }
-        
+        // Uncomment for No volume - 1 of 2
+        // split[6] = "1";
+
         // $FORMAT Ticker, Date_YMD, Time, Open, High, Low, Close, Volume
         fout << scrip_name << ',' << today_date << ',' << time << ',' << split[2] << ',' << split[3] << ',' << split[4] << ',' 
-             << split[5]   << ',' << split[6]   << std::endl ;
+             << split[5]   << ',' << split[6]   << std::endl ;             
     }   
     return true;
 }
@@ -107,12 +109,12 @@ bool Reader::parseDataTableToCsv( const std::string &dt_file, const std::string 
 
     while( std::getline( fin, line  ) ){
                 
-        MiscUtil::trimString( line );                                          // Remove leading and trailing spaces
-        MiscUtil::replaceTabsWithSpace(line);                                  // Replace Tabs with space
+        Util::trimString( line );                                          // Remove leading and trailing spaces
+        Util::replaceTabsWithSpace(line);                                  // Replace Tabs with space
 
         if( line.empty() ) continue;                                           // Ignore Empty lines
                 
-        MiscUtil::splitString( line , '=', split ) ;                           // Check for Scrip Name
+        Util::splitString( line , '=', split ) ;                           // Check for Scrip Name
         if( split.size() > 0 && split[0] == "name" ){
             if( split.size() == 2 ){
                 custom_name = split[1];
@@ -121,7 +123,7 @@ bool Reader::parseDataTableToCsv( const std::string &dt_file, const std::string 
             continue;
         }        
         
-        MiscUtil::splitString( line , ' ', split ) ;                           // Data. Expected format is 
+        Util::splitString( line , ' ', split ) ;                           // Data. Expected format is 
                                                                                // Name dd-mm-yyyy Time O H L C V
         if( split.size() != 8  ){
             std::stringstream msg;  
@@ -133,7 +135,10 @@ bool Reader::parseDataTableToCsv( const std::string &dt_file, const std::string 
         custom_name.empty() ?  name = split[0] : name = custom_name ;
 
         std::string date = split[1];
-        MiscUtil::splitString( date , '-', date_split ) ;
+        Util::splitString( date , '-', date_split ) ;
+
+        // Uncomment for No volume 2 of 2 
+        // split[7] = "1";
         
         // $FORMAT Ticker, Date_YMD, Time, Open, High, Low, Close, Volume
         fout << name     << ',' << date_split[2]   << date_split[1] << date_split[0] << ','
@@ -175,7 +180,7 @@ void Reader::changeHHFrom12To24( std::string &time ){                          /
     
     std::vector<std::string>  split_strings;
 
-    MiscUtil::splitString( time , ':', split_strings ) ;
+    Util::splitString( time , ':', split_strings ) ;
     long long hh = std::stoll( split_strings[0] );
 
     if( hh < 12 ){

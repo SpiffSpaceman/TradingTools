@@ -61,6 +61,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Command>cd $(OutputPath)
@@ -84,6 +85,7 @@ del *.bat</Command>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Command>cd $(OutputPath)\RTDMan\
@@ -118,8 +120,8 @@ del *.bat</Command>
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\amibroker_feed.h" />
-    <ClInclude Include="include\misc_util.h" />
+    <ClInclude Include="include\amibroker.h" />
+    <ClInclude Include="include\util.h" />
     <ClInclude Include="include\rtd_callback.h" />
     <ClInclude Include="include\rtd_client.h" />
     <ClInclude Include="include\settings.h" />
@@ -134,9 +136,9 @@ del *.bat</Command>
     </Midl>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="source\amibroker_feed.cpp" />
+    <ClCompile Include="source\amibroker.cpp" />
     <ClCompile Include="source\main.cpp" />
-    <ClCompile Include="source\misc_util.cpp" />
+    <ClCompile Include="source\util.cpp" />
     <ClCompile Include="source\rtd_callback.cpp" />
     <ClCompile Include="source\rtd_client.cpp" />
     <ClCompile Include="source\settings.cpp" />

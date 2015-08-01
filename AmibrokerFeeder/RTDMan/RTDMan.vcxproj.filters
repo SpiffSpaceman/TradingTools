@@ -35,13 +35,13 @@
     <ClInclude Include="include\worker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\amibroker_feed.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\misc_util.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\settings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\amibroker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -63,16 +63,16 @@
     <ClCompile Include="source\worker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\amibroker_feed.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="source\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\misc_util.cpp">
+    <ClCompile Include="source\settings.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\settings.cpp">
+    <ClCompile Include="source\util.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\amibroker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

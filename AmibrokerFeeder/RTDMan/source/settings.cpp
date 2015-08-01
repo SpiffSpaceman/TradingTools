@@ -1,14 +1,14 @@
 
 #include "settings.h"
-#include "misc_util.h"
+#include "util.h"
 
 void Settings::loadSettings(){
     
-    rtd_server_prog_id    = MiscUtil::getINIString("RTDServerProgID");     
-    bar_period            = MiscUtil::getINIInt   ("BarPeriod");
-    csv_path              = MiscUtil::getINIString("CSVFolderPath"); 
-    time_format           = MiscUtil::getINIString("TimeFormat"); 
-    ab_db_path            = MiscUtil::getINIString("AbDbPath");     
+    rtd_server_prog_id    = Util::getINIString("RTDServerProgID");     
+    bar_period            = Util::getINIInt   ("BarPeriod");
+    csv_path              = Util::getINIString("CSVFolderPath"); 
+    bell_wait_time        = Util::getINIInt   ("BellWaitTime"); 
+    ab_db_path            = Util::getINIString("AbDbPath");     
     no_of_scrips          = 0 ;    
 
     std::string scrip_value;
@@ -18,12 +18,12 @@ void Settings::loadSettings(){
         throw "Minimum Bar Interval is 1000ms";        
     }
         
-    MiscUtil::createDirectory( csv_path );                                   // If folder does not exist, create it.
+    Util::createDirectory( csv_path );                                   // If folder does not exist, create it.
     csv_path.append("quotes.rtd");
     
     while(1){
         scrip_key    = "Scrip";  scrip_key.append( std::to_string( (long long)no_of_scrips+1 ) );
-        scrip_value  = MiscUtil::getINIString( scrip_key.c_str() ) ;
+        scrip_value  = Util::getINIString( scrip_key.c_str() ) ;
 
         if(scrip_value.empty()){                                             // No more Scrips left
             if( no_of_scrips == 0 ){
@@ -34,7 +34,7 @@ void Settings::loadSettings(){
 
         //  ScripID(mandatory);Alias(mandatory);LTP(mandatory);LTT;Todays Volume;OI  
         std::vector<std::string>  split_strings;
-        MiscUtil::splitString( scrip_value , ';', split_strings ) ;
+        Util::splitString( scrip_value , ';', split_strings ) ;
         if(split_strings.size() < 3 ){                                       // 3 mandatory field at start
             throw( scrip_key + " Invalid" ); 
         }

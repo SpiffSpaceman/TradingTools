@@ -16,8 +16,8 @@
 **/
 
 
-#include "amibroker_feed.h"
-#include "misc_util.h"
+#include "amibroker.h"
+#include "util.h"
 
 #include <atlbase.h>  
 #include <iostream>
@@ -63,10 +63,10 @@ Amibroker::~Amibroker(){
         saveDB();                                                           // Save AB db before quit
     }
     catch( const std::string msg ){    
-        MiscUtil::printException(msg);
+        Util::printException(msg);
     }
     catch( const char *msg ){    
-        MiscUtil::printException(msg);
+        Util::printException(msg);
     }
 
     if(amiBrokerDispatch){

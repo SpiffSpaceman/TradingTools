@@ -1,11 +1,11 @@
-#ifndef  RTDMAN_MISC_UTIL_H
-#define  RTDMAN_MISC_UTIL_H
+#ifndef  RTDMAN_UTIL_H
+#define  RTDMAN_UTIL_H
   
 #include <string>
 #include <vector>
 #include <OAIdl.h>
 
-class MiscUtil{
+class Util{
 
 public:
     static void            printVariant( const VARIANT &var );
@@ -24,11 +24,11 @@ public:
     static void            trimString          ( std::string & string  );
     static void            replaceTabsWithSpace( std::string & string  );
 
-    static void            createDirectory( std::string & dir  );
+    static void            createDirectory( const std::string & dir  );
 
-    static void            printException( std::string msg );
+    static void            printException( const std::string &msg );
 
-    static bool            isStringEqualIC( std::string str1 , std::string str2 ) ;
+    static bool            isStringEqualIC( std::string str1 , std::string str2 ) ; 
      
 };
 

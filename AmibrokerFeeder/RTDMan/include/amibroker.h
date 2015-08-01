@@ -1,5 +1,5 @@
-#ifndef  AMIBROKER_FEED_H
-#define  AMIBROKER_FEED_H
+#ifndef  RTDMAN_AMIBROKER_H
+#define  RTDMAN_AMIBROKER_H
 
 #include <OAIdl.h>
 #include <string>
