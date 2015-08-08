@@ -22,6 +22,7 @@ public:
         std::string topic_LTT;                        
         std::string topic_vol_today;
         std::string topic_OI; 
+        int         ltp_multiplier;                                       // Multiple LTP with this- Default 1
     };
 
     std::vector<Scrip> scrips_array;                                      // RTD Topics for each scrip

@@ -171,7 +171,7 @@ void Worker::processRTDData( const std::map<long,CComVariant>* data ){
 
         switch( field_id ){                        
             case LTP :{
-                double      ltp      = Util::getDouble( topic_value );
+                double      ltp      = Util::getDouble( topic_value ) * settings.scrips_array[script_id].ltp_multiplier;                
                 ScripState *_current = & current[script_id];
 
                 _current->ltp = ltp;
@@ -246,9 +246,13 @@ void Worker::amibrokerPoller(){
             !_current->ltt.empty()  ? bar_ltt = _current->ltt : bar_ltt = Util::getTime( "%H:%M:%S" );
             
             if(  bar_ltt == _prev->last_bar_ltt  ){                        // IF LTT is same as previous LTT of this scrip ( but data is different )
-                continue;                                                  //   skip to avoid overwrite with same timestamp
+                continue;                                                  //   skip to avoid overwrite with same timestamp.
             }                                                              // This can happen if we have more than 1 update in a second 
-                                                                           //   and poller took data in between 
+                                                                           //   and poller took data in between.                         
+            if( bar_ltt == "15:29:59" && Util::getTime("%H") != "15"  ){   // Skip 15:29:59 if current hour is not 15 
+                continue;                                                  //   to avoid yesterdays quote on open in NOW. 
+            }
+
             new_bars.push_back( ScripBar() );
             ScripBar* bar = &new_bars.back();
 
@@ -323,7 +327,8 @@ void Worker::writeCsv( const std::vector<ScripBar> & bars ){
     const ScripBar *bar;
 
     for( size_t i=0 ; i<size ; i++ ){                                      // $FORMAT Ticker, Date_YMD, Time, Open, High, Low, Close, Volume, OpenInt
-        bar = &bars[i];
+        bar = &bars[i];     
+        
         csv_file_out << bar->ticker     << ',' 
                      << today_date      << ',' 
                      << bar->ltt        << ',' 

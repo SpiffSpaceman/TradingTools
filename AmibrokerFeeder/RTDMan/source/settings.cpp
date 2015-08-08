@@ -32,7 +32,7 @@ void Settings::loadSettings(){
             else break;
         }
 
-        //  ScripID(mandatory);Alias(mandatory);LTP(mandatory);LTT;Todays Volume;OI  
+        //  ScripID(mandatory);Alias(mandatory);LTP(mandatory);LTT;Todays Volume;OI;LTP Multiplier  
         std::vector<std::string>  split_strings;
         Util::splitString( scrip_value , ';', split_strings ) ;
         if(split_strings.size() < 3 ){                                       // 3 mandatory field at start
@@ -54,6 +54,12 @@ void Settings::loadSettings(){
         if(split_strings.size() >=6 ){
             scrip_topics.topic_OI        =  split_strings[5];
         } 
+        if(split_strings.size() >=7 && !split_strings[6].empty() ){ 
+            scrip_topics.ltp_multiplier  =  std::stoi( split_strings[6] );
+        }
+        else {
+            scrip_topics.ltp_multiplier  =  1;
+        }
 
         scrips_array.push_back(  scrip_topics ) ;
         no_of_scrips++;
