@@ -24,7 +24,6 @@
 #include <process.h>
 #include <mmsystem.h>
 
-#include <iostream>
 #include <sstream>
 #include <limits>
  
@@ -100,7 +99,7 @@ Worker::ScripState::ScripState() :
 {}
 
 void Worker::ScripState::reset(){
-    ltp = 0; vol_today = 0; oi =0; bar_high = 0; bar_low = std::numeric_limits<double>::infinity(); bar_open = 0; last_bar_ltt="";
+    ltp = 0; vol_today = 0; oi =0; bar_high = 0; bar_low = std::numeric_limits<double>::infinity(); bar_open = 0; ltt=""; last_bar_ltt="";
 }
 
 bool Worker::ScripState::operator==(const ScripState& right) const{
@@ -108,7 +107,6 @@ bool Worker::ScripState::operator==(const ScripState& right) const{
            (oi  == right.oi )  && (bar_high  == right.bar_high)  &&
            (ltt == right.ltt)  && (bar_low   == right.bar_low ); 
 }
-
 
 
 /** 
@@ -229,13 +227,15 @@ void Worker::amibrokerPoller(){
         }        
 
     // Shared data access start
-        EnterCriticalSection( &lock );
+        EnterCriticalSection( &lock );             
 
         for( int i=0 ; i<settings.no_of_scrips ; i++  ){                   // (B) Setup Bar data for each updated scrip using current and previous
 
             ScripState *_current  =  &current[i];
             ScripState *_prev     =  &previous[i];
             long long bar_volume  =  _current->vol_today - _prev->vol_today ;
+            
+            // if( i==0) std::cout << i <<": " << *_current << std::endl ; 
                                                                            // If data not changed, skip
             if( (_current->bar_open == 0)                   ||             // 1. No New data from readNewData()     
                 (bar_volume==0 && _current->vol_today!=0)   ||             // 2. Also skip if bar volume 0 but allow 0 volume scrips like forex
@@ -250,7 +250,8 @@ void Worker::amibrokerPoller(){
             }                                                              // This can happen if we have more than 1 update in a second 
                                                                            //   and poller took data in between.                         
             if( bar_ltt == "15:29:59" && Util::getTime("%H") != "15"  ){   // Skip 15:29:59 if current hour is not 15 
-                continue;                                                  //   to avoid yesterdays quote on open in NOW. 
+                _current->reset();                                         //   to avoid yesterdays quote on open in NOW.                                                              
+                continue;                                                  // Reset Current Bar to avoid yesterday data in open bar 
             }
 
             new_bars.push_back( ScripBar() );

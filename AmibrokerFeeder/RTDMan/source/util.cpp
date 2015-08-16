@@ -155,7 +155,10 @@ void Util::printException( const std::string &msg ){
     if( log_out .is_open()){
         log_out << msg << std::endl;
         log_out.close();
-    }    
+    } 
+
+    std::cout << "Press Enter to Quit" << std::endl;
+    std::cin.ignore(); 
 }
 
 // Compare strings ignoring case

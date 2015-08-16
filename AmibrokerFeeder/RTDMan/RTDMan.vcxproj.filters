@@ -41,9 +41,6 @@
     <ClInclude Include="include\util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\amibroker.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="include\NestTrader.IDL">

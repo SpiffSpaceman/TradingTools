@@ -120,7 +120,6 @@ del *.bat</Command>
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\amibroker.h" />
     <ClInclude Include="include\util.h" />
     <ClInclude Include="include\rtd_callback.h" />
     <ClInclude Include="include\rtd_client.h" />

@@ -9,6 +9,7 @@
 #include <vector>
 #include <map>
 #include <utility>
+#include <iostream>
 #include <fstream> 
 
 class Worker{
@@ -52,7 +53,6 @@ private:
     
     Worker( const Worker& );                                                // Disable copy
     Worker operator=(const Worker& );
-
     
     // Used to create and resolve Topic ids
     enum SCRIP_FIELDS{                                                      // -- Topic 2 --        
@@ -62,7 +62,7 @@ private:
         OI=3,                                                               // "Open Interest"        
         FIELD_COUNT=4                                                       // No of Fields used
     };
-    struct ScripState {                                                        
+    struct ScripState {
         double       ltp;                                                    
         std::string  ltt;                                                   // ltt can be empty for index scrips
         std::string  last_bar_ltt;                                          // last_bar_ltt will be always set with last sent bar's ltt
@@ -76,6 +76,12 @@ private:
         ScripState();
         void  reset();
         bool  operator==(const ScripState& right) const ;
+
+        friend std::ostream& operator<<(std::ostream& os, const Worker::ScripState& bar){
+            return std::cout << " LTT:" << bar.ltt      << " Open:"  << bar.bar_open << " High:" << bar.bar_high \
+                             << " Low:" << bar.bar_low  << " Close:" << bar.ltp ;
+        }
+        
     };
     struct ScripBar{                                                        // Bar data to Amibroker
         std::string  ticker;
@@ -89,5 +95,7 @@ private:
         long long    oi;
     };
 };
+
+
 
 #endif
