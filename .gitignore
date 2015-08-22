@@ -28,5 +28,8 @@ errorLog.txt
 # ignore line ending conversions
 * -crlf
 
-# ignore tutorial pdf
-*.pdf
+# BackfillMan - Ignore ABBackFill, AHK Binaries
+BackfillMan/ABBackFill/
+BackfillMan/AHK/
+BackfillMan/SciTE.lnk
+
