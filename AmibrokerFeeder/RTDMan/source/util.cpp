@@ -105,8 +105,8 @@ std::string  Util::getTime( const char *format ){
     std::tm      local;
     localtime_s( &local, &raw );
     
-    char buffer[16];
-    strftime(buffer,16, format, &local );
+    char buffer[64];
+    strftime(buffer,64, format, &local );
 
     return std::string( buffer );
 } 
@@ -146,16 +146,18 @@ void Util::createDirectory( const std::string & dir  ){
     }
 }
 
-
-void Util::printException( const std::string &msg ){
-    
+void Util::printExceptionSilent( const std::string &msg ){
     std::cout << msg << std::endl;
 
-    std::ofstream log_out( "./errorLog.txt" );
-    if( log_out .is_open()){
-        log_out << msg << std::endl;
+    std::ofstream log_out( "./errorLog.txt", std::ios_base::app | std::ios_base::out );     // Append mode, open for writing.
+    if( log_out .is_open()){ 
+        log_out << Util::getTime("%Y:%m:%d %H:%M:%S") << " : " << msg << std::endl;        
         log_out.close();
     } 
+}
+
+void Util::printException( const std::string &msg ){
+    printExceptionSilent( msg );  
 
     std::cout << "Press Enter to Quit" << std::endl;
     std::cin.ignore(); 

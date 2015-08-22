@@ -7,6 +7,8 @@
 
 
 // TODO
+    // Bell - No Bell / No quotes between start and end time
+
     // Bell - Change wav + in project 
 	// Bug - Negative Volume ? 
 		// Atleast set volume to 0. Currently check for ==0 but not <0
@@ -57,14 +59,14 @@ int _tmain(int argc, _TCHAR* argv[]){
     }
     catch( const std::string msg ){
         Util::printException(msg);
-        return 0;
+        return 1;
     }
     catch( const char *msg ){
         Util::printException(msg);
-        return 0;
+        return 1;
     }
 
-    return 1;
+    return 0;
 }
 
 

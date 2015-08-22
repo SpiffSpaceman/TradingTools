@@ -27,6 +27,7 @@ public:
     static void            createDirectory( const std::string & dir  );
 
     static void            printException( const std::string &msg );
+    static void            printExceptionSilent( const std::string &msg );
 
     static bool            isStringEqualIC( std::string str1 , std::string str2 ) ; 
      

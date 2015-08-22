@@ -62,10 +62,10 @@ RTDClient::~RTDClient(){
         stopServer();
     }
     catch( const std::string msg ){    
-        Util::printException(msg);
+        Util::printExceptionSilent(msg);
     }
     catch( const char *msg ){    
-        Util::printException(msg);
+        Util::printExceptionSilent(msg);
     }
     
     if(comObjectScripRTD){

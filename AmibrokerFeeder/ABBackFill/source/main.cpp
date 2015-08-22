@@ -6,8 +6,10 @@
 #include "amibroker.h"
 #include "util.h"
 #include <iostream>
-          
-// TODO - Delete data in between start and end time - Also take care of start time - ZT : 09:16 = First bar
+
+// TODO - Volume only if no quote in minute else find empty second and update extremes with 0 volume.  
+    // Remove Volume Skip option
+    // Open Minute - Still import if no data in AB and volume available
 
 int _tmain(int argc, _TCHAR* argv[]){
 
@@ -21,9 +23,9 @@ int _tmain(int argc, _TCHAR* argv[]){
         settings.loadSettings();        
 
         // Read Input and convert to CSV
-        Reader reader;     
-        bool vwap = reader.parseVWAPToCsv     ( settings.vwap_file_path,        settings.csv_file_path ) ;
-        bool dt   = reader.parseDataTableToCsv( settings.data_table_file_path,  settings.csv_file_path ) ;
+        Reader reader( settings );     
+        bool vwap = reader.parseVWAPToCsv     ( ) ;
+        bool dt   = reader.parseDataTableToCsv( ) ;
         reader.closeOutput();
 
         if( !vwap && !dt ){
@@ -42,10 +44,12 @@ int _tmain(int argc, _TCHAR* argv[]){
         std::cout << "Done" << std::endl ;
     }    
     catch( const std::string msg ){    
-        Util::printException( msg );
+        Util::printExceptionSilent( msg );
+        return 1;
     }
     catch( const char *msg ){    
-        Util::printException( msg );
+        Util::printExceptionSilent( msg );
+        return 1;
     }
 
     return 0;

@@ -11,8 +11,14 @@ public:
     std::string   vwap_file_path;
     std::string   data_table_file_path;
 
-    void loadSettings();
+    std::string   open_minute;
+    std::string   close_minute;
 
+    bool          is_skip_open_minute;
+    bool          is_skip_volume;
+    bool          is_intraday_mode;    
+
+    void loadSettings();
 };
 
 
