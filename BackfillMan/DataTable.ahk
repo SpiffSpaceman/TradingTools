@@ -1,8 +1,17 @@
 // NOW - NestPlus DataTable Backfill
 
+#include Lib/__ExternalHeaderLib.ahk										// External Library to read Column Headers
+
 dtBackFill(){
 	global																	// This Declares function global - all variables global except local ones	
 																			// Need to use DT1, DT2 etc
+	
+	TradingSymbolColIndex := getColumnIndex( "Trading Symbol" )				// Get Position of Trading Symbol Column in Market Watch
+	if( TradingSymbolColIndex == -1) { 
+		MsgBox, Trading Symbol not found in Market Watch
+		Exit
+	}
+	
 	Loop, %DTCount% {
 				
 		local fields := StrSplit( DT%A_Index% , ",")  						// Format - TradingSymbol,Alias
@@ -31,9 +40,22 @@ indexBackFill(){															// NOTE - This wont work if Index has scroll bars
 
 // ------- Private --------
 
+getColumnIndex( inColumnHeaderText ){										// Gets ListView Column Number for input Header text
+	global NowWindowTitle
+	
+	MWHeaders := GetExternalHeaderText( NowWindowTitle, "SysHeader323")	
+
+	for index, headertext in MWHeaders{
+		if( headertext == inColumnHeaderText )
+			return index
+	}	
+	
+	return -1
+}
+
 openDataTable( inTradingSymbol, retryCount ){
 	
-	global NowWindowTitle, DTWindowTitle, TradingSymbolColIndex 	
+	global NowWindowTitle, DTWindowTitle, TradingSymbolColIndex
 	
 	WinClose, %DTWindowTitle%	 											// Close DT If already Opened	
 	ControlGet, RowCount, List, Count, SysListView323, %NowWindowTitle%		// No of rows in MarketWatch	
@@ -62,7 +84,7 @@ openDataTable( inTradingSymbol, retryCount ){
 	WinMinimize, %DTWindowTitle%											// Minimize after data is loaded ? check
 }
 
-waitforDTOpen( symbol, i, maxI, waitTime  ){								// returns true if Datatble is open
+waitforDTOpen( symbol, i, maxI, waitTime  ){								// returns true if Datatable is open
 	global DTWindowTitle
 	
 	SetTitleMatchMode, RegEx
@@ -198,7 +220,7 @@ writeDTData( inAlias )														// columns expected order - TradingSymbol Ti
 	{				
 		file := FileOpen(DTBackfillFileName, "a" )	   			    		// := does not need %% for var
 		if !IsObject(file){
-			MsgBox, "Can't open DT backfill file for writing".
+			MsgBox, Can't open DT backfill file for writing.
 			Exit
 		}
 		
@@ -209,7 +231,7 @@ writeDTData( inAlias )														// columns expected order - TradingSymbol Ti
 		file.Close()		
 	}
 	else{
-		MsgBox, "DT backfill file Not Found."
+		MsgBox, DT backfill file Not Found.
 		Exit
 	}
 }

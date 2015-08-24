@@ -12,15 +12,14 @@ SetControlDelay, -1 			// Without this ControlClick fails sometimes. Example - I
 //!F1:: 							// Press Alt F1 to execute
 
 
-// TODO - DataTable - Search columns for Trading symbol, remove TradingSymbolColIndex 
-// TODO - 2 save calls triggered?
-// TODO - Put Keepalive for NOW. Touch every 15mins or so. Seperate ahk - SetTimer 
-
-
 // TODO - VWAP - HS needs extra columns for volume	- Just select correct columns - maybe can select in order?
 // TODO - VWAP - loop test
+
+
+// TODO - Put Keepalive for NOW. Touch every 15mins or so. Seperate ahk - SetTimer 
+
 // TODO - settings - Move to RAM drive in both, create files if not found
-// NOW on top Errors
+// NOW on top Errors + HK problem
 	// DT open using MW shift-D fails many times when NOW is in front
 	// ** DT Scrip Not found error ** - AHK With HotKEY - Row not selected? - symbol from row is empty
 		// Click on TabBar/ Marketwatch and run using Hotkey			

@@ -53,7 +53,7 @@ writeVwapData( alias ){
 	{				
 		file := FileOpen(VWAPBackfillFileName, "w" )	  				    // := does not need %% for var
 		if !IsObject(file){
-			MsgBox, "Can't open VWAP file for writing."
+			MsgBox, Can't open VWAP file for writing.
 			Exit
 		}
 		
@@ -64,7 +64,7 @@ writeVwapData( alias ){
 		file.Close()		
 	}
 	else{
-		MsgBox, "VWAP backfill file Not Found." 
+		MsgBox, VWAP backfill file Not Found. 
 		Exit
 	}
 }

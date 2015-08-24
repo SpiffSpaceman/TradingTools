@@ -33,3 +33,6 @@ BackfillMan/ABBackFill/
 BackfillMan/AHK/
 BackfillMan/SciTE.lnk
 
+# BackfillMan - External Header - License unclear
+BackfillMan/Lib/__ExternalHeaderLib.ahk
+

@@ -7,8 +7,6 @@ IniRead, NowWindowTitle,  Settings.ini, BackfillMan, NowWindowTitle
 IniRead, DTWindowTitle,   Settings.ini, BackfillMan, DTWindowTitle
 IniRead, VWAPWindowTitle, Settings.ini, BackfillMan, VWAPWindowTitle
 
-IniRead, TradingSymbolColIndex, Settings.ini, BackfillMan, TradingSymbolColIndex
-
 IniRead, BackfillExePath,      Settings.ini, BackfillMan, BackfillExePath
 IniRead, BackfillExe,  		   Settings.ini, BackfillMan, BackfillExe
 IniRead, DTBackfillFileName,   Settings.ini, BackfillMan, DTBackfillFileName
