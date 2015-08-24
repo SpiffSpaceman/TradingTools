@@ -22,6 +22,8 @@ indexBackFill(){															// NOTE - This wont work if Index has scroll bars
 		openIndexDataTable( fields[1] )			
 		writeDTData( fields[2] )		
 	}	
+	
+	closeNestPlusChart()													// Close Nest Plus chart when All done
 }
 
 
@@ -92,10 +94,12 @@ waitForDTData( symbol  ){
 		if( A_Index == 120  ){												// Wait upto a minute for data to load
 			MsgBox, %symbol% DataTable is empty, Continuing ... 
 			break			
-		}		
-		WinRestore, %DTWindowTitle%
+		}
+		if( A_Index > 10 ){
+			WinRestore, %DTWindowTitle%										// sometimes data doesnt load if window is minimized ?
+		}
 		Sleep, 500
-	}	
+	}
 }
 
 openIndexDataTable( inIndexSymbol ){
@@ -119,7 +123,7 @@ openIndexDataTable( inIndexSymbol ){
 		MsgBox, %inIndexSymbol% Not Found.
 		Exit
 	}
-
+	
 	ControlGetPos, IndexX, IndexY, IndexWidth, IndexHeight, SysListView324, %NowWindowTitle%	
 	RowSize := IndexHeight/RowCount											// Get Position of Index Row
 	ClickX  := IndexX + IndexWidth/2										// Middle of Index box
@@ -129,9 +133,6 @@ openIndexDataTable( inIndexSymbol ){
 	ControlSend,  SysListView324, {P}, %NowWindowTitle%		 				// Open Chart	
 		
 	WinWait, %NowWindowTitle%, IntraDay Chart, 30							// Wait for Chart Control to load - Waiting for Text 'IntraDay Chart'	
-	
-	// TODO use regex above for window %inIndexSymbol%
-	// If detached, then attach by double click on window
 	
 	if( ErrorLevel ){ 														// Chart open timeout		
 		MsgBox, Nest Plus Chart Open Timed Out.
@@ -144,12 +145,9 @@ openIndexDataTable( inIndexSymbol ){
 		ControlSend,  Static7, {D}, %NowWindowTitle%	
 	}
 	Until waitforDTOpen( inIndexSymbol, A_Index, 4, 5 )						// Check every 5 seconds upto 4 times
-	
-	closeNestPlusChart()
-	
-	waitForDTData( inIndexSymbol )		
+
+	waitForDTData( inIndexSymbol )
 	WinMinimize, %DTWindowTitle%
-	
 }
 
 /* Click Works on NestChart close button But ControlClick does not work
@@ -158,7 +156,7 @@ openIndexDataTable( inIndexSymbol ){
 	There may be a better workaround using PostMessage
 */
 closeNestPlusChart(){
-	global NowWindowTitle
+	global NowWindowTitle, DTWindowTitle	
 	
 	ControlGetPos, X, Y, Width, Height, AfxControlBar1006, %NowWindowTitle%		
 	ClickX  := X + 5
@@ -168,35 +166,26 @@ closeNestPlusChart(){
 	BlockInput, MouseMove	
     MouseGetPos, oldx, oldy
 	
-	WinGetTitle, currentWindow, A 											// save active window
-	WinActivate, %NowWindowTitle%	
+	SetTitleMatchMode, RegEx
+	IfWinNotActive, .*%NowWindowTitle%.*|.*%DTWindowTitle%.*
+	{
+		WinGetTitle, currentWindow, A 										// Save active window	
+		WinActivate, %NowWindowTitle%	
+	}
+	SetTitleMatchMode, 2
 	
 	CoordMode, Mouse, Relative												// click button	
 	Click %ClickX%, %ClickY% 		
-	
-	WinActivate, %currentWindow%											// restore active window
+	Sleep, 50																// Wait for click to work.
+
+	if( currentWindow != "" )
+		WinActivate, %currentWindow%										// restore active window		
 	
 	CoordMode, Mouse, Screen												// restore mouse position
 	MouseMove, %oldx%, %oldy%, 0	
 	BlockInput, MouseMoveOff
 	CoordMode, Mouse, Relative		
 }
-/*
-BasicClick(x, y, id)     ;// input coords relative to a full window (including borders and caption)
-{
-   CoordMode, Mouse, Screen
-   MouseGetPos, oldx, oldy
-   WinActivate, ahk_id %id%   
-   
-   BlockInput, MouseMove
-   CoordMode, Mouse, Relative
-   Click %x%, %y%
-   CoordMode, Mouse, Screen
-   MouseMove, %oldx%, %oldy%, 0
-   BlockInput, MouseMoveOff
-}
-*/
-
 
 writeDTData( inAlias )														// columns expected order - TradingSymbol Time O H L C V
 {

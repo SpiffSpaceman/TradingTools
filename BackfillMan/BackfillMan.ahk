@@ -1,6 +1,8 @@
 #CommentFlag // 
 #Include %A_ScriptDir%			// Set Include Directory path 
 								// Includes behave as though the file's contents are present at this exact position
+#SingleInstance force			// Reloads if already running
+#NoEnv							// Recommended for new scripts
 
 SendMode Input  				// Recommended for new scripts
 SetWorkingDir %A_ScriptDir%  	// Ensures a consistent starting directory.
@@ -8,10 +10,6 @@ SetTitleMatchMode, 2 			// A window's title can contain the text anywhere
 SetControlDelay, -1 			// Without this ControlClick fails sometimes. Example - Index Right click fails if mouse is over NOW
 
 //!F1:: 							// Press Alt F1 to execute
-
-
-// TODO - test close - restore position
-// TODO - Index Loop test
 
 
 // TODO - DataTable - Search columns for Trading symbol, remove TradingSymbolColIndex 
@@ -29,6 +27,7 @@ SetControlDelay, -1 			// Without this ControlClick fails sometimes. Example - I
 		// Maybe made worse by Shift-D problem above	
 // TODO - VWAP - Better logic to check if vwap data has been fetched 
 // 			   - Maybe do in ABBackfill - validate option and use exit code 
+// Index - x,y may fail if index list has empty space
 
 
 
@@ -56,7 +55,7 @@ IfWinExist, %NowWindowTitle%
 		indexBackFill()
 	}
 	
-	// save()
+	save()
 }
 else{
 	MsgBox, NOW not found.
