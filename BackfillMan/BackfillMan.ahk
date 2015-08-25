@@ -11,14 +11,12 @@ SetControlDelay, -1 			// Without this ControlClick fails sometimes. Example - I
 
 //!F1:: 							// Press Alt F1 to execute
 
-// Index - Transparency if window covered
-// TODO - Put Keepalive for NOW. Touch every 15mins or so. Seperate ahk - SetTimer 
+// TODO - DT and VWAP - Better logic to check if data has been fetched
+// 		- Do in ABBackfill - validate option and use exit code 
 
-// DT - ABBackFill - validate got all mins from open to now 
-// TODO - VWAP - Better logic to check if vwap data has been fetched 
-// 			   - Maybe do in ABBackfill - validate option and use exit code 
 
 // TODO - settings - Move to RAM drive in both, create files if not found
+// TODO - Put Keepalive for NOW. Touch every 15mins or so. Seperate ahk - SetTimer 
 // NOW on top Errors + HK problem
 	// DT open using MW shift-D fails many times when NOW is in front
 	// ** DT Scrip Not found error ** - AHK With HotKEY - Row not selected? - symbol from row is empty
