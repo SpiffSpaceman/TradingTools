@@ -237,7 +237,7 @@ void Worker::amibrokerPoller(){
             
             // if( i==0) std::cout << i <<": " << *_current << std::endl ; 
                                                                            // If data not changed, skip
-            if( (_current->bar_open == 0)                   ||             // 1. No New data from readNewData()     
+            if( (_current->bar_open == 0)                   ||             // 1. No New data from readNewData()
                 (bar_volume==0 && _current->vol_today!=0)   ||             // 2. Also skip if bar volume 0 but allow 0 volume scrips like forex
                 ((*_current) == (*_prev))                                  // 3. We got new data from readNewData() but its duplicate
               )    continue;                                               //    NEST RTD sends all fields even if unconnected field (ex B/A) changes    
@@ -248,10 +248,17 @@ void Worker::amibrokerPoller(){
             if(  bar_ltt == _prev->last_bar_ltt  ){                        // IF LTT is same as previous LTT of this scrip ( but data is different )
                 continue;                                                  //   skip to avoid overwrite with same timestamp.
             }                                                              // This can happen if we have more than 1 update in a second 
-                                                                           //   and poller took data in between.                         
+                                                                           //   and poller took data in between.
             if( bar_ltt == "15:29:59" && Util::getTime("%H") != "15"  ){   // Skip 15:29:59 if current hour is not 15 
-                _current->reset();                                         //   to avoid yesterdays quote on open in NOW.                                                              
-                continue;                                                  // Reset Current Bar to avoid yesterday data in open bar 
+                _current->reset();                                         //   to avoid yesterdays quote on open in NOW.
+                _prev->reset();                                            // Reset Bars to avoid yesterday data in open bar 
+                continue;                                                  
+            }
+            // Skip quotes outside market hours
+            if( !isMarketTime( bar_ltt  )){
+                _current->reset(); 
+                _prev->reset();
+                continue;
             }
 
             new_bars.push_back( ScripBar() );
@@ -303,7 +310,7 @@ void Worker::notifyInactive(){
 
     rtd_inactive_count++;
 
-    if( rtd_inactive_count >= settings.bell_wait_time ){                    // Wait time up?
+    if( rtd_inactive_count >= settings.bell_wait_time ){                     // Wait time up?
         
         rtd_inactive_count = 0; 
 
@@ -311,10 +318,16 @@ void Worker::notifyInactive(){
         std::flush(std::cout);         
 
         if( is_rtd_started ){        
-            PlaySound( L"NotifyBell.wav" , NULL, SND_FILENAME | SND_ASYNC);                            
-            is_rtd_started     = false;                                     // Play only Once
+            is_rtd_started  = false;                                         // Play only Once
+            if( isMarketTime( Util::getTime() ))                             // and only in market hours
+                PlaySound( L"NotifyBell.wav" , NULL, SND_FILENAME | SND_ASYNC);                            
+            
         }
     }    
+}
+
+bool Worker::isMarketTime ( const std::string &time ){                       // Time is in hh:mm:ss - lexicographical order. 
+    return  time >= settings.open_time && time <= settings.close_time ;      // So string compare works
 }
 
 void Worker::writeCsv( const std::vector<ScripBar> & bars ){

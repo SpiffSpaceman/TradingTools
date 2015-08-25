@@ -8,7 +8,11 @@ void Settings::loadSettings(){
     bar_period            = Util::getINIInt   ("BarPeriod");
     csv_path              = Util::getINIString("CSVFolderPath"); 
     bell_wait_time        = Util::getINIInt   ("BellWaitTime"); 
-    ab_db_path            = Util::getINIString("AbDbPath");     
+    ab_db_path            = Util::getINIString("AbDbPath");
+
+    open_time             = Util::getINIString("OpenTime");     
+    close_time            = Util::getINIString("CloseTime");         	   
+
     no_of_scrips          = 0 ;    
 
     std::string scrip_value;

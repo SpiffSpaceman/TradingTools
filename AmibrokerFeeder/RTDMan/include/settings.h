@@ -14,6 +14,9 @@ public:
     int         bell_wait_time;                                           // No of bar_periods
     std::string csv_path;                                                 // path for csv file to be sent to Amibroker - Use ram drive
     std::string ab_db_path;
+
+    std::string  open_time;
+    std::string  close_time;    
         
     struct Scrip {
         std::string topic_name;                                           // Scrip Name = Topic 1

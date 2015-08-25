@@ -50,7 +50,8 @@ private:
     void        writeCsv        ( const std::vector<ScripBar> & bars  );        // This thread uses members - current , previous, settings
     void        notifyActive    ();
     void        notifyInactive  ();                                         // Ring Bell if RTD Inactive    
-    
+    bool        isMarketTime  ( const std::string &time);                 // Is input time within OpenTime and CloseTime
+
     Worker( const Worker& );                                                // Disable copy
     Worker operator=(const Worker& );
     
