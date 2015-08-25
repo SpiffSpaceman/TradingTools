@@ -1,7 +1,5 @@
 // NOW - NestPlus DataTable Backfill
 
-#include Lib/__ExternalHeaderLib.ahk										// External Library to read Column Headers
-
 dtBackFill(){
 	global																	// This Declares function global - all variables global except local ones	
 																			// Need to use DT1, DT2 etc
@@ -74,9 +72,9 @@ openDataTable( inTradingSymbol, retryCount ){
 		Exit
 	}	
 		
-	ControlSend, SysListView323, {Shift}D, %NowWindowTitle%				// At this point row should be selected. Open Data Table with shift-d	
+	ControlSend, SysListView323, {Shift}D, %NowWindowTitle%					// At this point row should be selected. Open Data Table with shift-d	
 		
-	if( !waitforDTOpen( inTradingSymbol, retryCount, 20, 1 ) ) {		// Wait for DataTable to open and load
+	if( !waitforDTOpen( inTradingSymbol, retryCount, 20, 1 ) ) {			// Wait for DataTable to open and load
 		openDataTable( inTradingSymbol, retryCount+1  )
 	}
 	waitForDTData( inTradingSymbol )	
@@ -214,26 +212,19 @@ writeDTData( inAlias )														// columns expected order - TradingSymbol Ti
 	global DTWindowTitle, DTBackfillFileName	
 	
 	ControlGet, data, List, , SysListView321, %DTWindowTitle%				// Copy Data
-	WinClose, %DTWindowTitle%	 											// Close DT and Chart	
-		
-	IfExist, %DTBackfillFileName%
-	{				
-		file := FileOpen(DTBackfillFileName, "a" )	   			    		// := does not need %% for var
-		if !IsObject(file){
-			MsgBox, Can't open DT backfill file for writing.
-			Exit
-		}
-		
-		AliasText := "name=" . inAlias . "`n"
-		file.Write(AliasText)												// Append AB Scrip Name		
-		file.Write(data)							    					// Add Data
-		file.Write("`n")							    					// Add newline		
-		file.Close()		
-	}
-	else{
-		MsgBox, DT backfill file Not Found.
+	WinClose, %DTWindowTitle%	 											// Close DT and Chart		
+	
+	file := FileOpen(DTBackfillFileName, "a" )
+	if !IsObject(file){
+		MsgBox, Can't open DT backfill file for writing.
 		Exit
 	}
+		
+	AliasText := "name=" . inAlias
+	file.WriteLine(AliasText)												// Append AB Scrip Name
+	file.Write(data)							    						// Add Data
+	file.Write("`n")							    						// Add newline
+	file.Close()
 }
 
 checkPlusLoginPrompt(){

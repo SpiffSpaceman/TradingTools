@@ -11,23 +11,20 @@ SetControlDelay, -1 			// Without this ControlClick fails sometimes. Example - I
 
 //!F1:: 							// Press Alt F1 to execute
 
-
-// TODO - VWAP - HS needs extra columns for volume	- Just select correct columns - maybe can select in order?
-// TODO - VWAP - loop test
-
-
+// Index - Transparency if window covered
 // TODO - Put Keepalive for NOW. Touch every 15mins or so. Seperate ahk - SetTimer 
+
+// DT - ABBackFill - validate got all mins from open to now 
+// TODO - VWAP - Better logic to check if vwap data has been fetched 
+// 			   - Maybe do in ABBackfill - validate option and use exit code 
 
 // TODO - settings - Move to RAM drive in both, create files if not found
 // NOW on top Errors + HK problem
 	// DT open using MW shift-D fails many times when NOW is in front
 	// ** DT Scrip Not found error ** - AHK With HotKEY - Row not selected? - symbol from row is empty
 		// Click on TabBar/ Marketwatch and run using Hotkey			
-		// Maybe made worse by Shift-D problem above	
-// TODO - VWAP - Better logic to check if vwap data has been fetched 
-// 			   - Maybe do in ABBackfill - validate option and use exit code 
+		// Maybe made worse by Shift-D problem above
 // Index - x,y may fail if index list has empty space
-
 
 
 #Include Settings.ahk														// Load settings first
@@ -94,3 +91,4 @@ save(){
 
 #Include DataTable.ahk
 #Include Vwap.ahk
+#include Lib/__ExternalHeaderLib.ahk										// External Library to read Column Headers
