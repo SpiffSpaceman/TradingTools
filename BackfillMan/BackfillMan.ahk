@@ -11,8 +11,6 @@ SetControlDelay, -1 			// Without this ControlClick fails sometimes. Example - I
 
 //!F1:: 							// Press Alt F1 to execute
 
-// TODO - settings - Move to RAM drive in both
-
 // NOW on top Errors + HK problem
 	// DT open using MW shift-D fails many times when NOW is in front - try menu - pd
 	// ** DT Scrip Not found error ** - AHK With HotKEY - Row not selected? - symbol from row is empty
@@ -56,9 +54,17 @@ return
 getExpectedDataRowCount(){
 	hour 		  := A_Hour>15 ? 15 : A_Hour
 	min  		  := A_Hour>15 ? 30 : A_Min
-	ExpectedCount := (hour - 9)*60 - 15  + min
-	
+	ExpectedCount := (hour - 9)*60 + (min - 15) - 1 						// Allow 1 less minute than the expected count for border cases
+
 	return ExpectedCount
+}
+
+createFileDirectory( file_path ){											// Create File directory path if it does not exist
+	
+	SplitPath, file_path,, directory
+	
+	IfNotExist, %directory%
+		FileCreateDir, %directory%
 }
 
 clearFiles(){

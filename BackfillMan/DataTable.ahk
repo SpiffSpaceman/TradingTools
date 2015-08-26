@@ -211,6 +211,8 @@ writeDTData( inAlias )														// columns expected order - TradingSymbol Ti
 	ControlGet, data, List, , SysListView321, %DTWindowTitle%				// Copy Data
 	WinClose, %DTWindowTitle%	 											// Close DT and Chart		
 	
+	createFileDirectory( DTBackfillFileName )
+	
 	file := FileOpen(DTBackfillFileName, "a" )
 	if !IsObject(file){
 		MsgBox, Can't open DT backfill file for writing.

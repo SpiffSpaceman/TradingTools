@@ -113,6 +113,8 @@ writeVwapData( alias ){
 	ControlGet, vwapStats, List, , SysListView321, %VWAPWindowTitle%		// Copy Data into vwapStats
 	WinClose, %VWAPWindowTitle%		 										// Close HS		
 	
+	createFileDirectory( VWAPBackfillFileName )
+	
 	file := FileOpen(VWAPBackfillFileName, "a" )
 	if( !IsObject(file) ){
 		MsgBox, Can't open VWAP file for writing.
