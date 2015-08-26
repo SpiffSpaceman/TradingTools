@@ -77,9 +77,9 @@ openDataTable( inTradingSymbol, retryCount ){
 	if( !waitforDTOpen( inTradingSymbol, retryCount, 20, 1 ) ) {			// Wait for DataTable to open and load
 		openDataTable( inTradingSymbol, retryCount+1  )
 	}
-	waitForDTData( inTradingSymbol )	
 	
-	WinMinimize, %DTWindowTitle%											// Minimize after data is loaded ? check
+	waitForDTData( inTradingSymbol )	
+	WinMinimize, %DTWindowTitle% 
 }
 
 waitforDTOpen( symbol, i, maxI, waitTime  ){								// returns true if Datatable is open
@@ -102,23 +102,17 @@ waitforDTOpen( symbol, i, maxI, waitTime  ){								// returns true if Datatable
 
 waitForDTData( symbol  ){
 	global DTWindowTitle
-	
-	Loop{																	// If No Data in DataTable, wait for it. 
-		ControlSend, SysListView321, {Down 10}, %DTWindowTitle%				// Highlight a row and pick first column. Match against Trading symbol
-		ControlSend, SysListView321, {HOME},    %DTWindowTitle%
-		ControlGet,  data, List, Selected Col1, SysListView321, %DTWindowTitle%	
 		
-		if( data == symbol ){
-			break															// Found
+	ExpectedCount := getExpectedDataRowCount()								// Assuming NestPlus No of days is set to 1 day 
+																			// Still, NestPlus seems to load latest first which should also work
+	Loop {
+		ControlGet, rowCount, List, Count, SysListView321, %DTWindowTitle%
+		if( A_Index > 20 ){
+			WinRestore, %DTWindowTitle%										// sometimes data doesnt load if window is minimized ? 
 		}
-		if( A_Index == 120  ){												// Wait upto a minute for data to load
-			MsgBox, %symbol% DataTable is empty, Continuing ... 
-			break			
-		}
-		if( A_Index > 10 ){
-			WinRestore, %DTWindowTitle%										// sometimes data doesnt load if window is minimized ?
-		}
-		Sleep, 500
+		if( rowCount >= ExpectedCount )
+			break
+		Sleep 500
 	}
 }
 

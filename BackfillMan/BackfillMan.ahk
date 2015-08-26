@@ -11,14 +11,10 @@ SetControlDelay, -1 			// Without this ControlClick fails sometimes. Example - I
 
 //!F1:: 							// Press Alt F1 to execute
 
-// TODO - DT and VWAP - Better logic to check if data has been fetched
-// 		- Do in ABBackfill - validate option and use exit code 
+// TODO - settings - Move to RAM drive in both
 
-
-// TODO - settings - Move to RAM drive in both, create files if not found
-// TODO - Put Keepalive for NOW. Touch every 15mins or so. Seperate ahk - SetTimer 
 // NOW on top Errors + HK problem
-	// DT open using MW shift-D fails many times when NOW is in front
+	// DT open using MW shift-D fails many times when NOW is in front - try menu - pd
 	// ** DT Scrip Not found error ** - AHK With HotKEY - Row not selected? - symbol from row is empty
 		// Click on TabBar/ Marketwatch and run using Hotkey			
 		// Maybe made worse by Shift-D problem above
@@ -57,7 +53,13 @@ else{
 return
 
 
-
+getExpectedDataRowCount(){
+	hour 		  := A_Hour>15 ? 15 : A_Hour
+	min  		  := A_Hour>15 ? 30 : A_Min
+	ExpectedCount := (hour - 9)*60 - 15  + min
+	
+	return ExpectedCount
+}
 
 clearFiles(){
 	global VWAPBackfillFileName, DTBackfillFileName

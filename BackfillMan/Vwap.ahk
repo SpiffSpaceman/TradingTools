@@ -8,11 +8,14 @@ vwapBackFill()
 		
 		local fields := StrSplit( VWAP%A_Index% , ",")  					// Format - HS parameters 1-6,Alias
 			
-		openVwap( fields[1], fields[2], fields[3], fields[4], fields[5], fields[6] )	
+		openVwap( fields[1], fields[2], fields[3], fields[4], fields[5], fields[6] )
+		if( !IsObject( VWAPColumnIndex ) ){		 				
+			getVWAPColumnIndex()											// Check Required columns
+		}
+		waitForDataLoad()													// Wait for All data to load
 		writeVwapData( fields[7] )											// Write csv 	
 	}
 }
-
 
 
 // ------- Private --------
@@ -75,19 +78,37 @@ openVwap( inParam1,inParam2,inParam3,inParam4,inParam5,inParam6 ){
 	ControlSend,    Edit1, {Enter}, %VWAPWindowTitle%						// Request Data		
 }
 
+
+waitForDataLoad(){															// Wait for all data to load. Verifies that all data from now till 09:15 has been loaded
+	
+	global VWAPWindowTitle, VWAPColumnIndex
+	
+	ExpectedCount := getExpectedDataRowCount()
+	
+	Loop {
+		ControlGet, rowCount, List, Count, SysListView321, %VWAPWindowTitle%
+		if( rowCount >= ExpectedCount )
+			break
+		Sleep 500
+	}
+	
+	Loop {																	// Count matched, but there can be duplicates in VWAP stats - so confirm after removing duplicates
+		rowCount := 0
+		ControlGet, vwapTime, List, % "Col" . VWAPColumnIndex.start, SysListView321, %VWAPWindowTitle%				// Start Time Column only
+		Sort, vwapTime, U 																							// Sort, Remove duplicates		
+		Loop, Parse, vwapTime, `n  																					// Get Number of rows
+		{
+			rowCount++
+		}		
+		if( rowCount >= ExpectedCount )
+			break
+		Sleep 1000
+	}
+}
+
 // Columns Expected Order - Start time, O, H, L, C, V
 writeVwapData( alias ){
 	global VWAPWindowTitle, VWAPBackfillFileName, VWAPSleepTime, VWAPColumnIndex
-	
-	// Wait till all data is available
-	// Just hope that sleep time is enough to fetch all data
-	// When slow, NOW seems to fetch them in batches without necessarily a clear order. sort messes it up more
-	// Better option - Can sort and try to verify that each minute from current time till 09:15 has been fetched 		
-		
-	Sleep, %VWAPSleepTime%
-	
-	if( VWAPColumnIndex == "" )
-		getVWAPColumnIndex()
 		
 	ControlGet, vwapStats, List, , SysListView321, %VWAPWindowTitle%		// Copy Data into vwapStats
 	WinClose, %VWAPWindowTitle%		 										// Close HS		
