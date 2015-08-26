@@ -56,17 +56,22 @@ openDataTable( inTradingSymbol, retryCount ){
 	global NowWindowTitle, DTWindowTitle, TradingSymbolColIndex
 	
 	WinClose, %DTWindowTitle%	 											// Close DT If already Opened	
-	ControlGet, RowCount, List, Count, SysListView323, %NowWindowTitle%		// No of rows in MarketWatch	
-	ControlSend, SysListView323, {Home}, %NowWindowTitle%					// Start from top and search for scrip
-				
-	Loop, %RowCount%{														// Select row with our scrip		
-		ControlGet, RowSymbol, List, Selected Col%TradingSymbolColIndex%, SysListView323, %NowWindowTitle%							
-																			// Take Trading Symbol from column Number in %TradingSymbolColIndex%		
-		if( RowSymbol = inTradingSymbol ){									// and compare it with input 
-			 break
-		}
-		ControlSend, SysListView323, {Down}, %NowWindowTitle%				// Move Down to next row if not found yet
-	}		
+	
+	Loop, 3{																// Sometimes {HOME} does not work when NOW is active - try 3 times
+		ControlGet, RowCount, List, Count, SysListView323, %NowWindowTitle%		// No of rows in MarketWatch	
+		ControlSend, SysListView323, {Home 2}, %NowWindowTitle%					// Start from top and search for scrip
+					
+		Loop, %RowCount%{														// Select row with our scrip		
+			ControlGet, RowSymbol, List, Selected Col%TradingSymbolColIndex%, SysListView323, %NowWindowTitle%							
+																				// Take Trading Symbol from column Number in %TradingSymbolColIndex%		
+			if( RowSymbol = inTradingSymbol ){									// and compare it with input 
+				 break
+			}
+			ControlSend, SysListView323, {Down}, %NowWindowTitle%				// Move Down to next row if not found yet
+		}		
+		if( RowSymbol = inTradingSymbol )
+			break		
+	}
 	if ( RowSymbol != inTradingSymbol ) {
 		MsgBox, %inTradingSymbol% Not Found.
 		Exit

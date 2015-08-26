@@ -1,3 +1,5 @@
+#B:: 							; Press Win-B to execute
+
 #CommentFlag // 
 #Include %A_ScriptDir%			// Set Include Directory path 
 								// Includes behave as though the file's contents are present at this exact position
@@ -9,17 +11,10 @@ SetWorkingDir %A_ScriptDir%  	// Ensures a consistent starting directory.
 SetTitleMatchMode, 2 			// A window's title can contain the text anywhere
 SetControlDelay, -1 			// Without this ControlClick fails sometimes. Example - Index Right click fails if mouse is over NOW
 
-//!F1:: 							// Press Alt F1 to execute
-
-// NOW on top Errors + HK problem	
-	// ** DT Scrip Not found error ** - AHK With HotKEY - Row not selected? - symbol from row is empty
-	// Click on TabBar/ Marketwatch and run using Hotkey		
-
-
 // TODO
 // DT - Shift-D also causes separate d keystroke. So if Marketwatch has a scrip starting with D, it gets selected
 	// check how to avoid it.  Datatable opens correctly though, so no bug.
-// Index - x,y may fail if index list has empty space
+// Index - x,y click may fail if index list has  multiple indices and big empty space 
 
 
 #Include Settings.ahk														// Load settings first
