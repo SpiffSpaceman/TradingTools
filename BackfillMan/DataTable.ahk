@@ -15,7 +15,7 @@ dtBackFill(){
 		local fields := StrSplit( DT%A_Index% , ",")  						// Format - TradingSymbol,Alias
 				
 		openDataTable( fields[1], 0 )		
-		writeDTData( fields[2] )			
+		writeDTData( fields[2] )
 	}	
 }
 
@@ -72,9 +72,10 @@ openDataTable( inTradingSymbol, retryCount ){
 		Exit
 	}	
 		
-	ControlSend, SysListView323, {Shift}D, %NowWindowTitle%					// At this point row should be selected. Open Data Table with shift-d	
-		
-	if( !waitforDTOpen( inTradingSymbol, retryCount, 20, 1 ) ) {			// Wait for DataTable to open and load
+	ControlSend, SysListView323, {Shift Down}d{Shift Up}, %NowWindowTitle%  // At this point row should be selected. Open Data Table with shift-d 		
+																			// Note - This also selects scrip starting with d in MW. Check 
+	
+	if( !waitforDTOpen( inTradingSymbol, retryCount, 5, 5 ) ) {				// Wait for DataTable to open and load
 		openDataTable( inTradingSymbol, retryCount+1  )
 	}
 	
@@ -106,12 +107,22 @@ waitForDTData( symbol  ){
 	ExpectedCount := getExpectedDataRowCount()								// Assuming NestPlus No of days is set to 1 day 
 																			// Still, NestPlus seems to load latest first which should also work
 	Loop {
-		ControlGet, rowCount, List, Count, SysListView321, %DTWindowTitle%
+		ControlGet, rowCount, List, Count, SysListView321, %DTWindowTitle% 
+	
+		if( rowCount >= ExpectedCount ){
+			break
+		}		
 		if( A_Index > 20 ){
 			WinRestore, %DTWindowTitle%										// sometimes data doesnt load if window is minimized ? 
 		}
-		if( rowCount >= ExpectedCount )
+		if( A_Index >= 40 && rowCount >= (ExpectedCount-5) ){				// Allow upto 5 missing minutes
 			break
+		}
+		if( A_Index > 120  ){
+			MsgBox, DT does not have all data. Timeout.
+			Exit
+		}				
+		
 		Sleep 500
 	}
 }
@@ -158,7 +169,7 @@ openIndexDataTable( inIndexSymbol ){
 		ControlClick, Static7, 		%NowWindowTitle%,, RIGHT,,NA			// Open Datatable 
 		ControlSend,  Static7, {D}, %NowWindowTitle%	
 	}
-	Until waitforDTOpen( inIndexSymbol, A_Index, 4, 5 )						// Check every 5 seconds upto 4 times
+	Until waitforDTOpen( inIndexSymbol, A_Index, 5, 5 )						// Check upto 5 times. Check every 5 seconds
 
 	waitForDTData( inIndexSymbol )
 	WinMinimize, %DTWindowTitle%

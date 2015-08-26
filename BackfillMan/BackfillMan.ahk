@@ -11,11 +11,14 @@ SetControlDelay, -1 			// Without this ControlClick fails sometimes. Example - I
 
 //!F1:: 							// Press Alt F1 to execute
 
-// NOW on top Errors + HK problem
-	// DT open using MW shift-D fails many times when NOW is in front - try menu - pd
+// NOW on top Errors + HK problem	
 	// ** DT Scrip Not found error ** - AHK With HotKEY - Row not selected? - symbol from row is empty
-		// Click on TabBar/ Marketwatch and run using Hotkey			
-		// Maybe made worse by Shift-D problem above
+	// Click on TabBar/ Marketwatch and run using Hotkey		
+
+
+// TODO
+// DT - Shift-D also causes separate d keystroke. So if Marketwatch has a scrip starting with D, it gets selected
+	// check how to avoid it.  Datatable opens correctly though, so no bug.
 // Index - x,y may fail if index list has empty space
 
 
@@ -53,9 +56,9 @@ return
 
 getExpectedDataRowCount(){
 	hour 		  := A_Hour>15 ? 15 : A_Hour
-	min  		  := A_Hour>15 ? 30 : A_Min
-	ExpectedCount := (hour - 9)*60 + (min - 15) - 1 						// Allow 1 less minute than the expected count for border cases
-
+	min  		  := (A_Hour>15 || (A_Hour==15 && A_Min>30) ) ? 30 : A_Min
+	ExpectedCount := (hour - 9)*60 + (min - 15) -1							// Allow 1 less minute for border case - 
+																			// Minute changes between data fetch and call to getExpectedDataRowCount() 
 	return ExpectedCount
 }
 
