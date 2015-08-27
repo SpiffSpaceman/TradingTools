@@ -1,1 +1,1 @@
-START AHK/AutoHotkey.exe BackfillMan.ahk
+START ./../AHK/AutoHotkey.exe BackfillMan.ahk

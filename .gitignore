@@ -30,7 +30,7 @@ errorLog.txt
 
 # BackfillMan - Ignore ABBackFill, AHK Binaries
 BackfillMan/ABBackFill/
-BackfillMan/AHK/
+AHK/
 BackfillMan/SciTE.lnk
 
 # BackfillMan - External Header - License unclear
