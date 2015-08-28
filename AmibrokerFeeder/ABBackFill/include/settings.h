@@ -17,6 +17,7 @@ public:
     bool          is_skip_open_minute;
     bool          is_skip_volume;
     bool          is_intraday_mode;    
+    bool          is_eod_tickmode;
 
     void loadSettings();
 };

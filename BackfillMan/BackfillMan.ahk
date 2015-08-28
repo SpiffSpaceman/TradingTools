@@ -107,4 +107,6 @@ PingNOW(){
 #Include Settings.ahk
 #Include DataTable.ahk
 #Include Vwap.ahk
-#include Lib/__ExternalHeaderLib.ahk										// External Library to read Column Headers
+
+#CommentFlag ;
+#include Lib/__ExternalHeaderLib.ahk										; External Library to read Column Headers

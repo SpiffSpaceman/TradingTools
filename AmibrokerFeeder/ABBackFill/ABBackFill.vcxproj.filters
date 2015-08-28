@@ -19,6 +19,7 @@
     <None Include="backfill.format" />
     <None Include="VWAP.txt" />
     <None Include="DataTable.txt" />
+    <None Include="backfillTick.format" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\main.cpp">
@@ -27,16 +28,16 @@
     <ClCompile Include="source\stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\RTDMan\source\amibroker_feed.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\RTDMan\source\misc_util.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="source\reader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\settings.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\RTDMan\source\amibroker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\RTDMan\source\util.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -47,16 +48,16 @@
     <ClInclude Include="include\targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\RTDMan\include\amibroker_feed.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\RTDMan\include\misc_util.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\reader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\settings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\RTDMan\include\amibroker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\RTDMan\include\util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

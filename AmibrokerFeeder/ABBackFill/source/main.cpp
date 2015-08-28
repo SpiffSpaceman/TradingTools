@@ -7,7 +7,8 @@
 #include "util.h"
 #include <iostream>
 
-// TODO - Volume only if no quote in minute else find empty second and update extremes with 0 volume.  
+// TODO - Volume only if no quote in minute else find empty second and update extremes with 0 volume. 
+    // Delete second quotes, just leave last 30 mins ( configurable ) 
     // Remove Volume Skip option
     // Open Minute - Still import if no data in AB and volume available
 
@@ -22,10 +23,13 @@ int _tmain(int argc, _TCHAR* argv[]){
         Settings settings;
         settings.loadSettings();        
 
+        // TickMode - Overwrite todays data with 1 min bars after market hours
+        bool is_tickmode = settings.is_eod_tickmode && Util::getTime() > settings.close_minute;
+
         // Read Input and convert to CSV
-        Reader reader( settings );     
-        bool vwap = reader.parseVWAPToCsv     ( ) ;
-        bool dt   = reader.parseDataTableToCsv( ) ;
+        Reader reader( settings, is_tickmode );     
+        bool vwap = reader.parseVWAPToCsv     () ;
+        bool dt   = reader.parseDataTableToCsv() ;
         reader.closeOutput();
 
         if( !vwap && !dt ){
@@ -36,10 +40,12 @@ int _tmain(int argc, _TCHAR* argv[]){
         //std::cout << "CSV Creation Time:" << ((finish.QuadPart - start.QuadPart) / (double)freq.QuadPart) << std::endl;
 
         // send CSV to AB
-        Amibroker AB( settings.ab_db_path, settings.csv_file_path, "backfill.format"); 
-        AB.import();        
+        std::string format = is_tickmode ? "backfillTick.format" : "backfill.format" ;
+                
+        Amibroker AB( settings.ab_db_path, settings.csv_file_path, format );
+        AB.import();
         AB.refreshAll();
-        AB.saveDB();       
+        AB.saveDB();
 
         std::cout << "Done" << std::endl ;
     }    

@@ -202,6 +202,7 @@ closeNestPlusChart(){
 		WinSet, Transparent, 1, %NowWindowTitle%							// 0 seems to have extra side effects, Window gets minimized?
 		WinGetTitle, currentWindow, A 										// Save active window	
 		WinActivate, %NowWindowTitle%	
+		hidden := true
 	}
 	SetTitleMatchMode, 2
 	
@@ -209,7 +210,7 @@ closeNestPlusChart(){
 	Click %ClickX%, %ClickY% 		
 	Sleep, 50																// Wait for click to work.
 
-	if( currentWindow != "" ){
+	if( hidden == true ){
 		WinActivate, %currentWindow%										// restore active window		
 		WinSet, Transparent, 255, %NowWindowTitle%		
 	}

@@ -102,6 +102,7 @@ del *.bat</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <None Include="backfillTick.format" />
     <None Include="settings.ini" />
     <None Include="DataTable.txt" />
     <None Include="VWAP.txt" />
@@ -114,6 +115,11 @@ del *.bat</Command>
   </ItemGroup>
   <ItemGroup>
     <Content Include="backfill.format">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="backfillTick.format">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
