@@ -10,7 +10,8 @@
 // TODO - Volume only if no quote in minute else find empty second and update extremes with 0 volume. 
     // Delete second quotes, just leave last 30 mins ( configurable ) 
     // Remove Volume Skip option
-    // Open Minute - Still import if no data in AB and volume available
+    // Open Minute - Still import if no data in AB and volume available    
+// Or alternately - save quotes in RTDman, use $TICKMODE 1 backfill, recreate last 30 min data with saved ticks+backfill data
 
 int _tmain(int argc, _TCHAR* argv[]){
 
@@ -45,7 +46,7 @@ int _tmain(int argc, _TCHAR* argv[]){
         Amibroker AB( settings.ab_db_path, settings.csv_file_path, format );
         AB.import();
         AB.refreshAll();
-        AB.saveDB();
+        // AB.saveDB();                         // Save is called by ~Amibroker
 
         std::cout << "Done" << std::endl ;
     }    

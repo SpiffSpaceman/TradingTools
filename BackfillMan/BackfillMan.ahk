@@ -11,6 +11,7 @@ SetControlDelay, -1 														// Without this ControlClick fails sometimes. 
 
 loadSettings()																// Load settings for Timer before hotkey install
 SetTimer, PingNOW, %PingerPeriod% 											// Install Keep Alive Timer 
+installEOD()																// Install Timer for EOD backfill once
 #B:: 							 							 				// Press Win-B to execute
 
 // TODO
@@ -20,36 +21,40 @@ SetTimer, PingNOW, %PingerPeriod% 											// Install Keep Alive Timer
 
 
 loadSettings()																// Reload settings
-
-IfWinExist, %NowWindowTitle%
-{	
-	global Mode, DoIndex	
-	
-	IfWinExist, Session Expired, E&xitNOW
-	{
-		MsgBox, NOW Locked.
-		Exit
-	}
-	
-	clearFiles()
-	
-	if( Mode = "DT" ){
-		dtBackFill()		
-	}
-	else if( Mode = "VWAP" )  {	
-		vwapBackFill()
-	}	
-	if( DoIndex = "Y"){
-		indexBackFill()
-	}
-	
-	save()
-}
-else{
-	MsgBox, NOW not found.
-}
+installEOD()																// Update EOD Timer
+DoBackfill( Mode, DoIndex )
 return
 
+DoBackfill( inMode, inDoIndex	){
+	
+	global NowWindowTitle
+	
+	IfWinExist, %NowWindowTitle%
+	{			
+		IfWinExist, Session Expired, E&xitNOW
+		{
+			MsgBox, NOW Locked.
+			Exit
+		}
+		
+		clearFiles()
+		
+		if( inMode = "DT" ){
+			dtBackFill()		
+		}
+		else if( inMode = "VWAP" )  {	
+			vwapBackFill()
+		}	
+		if( inDoIndex = "Y"){
+			indexBackFill()
+		}
+		
+		save()
+	}
+	else{
+		MsgBox, NOW not found.
+	}
+}
 
 getExpectedDataRowCount(){
 	hour 		  := A_Hour>15 ? 15 : A_Hour
@@ -102,6 +107,27 @@ PingNOW(){
 	{		
 		ControlClick, Button10, %NowWindowTitle%,, LEFT,,NA					// Just click on Button10  ( First INT status Button ) 
 	}
+}
+installEOD(){
+	global EODBackfillTriggerTime	
+	
+	targetTime  := StrSplit( EODBackfillTriggerTime, ":") 	
+	timeLeft	:= (targetTime[1] - A_Hour)*60 + ( targetTime[2] - A_Min )	// Time left to Trigger EOD Backfill in mins
+	
+	if( timeLeft > 0 ){
+		SetTimer, EODBackfill, % (timeLeft * 60 * -1000 )					// -ve Period => Run only once
+	}
+	else{
+		SetTimer, EODBackfill, Delete
+	}
+}
+EODBackfill(){
+	MsgBox, 4,, Do EOD Backfill ?
+	IfMsgBox Yes
+	{
+		eodMode :=  Mode == "DT" ? "DT" : "VWAP"
+		DoBackfill( eodMode, "Y" )
+	}		
 }
 
 #Include Settings.ahk

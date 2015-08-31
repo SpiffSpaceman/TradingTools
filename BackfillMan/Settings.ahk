@@ -9,11 +9,12 @@ loadSettings(){
 	IniRead, DTWindowTitle,   Settings.ini, BackfillMan, DTWindowTitle
 	IniRead, VWAPWindowTitle, Settings.ini, BackfillMan, VWAPWindowTitle	
 
-	IniRead, BackfillExePath,      Settings.ini, BackfillMan, BackfillExePath
-	IniRead, BackfillExe,  		   Settings.ini, BackfillMan, BackfillExe
-	IniRead, DTBackfillFileName,   Settings.ini, BackfillMan, DTBackfillFileName
-	IniRead, VWAPBackfillFileName, Settings.ini, BackfillMan, VWAPBackfillFileName
-
+	IniRead, BackfillExePath,        Settings.ini, BackfillMan, BackfillExePath
+	IniRead, BackfillExe,  		     Settings.ini, BackfillMan, BackfillExe
+	IniRead, DTBackfillFileName,     Settings.ini, BackfillMan, DTBackfillFileName
+	IniRead, VWAPBackfillFileName,   Settings.ini, BackfillMan, VWAPBackfillFileName
+	IniRead, EODBackfillTriggerTime, Settings.ini, BackfillMan, EODBackfillTriggerTime
+	
 	IniRead, value, Settings.ini, BackfillMan, PingerPeriod	
 	PingerPeriod  :=  value * 60 * 1000										// Mins to ms	
 

@@ -7,14 +7,13 @@
 
 
 // TODO
+    // Change month in future / options scrips if cannot connect + detect last thrusday has passed + check current date month + setting to enable
+    
     // Bell - Change wav + in project 
 	// Bug - Negative Volume ? 
 		// Atleast set volume to 0. Currently check for ==0 but not <0
 		// Maybe Current Volume not set - Not passed by RTD? 
-
-	// Change month in future / options scrips if cannot connect + detect last thrusday has passed + check current date month + setting to enable 
-    // Filter out quotes outside open and close time    
-	// Check direct call using quotations api - No need for csv, ram drive 		
+    // Check direct call using quotations api - No need for csv, ram drive
 	
         
 	
