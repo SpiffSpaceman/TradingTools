@@ -8,6 +8,8 @@
 #include <iostream>
 
 // TODO - Volume only if no quote in minute else find empty second and update extremes with 0 volume. 
+	// Or If Extremes of a minute match already + enough quotes in a minute - skip?
+	// and if diff, just take the highest and lowest tick bars and extend them 
     // Delete second quotes, just leave last 30 mins ( configurable ) 
     // Remove Volume Skip option
     // Open Minute - Still import if no data in AB and volume available    

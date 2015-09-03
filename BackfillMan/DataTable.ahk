@@ -92,7 +92,16 @@ waitforDTOpen( symbol, i, maxI, waitTime  ){								// returns true if Datatable
 	global DTWindowTitle
 	
 	SetTitleMatchMode, RegEx
-	WinWait, %DTWindowTitle%.*%symbol%,, %waitTime%							// Wait 1 second for Data Table to open - Look for DTWindowTitle and Scrip name
+	
+	WinWait, %DTWindowTitle%.*%symbol%,, 1									// Wait for Data Table to open - Look for DTWindowTitle and Scrip name
+	IfWinExist, Update Holdings/Collateral									// Workaround fix - When NOW is active, sometimes opening DT also opens Update Holdings
+	{																			// So close it. Check why this opens
+		WinClose, Update Holdings/Collateral
+		SetTitleMatchMode, 2
+		return false
+	}
+	WinWait, %DTWindowTitle%.*%symbol%,, % (waitTime-1)
+	
 	SetTitleMatchMode, 2													// If not opened, we will call openDataTable again
 		
 	if ErrorLevel {															// Sometimes shortcut does not work with NOW focussed , try again
@@ -102,7 +111,8 @@ waitforDTOpen( symbol, i, maxI, waitTime  ){								// returns true if Datatable
 			Exit
 		}		
 		return false
-	}	
+	}
+	
 	return true
 }
 
