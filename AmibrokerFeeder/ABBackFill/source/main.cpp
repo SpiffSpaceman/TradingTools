@@ -7,6 +7,9 @@
 #include "util.h"
 #include <iostream>
 
+// TODO - Allow overriding ini parameters using input args. param=value.
+	// put args key value in map. Use common funtion in settings.ini to check args before ini.
+
 // TODO - Volume only if no quote in minute else find empty second and update extremes with 0 volume. 
 	// Or If Extremes of a minute match already + enough quotes in a minute - skip?
 	// and if diff, just take the highest and lowest tick bars and extend them 

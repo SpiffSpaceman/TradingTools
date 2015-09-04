@@ -122,6 +122,8 @@ installEOD(){
 	}
 }
 EODBackfill(){
+	global Mode
+	
 	MsgBox, 4,, Do EOD Backfill ?
 	IfMsgBox Yes
 	{
