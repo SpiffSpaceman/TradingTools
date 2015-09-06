@@ -130,9 +130,11 @@ waitForDTData( symbol  ){
 		if( A_Index > 20 ){
 			WinRestore, %DTWindowTitle%										// sometimes data doesnt load if window is minimized ? 
 		}
+		/*
 		if( A_Index >= 40 && rowCount >= (ExpectedCount-5) ){				// Allow upto 5 missing minutes
 			break
 		}
+		*/
 		if( A_Index > 120  ){
 			MsgBox, DT does not have all data. Timeout.
 			Exit

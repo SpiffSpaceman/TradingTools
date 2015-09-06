@@ -14,6 +14,8 @@ loadSettings(){
 	IniRead, DTBackfillFileName,     Settings.ini, BackfillMan, DTBackfillFileName
 	IniRead, VWAPBackfillFileName,   Settings.ini, BackfillMan, VWAPBackfillFileName
 	IniRead, EODBackfillTriggerTime, Settings.ini, BackfillMan, EODBackfillTriggerTime
+	IniRead, HKBackfill, 			 Settings.ini, BackfillMan, HKBackfill
+	IniRead, HKFlattenTL, 			 Settings.ini, BackfillMan, HKFlattenTL
 	
 	IniRead, value, Settings.ini, BackfillMan, PingerPeriod	
 	PingerPeriod  :=  value * 60 * 1000										// Mins to ms	

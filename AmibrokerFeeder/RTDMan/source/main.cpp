@@ -9,10 +9,18 @@
 // TODO
     // Change month in future / options scrips if cannot connect + detect last thrusday has passed + check current date month + setting to enable
     
+    
+    // RTD Callback - Use array and construct bars in AB thread
+        // More accurate mins - some data gets shifter now
+        // Immediate update - use events instead of sleep. Manage minute change
+        // Integrate with backfill - IPC call input, another thread - Use TICKMODE backfill + reconstruct last ~30 mins with rtd+backfill data
+            // If extremes mismatch, update Highest and lowest ticks with backfill extreme as an approximation
+            // For each minute, if no rtd bars - use backfill bar with volume. But, RTD may have that volume pushed to future mins?            
+            
     // Bell - Change wav + in project 
-	// Bug - Negative Volume ? 
-		// Atleast set volume to 0. Currently check for ==0 but not <0
-		// Maybe Current Volume not set - Not passed by RTD? 
+    // Bug - Negative Volume ? 
+            // Atleast set volume to 0. Currently check for ==0 but not <0
+            // Maybe Current Volume not set - Not passed by RTD? 
     // Check direct call using quotations api - No need for csv, ram drive
 	
         
