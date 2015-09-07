@@ -31,8 +31,8 @@ errorLog.txt
 # BackfillMan - Ignore ABBackFill, AHK Binaries
 BackfillMan/ABBackFill/
 AHK/
-BackfillMan/SciTE.lnk
 
-# BackfillMan - External Header - License unclear
+# External Header - License unclear
 BackfillMan/Lib/__ExternalHeaderLib.ahk
+OrderMan/Lib/__ExternalHeaderLib.ahk
 

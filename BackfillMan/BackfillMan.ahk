@@ -14,6 +14,7 @@ SetControlDelay, -1 														// Without this ControlClick fails sometimes. 
 // DT - Shift-D also causes separate d keystroke. So if Marketwatch has a scrip starting with D, it gets selected
 //		check how to avoid it.  Datatable opens correctly though, so no bug
 // Index - x,y click may fail if index list has  multiple indices and big empty space 
+// Index - check count after removing useless entries
 
 
 loadSettings()																// Load settings for Timer before hotkey install

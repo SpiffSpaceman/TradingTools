@@ -1,0 +1,16 @@
+
+load Open and Completed Orders in internal array
+	limitOrder() - before sending entry order, check if order already exists - check open orders
+	limitOrder() - Verify order sent before sending stop
+	limitOrder() - before sending entry order, check current status of Completed Orders, list of order ids. New order after here is ours
+
+
+
+
+
+limitOrder() - Set OrderTypes
+SubmitOrder()- verify Filled order fields after filling detail
+Move to settings
+Setting to disable automatic Submission. Dont send {ENTER}
+input validation
+Release scrip/order objects if created in loop/ global 
