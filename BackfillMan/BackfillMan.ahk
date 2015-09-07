@@ -36,6 +36,8 @@ installHotKeys(){
 }
 
 hkBackfill(){
+	global  Mode, DoIndex
+	
 	loadSettings()															// Reload settings
 	installEOD()															// Update EOD Timer
 	DoBackfill( Mode, DoIndex )	
