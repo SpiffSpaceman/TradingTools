@@ -1,3 +1,20 @@
+/*
+  Copyright (C) 2014  SpiffSpaceman
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>
+*/
+
 #CommentFlag // 
 #Include %A_ScriptDir%														// Set Include Directory path
 #SingleInstance force														// Reloads if already running
@@ -8,34 +25,26 @@ SetWorkingDir %A_ScriptDir%  												// Ensures a consistent starting direct
 SetTitleMatchMode, 2 														// A window's title can contain the text anywhere
 SetControlDelay, -1 														// Without this ControlClick fails sometimes
 
-NowWindowTitle	= NOW 1.13
-executeOrders()
+TITLE_NOW		 := "NOW 1.13"												// window titles
+TITLE_ORDER_BOOK := "Order Book -"
+TITLE_BUY		 :=	"Buy Order Entry"
+TITLE_SELL		 := "Sell Order Entry"
+TITLE_TRANSACTION_PASSWORD := "Transaction Password"
+
+loadSettings()
+createGUI()
+readOrderBook()
 return
 
 
-executeOrders(){
+executeOrder( ){
+	global EntryPrice, StopTrigger, Direction, Qty, ProdType, Scrip
 	
-	direction	:= "B"
-	entryPrice  := 7000
-	stopTrigger	:= 6990
-
-
-
-	/////////////////////////////////////////////////////////////////////////	
-	qty			:= 25
-	scrip 		:= getScrip("NFO", "FUTIDX", "NIFTY", "XX","","1" )
-	prodType	:= "NRML"
+	entryOrder	:= getOrder("", Qty, EntryPrice, 0,	 	      ProdType  )
+	stopOrder   := getOrder("", Qty, 0,  	     StopTrigger, ProdType  )	
 	
-	
-	entryOrder	:= getOrder("LIMIT", qty, entryPrice, 0,	   	   prodType  )
-	stopOrder   := getOrder("SL-M",  qty, 0,  	      stopTrigger, prodType  )	
-	
-	limitOrder( direction, scrip, entryOrder, stopOrder )
+	limitOrder( Direction, Scrip, entryOrder, stopOrder )
 }
-
- 
- 
-
 
 
 getScrip( segment, instrument, symbol, type, strikePrice, expiryIndex ){
@@ -60,10 +69,16 @@ getOrder( orderType, qty, price, triggerprice, prodType   ){
 	
 	return order
 }
+isNumber( str ) {
+	if str is number
+		return true	
+	return false
+}
 
-
+#include Settings.ahk
 #include OrderSubmitter.ahk
 #include OrderTracker.ahk
+#include OrderManGui.ahk
 
 #CommentFlag ;
 #include Lib/__ExternalHeaderLib.ahk										; External Library to read Column Headers

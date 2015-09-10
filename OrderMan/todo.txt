@@ -1,16 +1,56 @@
 
-load Open and Completed Orders in internal array
-	limitOrder() - before sending entry order, check if order already exists - check open orders
-	limitOrder() - Verify order sent before sending stop
-	limitOrder() - before sending entry order, check current status of Completed Orders, list of order ids. New order after here is ours
+
+Trailing Stops
+	- check if order id -1 + check if order id is open
+	- Select order id if not linked
+	- Get order id + modify	
 
 
 
 
 
-limitOrder() - Set OrderTypes
-SubmitOrder()- verify Filled order fields after filling detail
-Move to settings
-Setting to disable automatic Submission. Dont send {ENTER}
-input validation
-Release scrip/order objects if created in loop/ global 
+
+
+Link open orders - on restart / manually
+Allow Entry/Stop modification
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-----------------------------------------------------------------------------------------
+
+SubmitOrder() - verify Filled order fields after filling detail
+Partial Stop orders - Modify Size as Entry gets filled 
+Track completed orders - update status for entry/stop orders 
+
+AB integration
+	Pick default values from AB
+	Limit order - check price against current price	
+orderbook open - ensure no filters?
+Open GUI in last saved location - save to settings, use WinGetPos + set in Gui, Show
+Cancel Order
+Other Entry Order types - SL/SLM, Market?
+Option for Stop orders - SL vs SLM
+Multiple Orders
+Multiple scrips?
+target orders
