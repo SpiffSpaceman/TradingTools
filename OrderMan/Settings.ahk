@@ -19,15 +19,15 @@ loadSettings(){
 	
 	local value												// All variables global by default
 	
-	IniRead, Qty, 	  		    settings.ini, OrderMan, Qty
-	IniRead, ProdType, 		    settings.ini, OrderMan, ProdType
-    IniRead, DefaultStopSize,	settings.ini, OrderMan, DefaultStopSize
-    IniRead, MaxStopSize,   	settings.ini, OrderMan, MaxStopSize
+	IniRead, Qty, 	  		    OrderMan.ini, OrderMan, Qty
+	IniRead, ProdType, 		    OrderMan.ini, OrderMan, ProdType
+    IniRead, DefaultStopSize,	OrderMan.ini, OrderMan, DefaultStopSize
+    IniRead, MaxStopSize,   	OrderMan.ini, OrderMan, MaxStopSize
     
-    IniRead, value, settings.ini, OrderMan, AutoSubmit
+    IniRead, value, OrderMan.ini, OrderMan, AutoSubmit
     AutoSubmit   := value=="true"
         
-    IniRead, value,	settings.ini, OrderMan, Scrip    
+    IniRead, value,	OrderMan.ini, OrderMan, Scrip    
 	local fields := StrSplit( value , ",")
 	Scrip  		 := getScrip(fields[1], fields[2], fields[3], fields[4], fields[5], fields[6] )
 }

@@ -15,11 +15,11 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="settings.ini" />
     <None Include="backfill.format" />
     <None Include="VWAP.txt" />
     <None Include="DataTable.txt" />
     <None Include="backfillTick.format" />
+    <None Include="ABBackFill.ini" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\main.cpp">

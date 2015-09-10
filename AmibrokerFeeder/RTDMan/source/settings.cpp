@@ -2,16 +2,23 @@
 #include "settings.h"
 #include "util.h"
 
-void Settings::loadSettings(){
-    
-    rtd_server_prog_id    = Util::getINIString("RTDServerProgID");     
-    bar_period            = Util::getINIInt   ("BarPeriod");
-    csv_path              = Util::getINIString("CSVFolderPath"); 
-    bell_wait_time        = Util::getINIInt   ("BellWaitTime"); 
-    ab_db_path            = Util::getINIString("AbDbPath");
+std::string Settings::getINIString( const char *key ){
+    return Util::getINIString(".\\RTDMan.ini", "RTDMan", key );
+}
+int Settings::getINIInt( const char *key ){
+    return Util::getINIInt(".\\RTDMan.ini", "RTDMan", key );
+}
 
-    open_time             = Util::getINIString("OpenTime");     
-    close_time            = Util::getINIString("CloseTime");         	   
+void Settings::loadSettings(){
+
+    rtd_server_prog_id    = getINIString("RTDServerProgID");     
+    bar_period            = getINIInt   ("BarPeriod");
+    csv_path              = getINIString("CSVFolderPath"); 
+    bell_wait_time        = getINIInt   ("BellWaitTime"); 
+    ab_db_path            = getINIString("AbDbPath");
+
+    open_time             = getINIString("OpenTime");     
+    close_time            = getINIString("CloseTime");         	   
 
     no_of_scrips          = 0 ;    
 
@@ -27,7 +34,7 @@ void Settings::loadSettings(){
     
     while(1){
         scrip_key    = "Scrip";  scrip_key.append( std::to_string( (long long)no_of_scrips+1 ) );
-        scrip_value  = Util::getINIString( scrip_key.c_str() ) ;
+        scrip_value  = getINIString( scrip_key.c_str() ) ;
 
         if(scrip_value.empty()){                                             // No more Scrips left
             if( no_of_scrips == 0 ){

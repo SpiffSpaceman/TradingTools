@@ -100,12 +100,12 @@ del *.bat</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <None Include="settings.ini" />
+    <None Include="RTDMan.ini" />
     <None Include="rtd.format" />
     <None Include="RTDManStartHighPriority.bat" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="settings.ini">
+    <Content Include="RTDMan.ini">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

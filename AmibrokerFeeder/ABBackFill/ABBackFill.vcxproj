@@ -103,13 +103,13 @@ del *.bat</Command>
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="backfillTick.format" />
-    <None Include="settings.ini" />
+    <None Include="ABBackFill.ini" />
     <None Include="DataTable.txt" />
     <None Include="VWAP.txt" />
     <None Include="backfill.format" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="settings.ini">
+    <Content Include="ABBackFill.ini">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

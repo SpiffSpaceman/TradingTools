@@ -75,8 +75,8 @@ hkFlatTrendLine(){															// Sets End price = Start price for trend line 
 		WinWait, Properties, Start Y:, 1
 		WinSet,Transparent, 1, Properties, Start Y:
 		
-		ControlGet, endPrice, Line, 1, Edit2, Properties, Start Y:		// Copy End Price into Start Price and press enter
-		ControlSetText, Edit1, %endPrice%, Properties, Start Y:
+		ControlGet, price, Line, 1, Edit1, Properties, Start Y:				// Copy Start Price into End Price and press enter
+		ControlSetText, Edit2, %price%, Properties, Start Y:
 		ControlSend, Edit2, {Enter}, Properties, Start Y:
 	}	
 }

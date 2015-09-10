@@ -20,6 +20,10 @@ public:
     bool          is_eod_tickmode;
 
     void loadSettings();
+
+private:
+    static std::string     getINIString( const char *key );
+    static int             getINIInt   ( const char *key );
 };
 
 

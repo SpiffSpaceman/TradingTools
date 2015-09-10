@@ -15,9 +15,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="settings.ini" />
     <None Include="rtd.format" />
     <None Include="RTDManStartHighPriority.bat" />
+    <None Include="RTDMan.ini" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\rtd_callback.h">

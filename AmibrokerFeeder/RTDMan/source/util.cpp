@@ -70,17 +70,17 @@ std::string Util::getString( const VARIANT &var ){
 } 
 
 
-std::string Util::getINIString( const char * key, const char *app_name){
+std::string Util::getINIString(  const char *ini, const char *section, const char *key ){
         
     char buffer[512];
-    GetPrivateProfileStringA( app_name, key, "", buffer, 512,".\\settings.ini");
+    GetPrivateProfileStringA( section, key, "", buffer, 512, ini);
 
     return std::string(buffer);
 }
 
-int Util::getINIInt( const char * key, const char *app_name ){
+int Util::getINIInt( const char *ini, const char *section, const char *key ){
             
-    return GetPrivateProfileIntA( app_name, key, 0  , ".\\settings.ini");        
+    return GetPrivateProfileIntA( section, key, 0  , ini );        
 }
 
 

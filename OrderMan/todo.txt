@@ -35,13 +35,12 @@ Allow Entry/Stop modification
 
 
 
-
-
 -----------------------------------------------------------------------------------------
-
+Some indication that orders are linked, and their status
 SubmitOrder() - verify Filled order fields after filling detail
 Partial Stop orders - Modify Size as Entry gets filled 
 Track completed orders - update status for entry/stop orders 
+	
 
 AB integration
 	Pick default values from AB

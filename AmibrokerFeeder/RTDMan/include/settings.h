@@ -30,6 +30,10 @@ public:
 
     std::vector<Scrip> scrips_array;                                      // RTD Topics for each scrip
     int                no_of_scrips;
+
+private:
+    static std::string     getINIString( const char *key );
+    static int             getINIInt   ( const char *key );
 };
 
 
