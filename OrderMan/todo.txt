@@ -1,18 +1,26 @@
+Test - isEntryComplete(), validation error if trailing above price
 
+
+Order window - keep on top
 
 Trailing Stops
-	- check if order id -1 + check if order id is open
-	- Select order id if not linked
-	- Get order id + modify	
+	- check if order id -1	- Allow linking to Stop order
+	- verify current order details on open	
 
 
-
-
-
-
-
-Link open orders - on restart / manually
+Link orders - on restart / manually
+	Update GUI prices
+	Entry to both open/completed.
+	Stop to open only	
 Allow Entry/Stop modification
+	- Same logic for Entry change - Allow change if open
+
+
+
+
+
+
+
 
 
 
@@ -36,7 +44,8 @@ Allow Entry/Stop modification
 
 
 -----------------------------------------------------------------------------------------
-Some indication that orders are linked, and their status
+update orders on completion - unlink, set objects as -1
+Some indication that orders are linked, and their status 
 SubmitOrder() - verify Filled order fields after filling detail
 Partial Stop orders - Modify Size as Entry gets filled 
 Track completed orders - update status for entry/stop orders 
@@ -50,6 +59,6 @@ Open GUI in last saved location - save to settings, use WinGetPos + set in Gui, 
 Cancel Order
 Other Entry Order types - SL/SLM, Market?
 Option for Stop orders - SL vs SLM
-Multiple Orders
+Multiple Orders?
 Multiple scrips?
 target orders

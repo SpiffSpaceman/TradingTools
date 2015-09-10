@@ -37,14 +37,21 @@ readOrderBook()
 return
 
 
-executeOrder( ){
+entryOrder( ){
 	global EntryPrice, StopTrigger, Direction, Qty, ProdType, Scrip
 	
 	entryOrder	:= getOrder("", Qty, EntryPrice, 0,	 	      ProdType  )
-	stopOrder   := getOrder("", Qty, 0,  	     StopTrigger, ProdType  )	
+	stopOrder   := getOrder("", Qty, 0,  	     StopTrigger, ProdType  )
 	
 	limitOrder( Direction, Scrip, entryOrder, stopOrder )
 }
+trailSLOrder(){
+	global StopTrigger, Qty, ProdType, Scrip
+	
+	stopOrder  := getOrder("", Qty, 0, StopTrigger, ProdType  )	
+	trailOrder( Scrip, stopOrder )
+}
+
 
 
 getScrip( segment, instrument, symbol, type, strikePrice, expiryIndex ){

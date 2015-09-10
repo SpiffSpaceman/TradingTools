@@ -26,28 +26,49 @@ limitOrder( direction, scrip, entry, stop ){
 	if ( !checkOpenOrderEmpty() )
 		return
 	
-	entryOrderNOW := orderCommon(direction, scrip, entry)
+	entryOrderNOW := newOrderCommon(direction, scrip, entry)
 	
 	if( ! IsObject(entryOrderNOW)  )
 		return
 	
-	stopOrderNOW  := orderCommon(direction == "B" ? "S" : "B", scrip, stop)
+	stopOrderNOW  := newOrderCommon(direction == "B" ? "S" : "B", scrip, stop)
 }
 
+trailOrder( scrip, stop  ){
+	
+	global stopOrderNOW
+	
+	stop.orderType	:= "SL-M"
+	stop.price		:= 0
+	
+	direction := stopOrderNOW.buySell == "BUY" ? "B"  : "S"	
+	stopOrderNOW  := modifyOrderCommon( stopOrderNOW, direction, scrip, stop)
+}
 
 
 // --  Private -- 
 
-checkOpenOrderEmpty(){
-	if( doOpenOrdersExist() ){												// Entry
-		MsgBox, % 262144+4,, Some Open Orders already exist . Continue?
-		IfMsgBox No
-			return false
+modifyOrderCommon( orderNOW,  direction, scrip, orderDetails ){
+	
+	global TITLE_BUY, TITLE_SELL	
+	
+	winTitle := direction == "B" ? TITLE_BUY : TITLE_SELL	
+	
+	opened := openModifyOrderForm( orderNOW, winTitle )						// Open Order by clicking on Modify in Order Book	
+	if( !opened )
+		return
+	
+	SubmitOrder( winTitle, scrip, orderDetails )							// Fill up new details and submit	
+	orderNOW := getOrderDetails( orderNOW.nowOrderNo )						// Get updated order details
+
+	if( orderNOW = -1 ){
+		MsgBox, % 262144,,  Bug - Updated Order not found in Orderbook after Modification
 	}
-	return true
+	return orderNOW
 }
 
-orderCommon( direction, scrip, order   ){
+
+newOrderCommon( direction, scrip, order ){
 	
 	readOrderBook()															// Read current status so that we can identify new order
 	
@@ -67,7 +88,7 @@ orderCommon( direction, scrip, order   ){
 
 	status := orderNOW.status												// check status
 	
-	if( status != "open" && status != "trigger pending" && status != "completed"  ){
+	if( status != "open" && status != "trigger pending" && status != "complete"  ){
 																			// if Entry order may have failed, ask
 		identifier := orderIdentifier( orderNOW.buySell, orderNOW.price, orderNOW.triggerPrice)
 		MsgBox, % 262144+4,,  Order( %identifier%  ) has suspect status %status%. Do you want to continue?
@@ -92,6 +113,33 @@ openOrderForm( direction ){
 	WinWait, %winTitle%,,5
 	
 	return winTitle
+}
+
+openModifyOrderForm( orderNOW, winTitle ){
+	global TITLE_ORDER_BOOK, OpenOrdersColumnIndex
+		
+	orderNoColIndex := OpenOrdersColumnIndex.nowOrderNo							// column number containing NOW Order no in Order Book > open orders
+	searchMeOrderNo	:= orderNOW.nowOrderNo
+		
+	Loop, 3{																	// Select order in Order Book. Search 3 times as a precaution
+		ControlGet, RowCount, List, Count, SysListView321, %TITLE_ORDER_BOOK%	// No of rows in open orders
+		ControlSend, SysListView321, {Home 2}, %TITLE_ORDER_BOOK%				// Start from top and search for order
+
+		Loop, %RowCount%{														// Get order number of selected row and compare
+			ControlGet, RowOrderNo, List, Selected Col%orderNoColIndex%, SysListView321, %TITLE_ORDER_BOOK%
+		
+			if( RowOrderNo = searchMeOrderNo ){									// Found, Click on Modify
+				ControlClick, Button1, %TITLE_ORDER_BOOK%,,,, NA				
+				WinWait, %winTitle%,,5
+				
+				return true
+			}
+			ControlSend, SysListView321, {Down}, %TITLE_ORDER_BOOK%				// Move Down to next row if not found yet
+		}				
+	}
+	
+	MsgBox, Order %searchMeOrderNo% Not Found in OrderBook > Open Orders
+	return false
 }
 
 SubmitOrder( winTitle, scrip, order ){										// Fill up opened Buy/Sell window and verify
@@ -123,6 +171,16 @@ SubmitOrder( winTitle, scrip, order ){										// Fill up opened Buy/Sell windo
 	
 	WinWaitClose, %winTitle%
 }
+
+checkOpenOrderEmpty(){
+	if( doOpenOrdersExist() ){												// Entry
+		MsgBox, % 262144+4,, Some Open Orders already exist . Continue?
+		IfMsgBox No
+			return false
+	}
+	return true
+}
+
 orderIdentifier( direction, price, trigger ){
 	identifier := direction . ", Price " . price . ", Trigger " . trigger
 	return identifier

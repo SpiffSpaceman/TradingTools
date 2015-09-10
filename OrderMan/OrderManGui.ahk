@@ -49,14 +49,14 @@ order(){
 	if( !validateInput() )
 		return
 	
-	executeOrder()
+	entryOrder()
 }
 trail(){
 	Gui, Submit, NoHide
 	if( !validateInput() )
 		return
 	
-	MsgBox, 262144,, Trailing ...
+	trailSLOrder()
 }
 
 
@@ -102,26 +102,27 @@ validateInput(){
 		return false
 	}	
 	
-	if( Direction == "B" ){									// If Buying, stop should be below price and vv
-		if( StopTrigger >= EntryPrice  ){
-			MsgBox, 262144,, Stop Trigger should be below Buy price
-			return false
+	if( !isEntryComplete() ){									// Allow to trail past Entry 
+		if( Direction == "B" ){									// If Buying, stop should be below price and vv
+			if( StopTrigger >= EntryPrice  ){
+				MsgBox, 262144,, Stop Trigger should be below Buy price
+				return false
+			}
 		}
+		else{
+			if( StopTrigger <= EntryPrice  ){
+				MsgBox, 262144,, Stop Trigger should be above Sell price
+				return false
+			}
+		}	
 	}
-	else{
-		if( StopTrigger <= EntryPrice  ){
-			MsgBox, 262144,, Stop Trigger should be above Sell price
-			return false
-		}
-	}	
-	
+
 	updateCurrentResult()
 	if( CurrentResult < -MaxStopSize  ){
 		MsgBox, % 262144+4,, Stop size more than Maximum Allowed. Continue?
 		IfMsgBox No
 			return false
 	}
-		
 	
 	return true
 }

@@ -63,8 +63,41 @@ getNewOrder(){
 	return foundOrder
 }
 
+/*
+	Search input NOW order number in Order Book 
+	Returns order details if found else -1
+*/
+getOrderDetails( inNowOrderNo ){
+	
+	global OpenOrders, CompletedOrders
+	
+	readOrderBook()
+	
+	order := getOrderDetails_(OpenOrders,  inNowOrderNo )
+	if( order == -1 ){
+		order := getOrderDetails_(CompletedOrders,  inNowOrderNo )
+	}
+	return order
+}
 
-// -- private --
+isEntryComplete(){
+	global entryOrderNOW
+	
+	return  IsObject( entryOrderNOW ) && entryOrderNOW.status == complete
+}
+
+
+// ----------
+
+getOrderDetails_( list, orderno){
+	Loop, % list.size {
+		i := A_Index
+		if( list[i].nowOrderNo ==  orderno ){					// Found
+			return list[i]
+		}	
+	}
+	return -1
+}
 
 getNewOrder_( oldList, newList ){
 	
