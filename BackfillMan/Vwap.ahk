@@ -1,3 +1,20 @@
+/*
+  Copyright (C) 2014  SpiffSpaceman
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>
+*/
+
 // NOW - Hourly Stats Backfill
 
 vwapBackFill()
@@ -47,7 +64,7 @@ getVWAPColumnIndex(){														// Gets Position of Start time, O, H, L, C, V
 	checkEmpty( VWAPColumnIndex.high,  "High Rate"  )
 	checkEmpty( VWAPColumnIndex.low,   "Low Rate"  )
 	checkEmpty( VWAPColumnIndex.close, "Close Rate"  )
-	checkEmpty( VWAPColumnIndex.vol,   "Differential Vol"  )		
+	checkEmpty( VWAPColumnIndex.vol,   "Differential Vol"  )
 }	
 
 checkEmpty( value, field ){

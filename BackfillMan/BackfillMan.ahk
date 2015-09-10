@@ -1,3 +1,20 @@
+/*
+  Copyright (C) 2014  SpiffSpaceman
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>
+*/
+
 #CommentFlag // 
 #Include %A_ScriptDir%														// Set Include Directory path
 																			// Includes behave as though the file's contents are present at this exact position
@@ -58,8 +75,8 @@ hkFlatTrendLine(){															// Sets End price = Start price for trend line 
 		WinWait, Properties, Start Y:, 1
 		WinSet,Transparent, 1, Properties, Start Y:
 		
-		ControlGet, startPrice, Line, 1, Edit1, Properties, Start Y:		// Copy Start Price into End Price and press enter
-		ControlSetText, Edit2, %startPrice%, Properties, Start Y:
+		ControlGet, endPrice, Line, 1, Edit2, Properties, Start Y:		// Copy End Price into Start Price and press enter
+		ControlSetText, Edit1, %endPrice%, Properties, Start Y:
 		ControlSend, Edit2, {Enter}, Properties, Start Y:
 	}	
 }
