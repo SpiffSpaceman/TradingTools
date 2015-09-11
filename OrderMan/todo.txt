@@ -9,7 +9,9 @@ Status
 	Show order status + price?
 
 
-
+AB integration
+	Pick default values from AB - study ID or just copy from tooltip or line start time
+	Limit order - check price against current price? Or not - market orders
 
 
 
@@ -38,13 +40,10 @@ Status
 
 
 -----------------------------------------------------------------------------------------
-AB integration
-	Pick default values from AB - study ID or just copy from tooltip or line start time
-	Limit order - check price against current price? Or not - market orders
-orderbook open - ensure no filters?
 Open GUI in last saved location - save to settings, use WinGetPos + set in Gui, Show
 button icons + tooltip
 color - Main Window B/S + List B/S
+orderbook open - ensure no filters?
 
 Link Orders
 	- how to check Trading symbol against actual scrip - maybe take TradingSymbol as input in ini and use in other places too

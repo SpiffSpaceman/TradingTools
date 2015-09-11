@@ -22,24 +22,21 @@ createGUI(){
 		
 	Gui, 1:New, +AlwaysOnTop, OrderMan
 	
-	Gui, 1:Add, ListBox, vDirection h30 w15 Choose1, B|S		// Column 1	
+	Gui, 1:Add, ListBox, vDirection h30 w15 Choose1, B|S				// Column 1	
 		
-	Gui, 1:Add, Text, ym, Entry									// Column 2	
-	Gui, 1:Add, Text,, Stop	
+	Gui, 1:Add, Text, ym, Entry											// Column 2	
+	Gui, 1:Add, Text, gstopEvent, Stop
 			
-	Gui, 1:Add, Edit, vEntryPrice w55 ym section				// Column 3
-	Gui, 1:Add, Edit, vStopTrigger w55
+	Gui, 1:Add, Edit, vEntryPrice w55 ym gupdateCurrentResult 			// Column 3
+	Gui, 1:Add, Edit, vStopTrigger w55 gupdateCurrentResult
 	
-	Gui, 1:Add, Button, gorderBtn vBtnOrder, Enter	
+	Gui, 1:Add, Button, gupdateOrderBtn vBtnUpdate, Update	
+	Gui, 1:Add, Button, gorderBtn vBtnOrder xp-40, New	
 	Gui, 1:Add, Button, gunlinkBtn vBtnUnlink hide xp+0 yp+0, Unlink
-	
-	Gui, 1:Add, Button, gupdateOrderBtn vBtnUpdate x+1, Update
-	Gui, 1:Add, Edit, vCurrentResult ReadOnly w30 x+10
-	
-	Gui, 1:Add, Button, gsetDefaultStopBtn ys xs+60, Default Stop // Column 4  - coord wrt Entry Price text box using section
-	Gui, 1:Add, Button, gupdateCurrentResultBtn, Current Result  	
+		
+	Gui, 1:Add, Edit, vCurrentResult ReadOnly ym w40 
 			
-	Gui, 1:Add, StatusBar, gstatusBarClick, 					// Status Bar - Shows link order Numbers. Double click to link manually
+	Gui, 1:Add, StatusBar, gstatusBarClick, 							// Status Bar - Shows link order Numbers. Double click to link manually
 	
 	Gui, 1:Show, AutoSize NoActivate
 	
@@ -74,6 +71,12 @@ statusBarClick(){
 	if( A_GuiEvent == "DoubleClick" ){
 		openLinkOrdersGUI()			
 	}
+}
+
+stopEvent(){	
+	if( A_GuiEvent == "DoubleClick"  ){
+		setDefaultStop()
+	}	
 }
 
 openLinkOrdersGUI(){
@@ -118,17 +121,17 @@ unlinkBtn(){
 	updateStatusBar()
 }
 
-setDefaultStopBtn(){
+setDefaultStop(){
 	global EntryPrice, StopTrigger, Direction, DefaultStopSize
 		
 	Gui, 1:Submit, NoHide			
 	StopTrigger :=  Direction == "B" ? EntryPrice-DefaultStopSize : EntryPrice+DefaultStopSize		
 	GuiControl, 1:Text, StopTrigger, %StopTrigger%
 	
-	updateCurrentResultBtn()
+	updateCurrentResult()
 }
 
-updateCurrentResultBtn(){
+updateCurrentResult(){
 	global EntryPrice, StopTrigger, Direction, CurrentResult
 	
 	Gui, 1:Submit, NoHide
@@ -214,7 +217,7 @@ linkOrdersSubmit(){
 	Gui  1:Default
 		
 	setGUIValues( entryOrderNOW.price, stopOrderNOW.triggerPrice, getDirectionFromOrder( entryOrderNOW ) )
-	updateCurrentResultBtn()
+	updateCurrentResult()
 }
 
 addOrderRow( o ) {
@@ -263,7 +266,7 @@ validateInput(){
 		}	
 	}
 
-	updateCurrentResultBtn()
+	updateCurrentResult()
 	if( CurrentResult < -MaxStopSize  ){
 		MsgBox, % 262144+4,, Stop size more than Maximum Allowed. Continue?
 		IfMsgBox No
