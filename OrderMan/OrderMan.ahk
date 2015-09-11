@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2014  SpiffSpaceman
+  Copyright (C) 2015  SpiffSpaceman
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -25,33 +25,22 @@ SetWorkingDir %A_ScriptDir%  												// Ensures a consistent starting direct
 SetTitleMatchMode, 2 														// A window's title can contain the text anywhere
 SetControlDelay, -1 														// Without this ControlClick fails sometimes
 
-TITLE_NOW		 := "NOW 1.13"												// window titles
-TITLE_ORDER_BOOK := "Order Book -"
-TITLE_BUY		 :=	"Buy Order Entry"
-TITLE_SELL		 := "Sell Order Entry"
-TITLE_TRANSACTION_PASSWORD := "Transaction Password"
+TITLE_NOW		 			  := "NOW 1.13"									// window titles
+TITLE_ORDER_BOOK			  := "Order Book -"
+TITLE_BUY					  := "Buy Order Entry"
+TITLE_SELL					  := "Sell Order Entry"
+TITLE_TRANSACTION_PASSWORD 	  := "Transaction Password"
+
+ORDER_STATUS_COMPLETE 		  := "complete"
+ORDER_STATUS_OPEN	  		  := "open"
+ORDER_STATUS_TRIGGER_PENDING  := "trigger pending"
 
 loadSettings()
 createGUI()
 readOrderBook()
+linkOrderPrompt()
 return
-
-
-entryOrder( ){
-	global EntryPrice, StopTrigger, Direction, Qty, ProdType, Scrip
-	
-	entryOrder	:= getOrder("", Qty, EntryPrice, 0,	 	      ProdType  )
-	stopOrder   := getOrder("", Qty, 0,  	     StopTrigger, ProdType  )
-	
-	limitOrder( Direction, Scrip, entryOrder, stopOrder )
-}
-trailSLOrder(){
-	global StopTrigger, Qty, ProdType, Scrip
-	
-	stopOrder  := getOrder("", Qty, 0, StopTrigger, ProdType  )	
-	trailOrder( Scrip, stopOrder )
-}
-
+  
 
 
 getScrip( segment, instrument, symbol, type, strikePrice, expiryIndex ){
@@ -76,11 +65,21 @@ getOrder( orderType, qty, price, triggerprice, prodType   ){
 	
 	return order
 }
+
 isNumber( str ) {
 	if str is number
 		return true	
 	return false
 }
+
+getDirectionFromOrder( order ){
+	return order.buySell == "BUY" ? "B" : "S"	
+}
+
+reverseDirection( direction ){
+	return direction == "B" ? "S" : "B"
+}
+
 
 #include Settings.ahk
 #include OrderSubmitter.ahk

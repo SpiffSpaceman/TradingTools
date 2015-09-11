@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2014  SpiffSpaceman
+  Copyright (C) 2015  SpiffSpaceman
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -63,6 +63,39 @@ getNewOrder(){
 	return foundOrder
 }
 
+linkOrders( entryOrderID, stopOrderID ){
+	
+	global entryOrderNOW, stopOrderNOW
+	
+	order := getOrderDetails( entryOrderID )
+	if( order == -1 ){
+		MsgBox, 262144,, Order %entryOrderID% Not found
+		return false
+	}
+		
+	order2 := getOrderDetails( stopOrderID )
+	if( order2 == -1 ){
+		MsgBox, 262144,, Order %stopOrderID% Not found
+		return false
+	}
+	
+	if( order.tradingSymbol != order2.tradingSymbol  ){
+		MsgBox, 262144,, Orders have different Trading Symbols 
+		return false	
+	}
+	
+	entryOrderNOW := order
+	stopOrderNOW  := order2
+	return true
+}
+
+unlinkOrders(){
+	global entryOrderNOW, stopOrderNOW
+	
+	entryOrderNOW := -1
+	stopOrderNOW  := -1
+}
+
 /*
 	Search input NOW order number in Order Book 
 	Returns order details if found else -1
@@ -80,12 +113,26 @@ getOrderDetails( inNowOrderNo ){
 	return order
 }
 
-isEntryComplete(){
-	global entryOrderNOW
+refreshLinkedOrderDetails(){	
+	global entryOrderNOW, stopOrderNOW
 	
-	return  IsObject( entryOrderNOW ) && entryOrderNOW.status == complete
+	if( IsObject(entryOrderNOW) )
+		entryOrderNOW := getOrderDetails( entryOrderNOW.nowOrderNo )
+	
+	if( IsObject(stopOrderNOW) )
+		stopOrderNOW  := getOrderDetails( stopOrderNOW.nowOrderNo )
 }
 
+isEntryComplete(){
+	global entryOrderNOW, ORDER_STATUS_COMPLETE
+	
+	return  IsObject( entryOrderNOW ) && entryOrderNOW.status == ORDER_STATUS_COMPLETE
+}
+
+isStatusOpen( status ){
+	global ORDER_STATUS_OPEN, ORDER_STATUS_TRIGGER_PENDING
+	return status==ORDER_STATUS_OPEN || status==ORDER_STATUS_TRIGGER_PENDING
+}
 
 // ----------
 
@@ -134,7 +181,6 @@ openOrderBook(){
 	WinMinimize, %TITLE_ORDER_BOOK%	
 }
 
-
 readOpenOrders(){
 	global TITLE_ORDER_BOOK, OpenOrdersColumnIndex, OpenOrders
 	
@@ -175,7 +221,6 @@ readOpenOrders(){
 		OpenOrders.size++	
 	}
 }
-
 
 readCompletedOrders(){
 	global TITLE_ORDER_BOOK, CompletedOrdersColumnIndex, CompletedOrders

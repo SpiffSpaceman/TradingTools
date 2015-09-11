@@ -1,19 +1,13 @@
-Test - isEntryComplete(), validation error if trailing above price
+Test after entry complete 
+	- Trail above price allowed after complete - isEntryComplete()
 
+Status
+	Periodic status checks - Timer, only if linked - In this case no new order so no need to disable Timer
+	Disable Entry/Stop modification if status not open
+	Track cancelled/rejected orders - set unlinked and call update status bar
+	Track completed orders - update status for entry/stop orders	
+	Show order status + price?
 
-Order window - keep on top
-
-Trailing Stops
-	- check if order id -1	- Allow linking to Stop order
-	- verify current order details on open	
-
-
-Link orders - on restart / manually
-	Update GUI prices
-	Entry to both open/completed.
-	Stop to open only	
-Allow Entry/Stop modification
-	- Same logic for Entry change - Allow change if open
 
 
 
@@ -44,21 +38,23 @@ Allow Entry/Stop modification
 
 
 -----------------------------------------------------------------------------------------
-update orders on completion - unlink, set objects as -1
-Some indication that orders are linked, and their status 
-SubmitOrder() - verify Filled order fields after filling detail
-Partial Stop orders - Modify Size as Entry gets filled 
-Track completed orders - update status for entry/stop orders 
-	
-
 AB integration
-	Pick default values from AB
-	Limit order - check price against current price	
+	Pick default values from AB - study ID or just copy from tooltip or line start time
+	Limit order - check price against current price? Or not - market orders
 orderbook open - ensure no filters?
 Open GUI in last saved location - save to settings, use WinGetPos + set in Gui, Show
-Cancel Order
-Other Entry Order types - SL/SLM, Market?
+button icons + tooltip
+color - Main Window B/S + List B/S
+
+Link Orders
+	- how to check Trading symbol against actual scrip - maybe take TradingSymbol as input in ini and use in other places too
+	- Can use as filter in read orders - so will get applied to most functions
+cleanup function/global objects mess - seperate out
+-----------------------------------------------------------------------------------------
+Other Entry Order types - SL/SLM - Slippage, Market?
 Option for Stop orders - SL vs SLM
-Multiple Orders?
+Cancel Orders
+Partial Stop orders - Modify Stop Size = Filled size when Trailing + what to do with unfilled entry
+Multiple Orders?  Target orders?
 Multiple scrips?
-target orders
+thin gui less mode, just get everything as input + unique id -  create order and return uniqueid-orderid pair

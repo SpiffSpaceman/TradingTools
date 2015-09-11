@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2014  SpiffSpaceman
+  Copyright (C) 2015  SpiffSpaceman
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -15,6 +15,9 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
+/*
+	entryOrderNOW, stopOrderNOW = objects linked with our entry and stop orders in orderbook
+*/
 limitOrder( direction, scrip, entry, stop ){
 	global TITLE_NOW, entryOrderNOW, stopOrderNOW
 		
@@ -31,19 +34,37 @@ limitOrder( direction, scrip, entry, stop ){
 	if( ! IsObject(entryOrderNOW)  )
 		return
 	
-	stopOrderNOW  := newOrderCommon(direction == "B" ? "S" : "B", scrip, stop)
+	stopOrderNOW  := newOrderCommon( reverseDirection(direction), scrip, stop )
+	
+	updateStatusBar()
 }
 
-trailOrder( scrip, stop  ){
+modifyLimitOrder( scrip, entry, stop  ){
 	
-	global stopOrderNOW
+	global entryOrderNOW, stopOrderNOW	
 	
-	stop.orderType	:= "SL-M"
-	stop.price		:= 0
+	if( IsObject(entryOrderNOW) && entry != "" ){
+		
+		entry.orderType := "LIMIT"
+		entry.trigger	:= 0
+		
+		direction 	    := getDirectionFromOrder( entryOrderNOW )			// same direction as linked order
+		entryOrderNOW   := modifyOrderCommon( entryOrderNOW, direction, scrip, entry )
+	}
 	
-	direction := stopOrderNOW.buySell == "BUY" ? "B"  : "S"	
-	stopOrderNOW  := modifyOrderCommon( stopOrderNOW, direction, scrip, stop)
+	if( IsObject(stopOrderNOW) && stop != "" ){
+		
+		stop.orderType	:= "SL-M"
+		stop.price		:= 0
+		
+		direction 	    := getDirectionFromOrder( stopOrderNOW )
+		stopOrderNOW    := modifyOrderCommon( stopOrderNOW, direction, scrip, stop )
+	}
+	
+	updateStatusBar()
 }
+
+
 
 
 // --  Private -- 
@@ -58,17 +79,18 @@ modifyOrderCommon( orderNOW,  direction, scrip, orderDetails ){
 	if( !opened )
 		return
 	
-	SubmitOrder( winTitle, scrip, orderDetails )							// Fill up new details and submit	
+	SubmitOrderCommon( winTitle, scrip, orderDetails )						// Fill up new details and submit	
 	orderNOW := getOrderDetails( orderNOW.nowOrderNo )						// Get updated order details
 
 	if( orderNOW = -1 ){
-		MsgBox, % 262144,,  Bug - Updated Order not found in Orderbook after Modification
+		MsgBox, % 262144,,  Bug? - Updated Order not found in Orderbook after Modification
 	}
 	return orderNOW
 }
 
-
 newOrderCommon( direction, scrip, order ){
+	
+	global ORDER_STATUS_COMPLETE, ORDER_STATUS_OPEN, ORDER_STATUS_TRIGGER_PENDING
 	
 	readOrderBook()															// Read current status so that we can identify new order
 	
@@ -87,9 +109,9 @@ newOrderCommon( direction, scrip, order ){
 	}
 
 	status := orderNOW.status												// check status
-	
-	if( status != "open" && status != "trigger pending" && status != "complete"  ){
 																			// if Entry order may have failed, ask
+	if( status != ORDER_STATUS_OPEN && status != ORDER_STATUS_TRIGGER_PENDING && status != ORDER_STATUS_COMPLETE  ){
+
 		identifier := orderIdentifier( orderNOW.buySell, orderNOW.price, orderNOW.triggerPrice)
 		MsgBox, % 262144+4,,  Order( %identifier%  ) has suspect status %status%. Do you want to continue?
 		IfMsgBox No
@@ -143,8 +165,7 @@ openModifyOrderForm( orderNOW, winTitle ){
 }
 
 SubmitOrder( winTitle, scrip, order ){										// Fill up opened Buy/Sell window and verify
-	global	TITLE_TRANSACTION_PASSWORD, AutoSubmit
-
+	
 	Control, ChooseString , % scrip.segment,     ComboBox1,  %winTitle%		// Exchange Segment - NFO/NSE etc
 	Control, ChooseString , % scrip.instrument,  ComboBox5,  %winTitle%		// Inst Name - FUTIDX / EQ  etc
 	Control, ChooseString , % scrip.symbol, 	 ComboBox6,  %winTitle%		// Scrip Symbol
@@ -156,6 +177,15 @@ SubmitOrder( winTitle, scrip, order ){										// Fill up opened Buy/Sell windo
 	Control, ChooseString , % order.prodType,    ComboBox10, %winTitle%		// Prod Type - MIS/NRML/CNC
 	Control, ChooseString , DAY, 			   	 ComboBox11, %winTitle%		// Validity - Day/IOC
 	
+	SubmitOrderCommon( winTitle, scrip, order  )
+}
+
+/*
+	Fills up stuff that is relevant to both create and update orders
+*/
+SubmitOrderCommon( winTitle, scrip, order ){
+	global	TITLE_TRANSACTION_PASSWORD, AutoSubmit
+
 	ControlSetText, Edit3, % order.qty,     %winTitle%						// Qty
 	if( order.price != 0 )
 		ControlSetText, Edit4, % order.price,   %winTitle%					// Price
