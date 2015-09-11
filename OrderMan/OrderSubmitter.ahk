@@ -36,7 +36,7 @@ limitOrder( direction, scrip, entry, stop ){
 	
 	stopOrderNOW  := newOrderCommon( reverseDirection(direction), scrip, stop )
 	
-	updateStatusBar()
+	updateStatus()
 }
 
 modifyLimitOrder( scrip, entry, stop  ){
@@ -61,7 +61,7 @@ modifyLimitOrder( scrip, entry, stop  ){
 		stopOrderNOW    := modifyOrderCommon( stopOrderNOW, direction, scrip, stop )
 	}
 	
-	updateStatusBar()
+	updateStatus()
 }
 
 
@@ -102,7 +102,7 @@ newOrderCommon( direction, scrip, order ){
 	if( orderNOW == -1 ){													// New order found in Orderbook ?
 		
 		identifier := orderIdentifier( direction, order.price, order.trigger) 				
-		MsgBox, % 262144+4,,  Order( %identifier%  ) Not Found in Open Orders. Do you want to continue?
+		MsgBox, % 262144+4,,  Order( %identifier%  ) Not Found yet in Order Book. Do you want to continue?
 		IfMsgBox No
 			return -1
 		orderNOW := getNewOrder()
@@ -113,7 +113,7 @@ newOrderCommon( direction, scrip, order ){
 	if( status != ORDER_STATUS_OPEN && status != ORDER_STATUS_TRIGGER_PENDING && status != ORDER_STATUS_COMPLETE  ){
 
 		identifier := orderIdentifier( orderNOW.buySell, orderNOW.price, orderNOW.triggerPrice)
-		MsgBox, % 262144+4,,  Order( %identifier%  ) has suspect status %status%. Do you want to continue?
+		MsgBox, % 262144+4,,  Order( %identifier%  ) has status - %status%. Do you want to continue?
 		IfMsgBox No
 			return -2
 	}

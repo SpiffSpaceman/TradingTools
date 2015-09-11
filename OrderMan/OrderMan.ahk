@@ -39,6 +39,9 @@ loadSettings()
 createGUI()
 readOrderBook()
 linkOrderPrompt()
+
+SetTimer, orderStatusTracker, 2500
+SetTimer, orderStatusTracker, off
 return
   
 

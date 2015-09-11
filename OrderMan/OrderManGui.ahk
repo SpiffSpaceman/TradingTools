@@ -16,13 +16,14 @@
 */
 
 createGUI(){
-	global EntryPrice, StopTrigger, Direction, CurrentResult, BtnOrder, BtnUpdate, BtnUnlink
+	global EntryPrice, StopTrigger, Direction, CurrentResult, BtnOrder, BtnUpdate, BtnUnlink, EntryStatus, StopStatus
 	
 	SetFormat, FloatFast, 0.2
 		
-	Gui, 1:New, +AlwaysOnTop, OrderMan
-	
-	Gui, 1:Add, ListBox, vDirection h30 w15 Choose1, B|S				// Column 1	
+	Gui, 1:New, +AlwaysOnTop +Resize, OrderMan
+																		// Column 1
+	Gui, 1:Add, ListBox, vDirection gupdateCurrentResult h30 w20 Choose1, B|S
+	Gui, 1:Add, Text, vCurrentResult  w30 			
 		
 	Gui, 1:Add, Text, ym, Entry											// Column 2	
 	Gui, 1:Add, Text, gstopEvent, Stop
@@ -31,11 +32,12 @@ createGUI(){
 	Gui, 1:Add, Edit, vStopTrigger w55 gupdateCurrentResult
 	
 	Gui, 1:Add, Button, gupdateOrderBtn vBtnUpdate, Update	
-	Gui, 1:Add, Button, gorderBtn vBtnOrder xp-40, New	
-	Gui, 1:Add, Button, gunlinkBtn vBtnUnlink hide xp+0 yp+0, Unlink
-		
-	Gui, 1:Add, Edit, vCurrentResult ReadOnly ym w40 
-			
+	Gui, 1:Add, Button, gorderBtn vBtnOrder xp-50, New	
+	Gui, 1:Add, Button, gunlinkBtn vBtnUnlink hide xp+0 yp+0, Unlink	
+	
+	Gui, 1:Add, Text, ym vEntryStatus
+	Gui, 1:Add, Text, vStopStatus
+	
 	Gui, 1:Add, StatusBar, gstatusBarClick, 							// Status Bar - Shows link order Numbers. Double click to link manually
 	
 	Gui, 1:Show, AutoSize NoActivate
@@ -45,21 +47,66 @@ createGUI(){
 	return	
 }
  
-updateStatusBar(){
-	global entryOrderNOW, stopOrderNOW
+/*
+	Update status bar, GUI controls state and Timer state based on order status
+*/
+updateStatus(){
+	global entryOrderNOW, stopOrderNOW, ORDER_STATUS_OPEN, EntryStatus, StopStatus
+	static isTimerActive := false
 	
 	entryLinked := IsObject( entryOrderNOW )
 	stopLinked	:= IsObject( stopOrderNOW )
+	anyLinked	:= entryLinked || stopLinked 
 	
-	entry := entryLinked ? entryOrderNOW.nowOrderNo : "No order linked" 
-	stop  := stopLinked  ? stopOrderNOW.nowOrderNo  : "No order linked" 
 	
-	GuiControl, % entryLinked ? "1:Disable" : "1:Enable", Direction		// Disable Direction if orders Linked
-	GuiControl, % entryLinked ? "1:Show"    : "1:Hide",   BtnUnlink		// Show Order if unlinked. If orders links show Unlink button instead
-	GuiControl, % entryLinked ? "1:Hide"    : "1:Show",   BtnOrder	
-	GuiControl, % stopLinked  ? "1:Enable"  : "1:Disable",BtnUpdate		// Enable Update only if linked		
+	entryOpen	:= entryLinked && entryOrderNOW.status == ORDER_STATUS_OPEN
+	stopOpen	:= stopLinked  && stopOrderNOW.status  == ORDER_STATUS_OPEN
 	
-	SB_SetText( "E: " . entry . ". S: " . stop )
+	entry := entryLinked ? entryOrderNOW.nowOrderNo : "No Order" 
+	stop  := stopLinked  ? stopOrderNOW.nowOrderNo  : "No Order" 
+	
+	GuiControl, % anyLinked ? "1:Disable" : "1:Enable", Direction					// Disable Direction if orders Linked
+	GuiControl, % anyLinked ? "1:Show"    : "1:Hide",   BtnUnlink					// Show Order if unlinked. If orders links show Unlink button instead
+	GuiControl, % anyLinked ? "1:Hide"    : "1:Show",   BtnOrder	
+	
+	GuiControl, % entryOpen    || stopOpen  ? "1:Enable"  : "1:Disable", BtnUpdate	// Enable Update only if atleast one linked order is open		
+	GuiControl, % !entryLinked || entryOpen ? "1:Enable"  : "1:Disable", EntryPrice	// Enable Price entry for new orders or for linked open orders
+	GuiControl, % !stopLinked  || stopOpen  ? "1:Enable"  : "1:Disable", StopTrigger
+		
+	if( entryLinked ){																// Set Status if Linked
+		GuiControl, 1:Text, EntryStatus, % entryOrderNOW.status
+		GuiControl, 1:Move, EntryStatus, w125
+	}
+	else{
+		GuiControl, 1:Text, EntryStatus, 
+		GuiControl, 1:Move, EntryStatus, w1
+	}
+	if( stopLinked ){
+		GuiControl, 1:Text, StopStatus, % stopOrderNOW.status
+		GuiControl, 1:Move, StopStatus, w125
+	}
+	else{
+		GuiControl, 1:Text, StopStatus,
+		GuiControl, 1:Move, StopStatus, w1
+	}
+		
+	if( entryLinked || stopLinked ){												// If order linked, start tracking orderbook
+		if( !isTimerActive ){
+			isTimerActive := true
+			SetTimer, orderStatusTracker, on
+		}
+	}
+	else{
+		if( isTimerActive ){
+			isTimerActive := false
+			SetTimer, orderStatusTracker, off
+		}
+	}
+	
+	timeStatus := isTimerActive ? "A" : "I" 
+	SB_SetText( timeStatus . "  [E: " . entry . "]  [S: " . stop . "]" ) 
+	
+	Gui, 1:Show, AutoSize NoActivate
 }
 
 /*
@@ -117,8 +164,10 @@ openLinkOrdersGUI(){
 }
 
 unlinkBtn(){
+	SetTimer, orderStatusTracker, off
+		
 	unlinkOrders()
-	updateStatusBar()
+	updateStatus()
 }
 
 setDefaultStop(){
@@ -231,7 +280,7 @@ setGUIValues( inEntry, inStop, inDirection ){
 	GuiControl, 1:Text, StopTrigger, %inStop%
 	GuiControl, 1:ChooseString, Direction,  %inDirection%
 	
-	updateStatusBar()	
+	updateStatus()	
 }
 
 validateInput(){

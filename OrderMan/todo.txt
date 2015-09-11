@@ -1,12 +1,7 @@
 Test after entry complete 
 	- Trail above price allowed after complete - isEntryComplete()
+Test - Price entry, Update button Enabled if linked order is open
 
-Status
-	Periodic status checks - Timer, only if linked - In this case no new order so no need to disable Timer
-	Disable Entry/Stop modification if status not open
-	Track cancelled/rejected orders - set unlinked and call update status bar
-	Track completed orders - update status for entry/stop orders	
-	Show order status + price?
 
 
 AB integration
@@ -39,7 +34,12 @@ AB integration
 
 
 
+
+
+
+
 -----------------------------------------------------------------------------------------
+if status = validation pending + others? wait for some time before message ?
 Open GUI in last saved location - save to settings, use WinGetPos + set in Gui, Show
 button icons + tooltip
 color - Main Window B/S + List B/S
@@ -50,7 +50,8 @@ Link Orders
 	- Can use as filter in read orders - so will get applied to most functions
 cleanup function/global objects mess - seperate out
 -----------------------------------------------------------------------------------------
-Other Entry Order types - SL/SLM - Slippage, Market?
+Other Entry Order types - SL/SLM - Slippage, Market?  
+	Use orderStatusTracker for SL orders, add stop if status complete else notify 
 Option for Stop orders - SL vs SLM
 Cancel Orders
 Partial Stop orders - Modify Stop Size = Filled size when Trailing + what to do with unfilled entry

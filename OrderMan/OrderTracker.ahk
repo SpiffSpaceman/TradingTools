@@ -23,6 +23,14 @@ readOrderBook(){
 	readCompletedOrders()	
 }
 
+orderStatusTracker(){
+	Critical 													// Mark Timer thread Data fetch as Critical to avoid any possible Mixup with main thread ( esp with linked orders )
+																	// Marking it as critical should avoid Main thread from running
+	refreshLinkedOrderDetails()										// Otherwise can get problem with entryOrderNOW / stopOrderNOW in unlink()
+	Critical , off
+	
+	updateStatus()
+}
 
 doOpenOrdersExist(){
 	global OpenOrders
@@ -32,7 +40,7 @@ doOpenOrdersExist(){
 }
 
 /*
-   Get Order ID of newly opened orders
+   Get Order ID of newly opened orders, searches both open and completed orders
    Assuming only 1 opened/completed since last read
    So readOpenOrders(),readCompletedOrders() should be called before creating new order and
 	  getNewOrder() should be immediately called after creating new order
@@ -45,13 +53,13 @@ getNewOrder(){
 	openOrdersOld		:=  OpenOrders
 	completedOrdersOld  :=  CompletedOrders
 	
-	Loop, 3{													// Wait for upto 3 seconds
+	Loop, 5{													// Wait for upto 5 seconds for new order
 		readOpenOrders()
 		readCompletedOrders()
 		
 		if( openOrdersOld.size < OpenOrders.size || completedOrdersOld.size < CompletedOrders.size )
 			break
-		Sleep, 1000		
+		Sleep, 1000
 	}
 	if( openOrdersOld.size >= OpenOrders.size  && completedOrdersOld.size >= CompletedOrders.size )
 		return -1
