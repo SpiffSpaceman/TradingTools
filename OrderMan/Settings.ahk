@@ -23,6 +23,10 @@ loadSettings(){
 	IniRead, ProdType, 		    OrderMan.ini, OrderMan, ProdType
     IniRead, DefaultStopSize,	OrderMan.ini, OrderMan, DefaultStopSize
     IniRead, MaxStopSize,   	OrderMan.ini, OrderMan, MaxStopSize
+    IniRead, HKEntryPrice,   	OrderMan.ini, OrderMan, HKEntryPrice
+    IniRead, HKStopTrigger,   	OrderMan.ini, OrderMan, HKStopTrigger
+    IniRead, HKStopTrigger,   	OrderMan.ini, OrderMan, HKStopTrigger
+    IniRead, TickSize,      	OrderMan.ini, OrderMan, TickSize
     
     IniRead, value, OrderMan.ini, OrderMan, AutoSubmit
     AutoSubmit   := value=="true"

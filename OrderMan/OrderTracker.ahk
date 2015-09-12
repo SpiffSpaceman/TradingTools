@@ -23,6 +23,30 @@ readOrderBook(){
 	readCompletedOrders()	
 }
 
+initializeStatusTracker(){
+	SetTimer, orderStatusTracker, 2500
+	SetTimer, orderStatusTracker, off
+}
+
+toggleStatusTracker( on_off ){
+	
+	static isTimerActive := false
+	
+	if( on_off == "on" ){
+		if( !isTimerActive ){
+			isTimerActive := true
+			SetTimer, orderStatusTracker, on
+		}
+	}
+	else if( on_off == "off"  ){
+		if( isTimerActive ){
+			isTimerActive := false
+			SetTimer, orderStatusTracker, off
+		}
+	}
+	return isTimerActive
+}
+
 orderStatusTracker(){
 	Critical 													// Mark Timer thread Data fetch as Critical to avoid any possible Mixup with main thread ( esp with linked orders )
 																	// Marking it as critical should avoid Main thread from running

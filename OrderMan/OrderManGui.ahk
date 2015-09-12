@@ -22,11 +22,11 @@ createGUI(){
 		
 	Gui, 1:New, +AlwaysOnTop +Resize, OrderMan
 																		// Column 1
-	Gui, 1:Add, ListBox, vDirection gupdateCurrentResult h30 w20 Choose1, B|S
+	Gui, 1:Add, ListBox, vDirection gonDirectionChange h30 w20 Choose1, B|S
 	Gui, 1:Add, Text, vCurrentResult  w30 			
 		
 	Gui, 1:Add, Text, ym, Entry											// Column 2	
-	Gui, 1:Add, Text, gstopEvent, Stop
+	Gui, 1:Add, Text, gstopClick, Stop
 			
 	Gui, 1:Add, Edit, vEntryPrice w55 ym gupdateCurrentResult 			// Column 3
 	Gui, 1:Add, Edit, vStopTrigger w55 gupdateCurrentResult
@@ -43,27 +43,23 @@ createGUI(){
 	Gui, 1:Show, AutoSize NoActivate
 	
 	setGUIValues(0, 0, "B")
+	onDirectionChange()
 	
 	return	
 }
- 
+
 /*
 	Update status bar, GUI controls state and Timer state based on order status
 */
 updateStatus(){
-	global entryOrderNOW, stopOrderNOW, ORDER_STATUS_OPEN, EntryStatus, StopStatus
-	static isTimerActive := false
+	global entryOrderNOW, stopOrderNOW, ORDER_STATUS_OPEN, EntryStatus, StopStatus	
 	
 	entryLinked := IsObject( entryOrderNOW )
 	stopLinked	:= IsObject( stopOrderNOW )
 	anyLinked	:= entryLinked || stopLinked 
-	
-	
+
 	entryOpen	:= entryLinked && entryOrderNOW.status == ORDER_STATUS_OPEN
-	stopOpen	:= stopLinked  && stopOrderNOW.status  == ORDER_STATUS_OPEN
-	
-	entry := entryLinked ? entryOrderNOW.nowOrderNo : "No Order" 
-	stop  := stopLinked  ? stopOrderNOW.nowOrderNo  : "No Order" 
+	stopOpen	:= stopLinked  && stopOrderNOW.status  == ORDER_STATUS_OPEN	
 	
 	GuiControl, % anyLinked ? "1:Disable" : "1:Enable", Direction					// Disable Direction if orders Linked
 	GuiControl, % anyLinked ? "1:Show"    : "1:Hide",   BtnUnlink					// Show Order if unlinked. If orders links show Unlink button instead
@@ -89,24 +85,24 @@ updateStatus(){
 		GuiControl, 1:Text, StopStatus,
 		GuiControl, 1:Move, StopStatus, w1
 	}
-		
-	if( entryLinked || stopLinked ){												// If order linked, start tracking orderbook
-		if( !isTimerActive ){
-			isTimerActive := true
-			SetTimer, orderStatusTracker, on
-		}
-	}
-	else{
-		if( isTimerActive ){
-			isTimerActive := false
-			SetTimer, orderStatusTracker, off
-		}
-	}
+																					// If order linked, start tracking orderbook	
+	isTimerActive := entryLinked || stopLinked ?  toggleStatusTracker( "on" ) : toggleStatusTracker( "off" )	
+	timeStatus    := isTimerActive ? "A" : "I"
 	
-	timeStatus := isTimerActive ? "A" : "I" 
-	SB_SetText( timeStatus . "  [E: " . entry . "]  [S: " . stop . "]" ) 
+	entry 	      := entryLinked ? entryOrderNOW.nowOrderNo : "No Order"
+	stop  	      := stopLinked  ? stopOrderNOW.nowOrderNo  : "No Order"
+		
+	SB_SetText( timeStatus . "  [E: " . entry . "]  [S: " . stop . "]" )
 	
 	Gui, 1:Show, AutoSize NoActivate
+}
+
+onDirectionChange(){
+	global Direction
+	
+	updateCurrentResult()												// Also submits
+	
+	Gui, Color, % Direction == "B" ? "4E9258" : "DC381F"	
 }
 
 /*
@@ -120,7 +116,7 @@ statusBarClick(){
 	}
 }
 
-stopEvent(){	
+stopClick(){	
 	if( A_GuiEvent == "DoubleClick"  ){
 		setDefaultStop()
 	}	
@@ -163,9 +159,12 @@ openLinkOrdersGUI(){
 	Gui, 2:Show, AutoSize	
 }
 
+addOrderRow( o ) {
+	LV_Add("", o.nowOrderNo, o.nowUpdateTime, o.tradingSymbol, o.status, o.orderType, o.buySell, o.totalQty, o.price, o.triggerPrice )
+}
+
 unlinkBtn(){
-	SetTimer, orderStatusTracker, off
-		
+	toggleStatusTracker( "off" )		
 	unlinkOrders()
 	updateStatus()
 }
@@ -190,8 +189,12 @@ updateCurrentResult(){
 
 orderBtn(){	
 	global EntryPrice, StopTrigger, Direction, Qty, ProdType, Scrip
+		
+	Gui, 1:Submit, NoHide										// sets variables from GUI
 	
-	Gui, 1:Submit, NoHide										// sets variables from GUI	
+	setEntryPrice( roundToTickSize(EntryPrice) )
+	setStopPrice(  roundToTickSize(StopTrigger) )
+		
 	if( !validateInput() )
 		return
 		
@@ -269,16 +272,29 @@ linkOrdersSubmit(){
 	updateCurrentResult()
 }
 
-addOrderRow( o ) {
-	LV_Add("", o.nowOrderNo, o.nowUpdateTime, o.tradingSymbol, o.status, o.orderType, o.buySell, o.totalQty, o.price, o.triggerPrice )
+setEntryPrice( inEntry ){
+	global EntryPrice
+	EntryPrice := inEntry
+	GuiControl, 1:Text, EntryPrice,  %inEntry%
+}
+
+setStopPrice( inStop ){
+	global StopTrigger
+	StopTrigger := inStop
+	GuiControl, 1:Text, StopTrigger, %inStop%
+}
+
+setDirection( inDirection ){
+	global Direction
+	Direction := inDirection
+	GuiControl, 1:ChooseString, Direction,  %inDirection%
 }
 
 setGUIValues( inEntry, inStop, inDirection ){	
-	global EntryPrice, StopTrigger, Direction
 		
-	GuiControl, 1:Text, EntryPrice,  %inEntry%
-	GuiControl, 1:Text, StopTrigger, %inStop%
-	GuiControl, 1:ChooseString, Direction,  %inDirection%
+	setEntryPrice( inEntry )
+	setStopPrice( inStop )
+	setDirection( inDirection )	
 	
 	updateStatus()	
 }

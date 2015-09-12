@@ -39,9 +39,9 @@ loadSettings()
 createGUI()
 readOrderBook()
 linkOrderPrompt()
+initializeStatusTracker()
+installHotkeys()
 
-SetTimer, orderStatusTracker, 2500
-SetTimer, orderStatusTracker, off
 return
   
 
@@ -83,11 +83,16 @@ reverseDirection( direction ){
 	return direction == "B" ? "S" : "B"
 }
 
+roundToTickSize( price ){
+	global TickSize	
+	return Round(  price / TickSize ) * TickSize
+}
 
 #include Settings.ahk
 #include OrderSubmitter.ahk
 #include OrderTracker.ahk
 #include OrderManGui.ahk
+#include AB.ahk
 
 #CommentFlag ;
 #include Lib/__ExternalHeaderLib.ahk										; External Library to read Column Headers

@@ -1,15 +1,11 @@
-Test after entry complete 
+Test after entry complete
 	- Trail above price allowed after complete - isEntryComplete()
 Test - Price entry, Update button Enabled if linked order is open
 
 
 
-AB integration
-	Pick default values from AB - study ID or just copy from tooltip or line start time
-	Limit order - check price against current price? Or not - market orders
-
-
-
+Open GUI in last saved location - save to settings, use WinGetPos + set in Gui, Show
+color - List B/S
 
 
 
@@ -39,10 +35,7 @@ AB integration
 
 
 -----------------------------------------------------------------------------------------
-if status = validation pending + others? wait for some time before message ?
-Open GUI in last saved location - save to settings, use WinGetPos + set in Gui, Show
-button icons + tooltip
-color - Main Window B/S + List B/S
+if status = validation pending + others? wait for some time before message ? 
 orderbook open - ensure no filters?
 
 Link Orders
@@ -53,6 +46,7 @@ cleanup function/global objects mess - seperate out
 Other Entry Order types - SL/SLM - Slippage, Market?  
 	Use orderStatusTracker for SL orders, add stop if status complete else notify 
 Option for Stop orders - SL vs SLM
+Option for non default size
 Cancel Orders
 Partial Stop orders - Modify Stop Size = Filled size when Trailing + what to do with unfilled entry
 Multiple Orders?  Target orders?
