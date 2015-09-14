@@ -63,6 +63,16 @@ doOpenOrdersExist(){
 	return OpenOrders.size > 0 
 }
 
+getOpenOrderCount(){
+	global OpenOrders
+	return OpenOrders.size
+}
+
+getCompletedOrderCount(){
+	global CompletedOrders
+	return CompletedOrders.size
+}
+
 /*
    Get Order ID of newly opened orders, searches both open and completed orders
    Assuming only 1 opened/completed since last read
@@ -162,8 +172,13 @@ isEntryComplete(){
 }
 
 isStatusOpen( status ){
-	global ORDER_STATUS_OPEN, ORDER_STATUS_TRIGGER_PENDING
-	return status==ORDER_STATUS_OPEN || status==ORDER_STATUS_TRIGGER_PENDING
+	global ORDER_STATUS_OPEN, ORDER_STATUS_TRIGGER_PENDING, ORDER_STATUS_VP, ORDER_STATUS_PUT
+	return status==ORDER_STATUS_OPEN || status==ORDER_STATUS_TRIGGER_PENDING || status==ORDER_STATUS_VP || status==ORDER_STATUS_PUT
+}
+
+isStatusClosed( status ){
+	global ORDER_STATUS_COMPLETE, ORDER_STATUS_REJECTED, ORDER_STATUS_CANCELLED
+	return status==ORDER_STATUS_COMPLETE || status==ORDER_STATUS_REJECTED || status==ORDER_STATUS_CANCELLED 
 }
 
 // ----------
@@ -205,10 +220,8 @@ openOrderBook(){
 	IfWinExist,  %TITLE_ORDER_BOOK%
 		return
 	
-	WinGetTitle, currentWindow, A 								// ControlSend F3 is activating NOW. Workaround save and active current window			
-	ControlSend, SysListView323 , {F3}, %TITLE_NOW%				// open orderbook		
-	WinActivate, %currentWindow%	
-	
+	WinMenuSelectItem, %TITLE_NOW%,, Orders and Trades, Order Book		// open orderbook
+
 	WinWait, %TITLE_ORDER_BOOK%
 	WinMinimize, %TITLE_ORDER_BOOK%	
 }

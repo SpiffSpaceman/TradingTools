@@ -27,6 +27,7 @@ loadSettings(){
     IniRead, HKStopTrigger,   	OrderMan.ini, OrderMan, HKStopTrigger
     IniRead, HKStopTrigger,   	OrderMan.ini, OrderMan, HKStopTrigger
     IniRead, TickSize,      	OrderMan.ini, OrderMan, TickSize
+    IniRead, LastWindowPosition,OrderMan.ini, OrderMan, LastWindowPosition
     
     IniRead, value, OrderMan.ini, OrderMan, AutoSubmit
     AutoSubmit   := value=="true"
@@ -34,4 +35,10 @@ loadSettings(){
     IniRead, value,	OrderMan.ini, OrderMan, Scrip    
 	local fields := StrSplit( value , ",")
 	Scrip  		 := getScrip(fields[1], fields[2], fields[3], fields[4], fields[5], fields[6] )
+}
+
+saveLastPosition(){
+	WinGetPos, X, Y,,, OrderMan ahk_class AutoHotkeyGUI
+    value = X%X% Y%Y%
+	IniWrite, %value%, OrderMan.ini, OrderMan, LastWindowPosition
 }

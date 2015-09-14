@@ -1,11 +1,14 @@
 Test after entry complete
-	- Trail above price allowed after complete - isEntryComplete()
+	 - Trail above price allowed after complete - isEntryComplete()
 Test - Price entry, Update button Enabled if linked order is open
 
 
 
-Open GUI in last saved location - save to settings, use WinGetPos + set in Gui, Show
-color - List B/S
+
+Other Entry Order types - SL/SLM - Slippage, Market?  
+	Option for Stop orders - SL vs SLM
+	Use orderStatusTracker for SL Entry orders, add stop if status complete else notify 
+    Option to change order type for open order + handle filled size
 
 
 
@@ -35,20 +38,36 @@ color - List B/S
 
 
 -----------------------------------------------------------------------------------------
-if status = validation pending + others? wait for some time before message ? 
-orderbook open - ensure no filters?
+Cancel Open Orders 
+    - both should be open
+    - Handle partially Filled orders
+    - Square Off - Market Stop order only if entry is complete - else cancel
+
+Partial Stop orders
+    - Show filled size for Entry/Stop
+    - Maybe Stop order only entered once filled and stop size modified if Entry Size increases
+        - But should always have protective stop for limit orders ( and so also for SL-Limit orders once triggered ) 
+    - Even for Limit Entry orders, partial fill affects trailing stop orders
+    - Modify Stop Size = Filled size when Trailing 
+    - Unfilled -> Need to have seperate protective stop behind Limit price for unfilled orders once order is a LIMIT order 
+            ( Limit / SL-Limit after trigger)
+        Should be cancelled once size = 0, ie Filled completely
+        option to cancel both - remaining qty 
+        Trailing Stop size should be always = Filled Size
+        Need to differentiate between original stop and Trailing stop ( only when order is unfilled)
+            Orignial Stop for unfilled size cannot be moved beyond Entry price
+    - Square Off - Market Stop order for filled position + cancel rest
 
 Link Orders
 	- how to check Trading symbol against actual scrip - maybe take TradingSymbol as input in ini and use in other places too
 	- Can use as filter in read orders - so will get applied to most functions
-cleanup function/global objects mess - seperate out
 -----------------------------------------------------------------------------------------
-Other Entry Order types - SL/SLM - Slippage, Market?  
-	Use orderStatusTracker for SL orders, add stop if status complete else notify 
-Option for Stop orders - SL vs SLM
-Option for non default size
-Cancel Orders
-Partial Stop orders - Modify Stop Size = Filled size when Trailing + what to do with unfilled entry
-Multiple Orders?  Target orders?
-Multiple scrips?
+orderbook open - ensure no filters?
+Target orders? 2 part exits
+Multiple scrips, Multiple Orders 
+    - One Order at a time
+    - Keep array of orders and current context
+    - Switch context on Scrip/Order change
+    - refresh orderbook too on context change + Filter all data for specific scrip - So everything else becomes per scrip    
 thin gui less mode, just get everything as input + unique id -  create order and return uniqueid-orderid pair
+

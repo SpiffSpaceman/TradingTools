@@ -31,13 +31,18 @@ TITLE_BUY					  := "Buy Order Entry"
 TITLE_SELL					  := "Sell Order Entry"
 TITLE_TRANSACTION_PASSWORD 	  := "Transaction Password"
 
-ORDER_STATUS_COMPLETE 		  := "complete"
+ORDER_STATUS_PUT			  := "put order req received"
+ORDER_STATUS_VP				  := "validation pending"
 ORDER_STATUS_OPEN	  		  := "open"
 ORDER_STATUS_TRIGGER_PENDING  := "trigger pending"
+ORDER_STATUS_COMPLETE 		  := "complete"
+ORDER_STATUS_REJECTED		  := "rejected"
+ORDER_STATUS_CANCELLED		  := "cancelled"
+
 
 loadSettings()
-createGUI()
 readOrderBook()
+createGUI()
 linkOrderPrompt()
 initializeStatusTracker()
 installHotkeys()

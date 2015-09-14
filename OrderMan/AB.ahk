@@ -29,15 +29,22 @@ getEntryPriceFromAB(){
 	price := getPriceFromAB()
 	if( price > 0 ){
 		setEntryPrice( price )
-	}	
+		guessDirection()
+	}
 }
 
 getStopPriceFromAB(){
 	price := getPriceFromAB()
 	if( price > 0 ){
 		setStopPrice( price )
+		guessDirection()
 	}
-} 
+}
+guessDirection(){
+	global EntryPrice, StopTrigger
+	
+	setDirection( EntryPrice>StopTrigger ? "B" : "S" )
+}
 
 getPriceFromAB(){
 	IfWinActive, OrderMan

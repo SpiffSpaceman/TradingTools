@@ -90,7 +90,7 @@ modifyOrderCommon( orderNOW,  direction, scrip, orderDetails ){
 
 newOrderCommon( direction, scrip, order ){
 	
-	global ORDER_STATUS_COMPLETE, ORDER_STATUS_OPEN, ORDER_STATUS_TRIGGER_PENDING
+	global ORDER_STATUS_COMPLETE, ORDER_STATUS_OPEN, ORDER_STATUS_TRIGGER_PENDING, ORDER_STATUS_PUT, ORDER_STATUS_VP
 	
 	readOrderBook()															// Read current status so that we can identify new order
 	
@@ -109,6 +109,13 @@ newOrderCommon( direction, scrip, order ){
 	}
 
 	status := orderNOW.status												// check status
+	
+	Loop, 12{																// Wait for upto 3 seconds for order to be validated
+		if( status == ORDER_STATUS_PUT || status == ORDER_STATUS_VP )
+			Sleep, 250
+		else
+			break
+	}	
 																			// if Entry order may have failed, ask
 	if( status != ORDER_STATUS_OPEN && status != ORDER_STATUS_TRIGGER_PENDING && status != ORDER_STATUS_COMPLETE  ){
 
@@ -126,11 +133,11 @@ openOrderForm( direction ){
 	
 	if( direction == "B" ){
 		winTitle := TITLE_BUY
-		ControlSend, SysListView323, {F1}, %TITLE_NOW%						// F1 for Buy
+		WinMenuSelectItem, %TITLE_NOW%,, Orders and Trades, Buy Order Entry	// F1 F2 F3 sometimes (rarely) does not work. Menu Does
 	}
 	else if( direction == "S" ){
 		winTitle := TITLE_SELL
-		ControlSend, SysListView323, {F2}, %TITLE_NOW%						// F2 for Sell
+		WinMenuSelectItem, %TITLE_NOW%,, Orders and Trades, Sell Order Entry
 	}		
 	WinWait, %winTitle%,,5
 	
