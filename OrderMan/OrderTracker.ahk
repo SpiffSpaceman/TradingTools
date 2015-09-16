@@ -30,7 +30,8 @@ readOrderBook(){
 	Register Order Tracking Timer Function
 */
 initializeStatusTracker(){
-	SetTimer, orderStatusTracker, 2500
+	global ORDERBOOK_POLL_TIME
+	SetTimer, orderStatusTracker, % ORDERBOOK_POLL_TIME
 	SetTimer, orderStatusTracker, off
 }
 
@@ -61,7 +62,7 @@ toggleStatusTracker( on_off ){
 	Also creates pending order if Stop Entry order was triggered
 */
 orderStatusTracker(){
-	Critical 													// Mark Timer thread Data fetch as Critical to avoid any possible Mixup with main thread ( esp with linked orders )
+	Critical 														// Mark Timer thread Data fetch as Critical to avoid any possible Mixup with main thread 
 																	// Marking it as critical should avoid Main thread from running
 	refreshLinkedOrderDetails()										// Otherwise can get problem with entryOrderNOW / stopOrderNOW in unlink()
 	createSLOrderOnEntryTrigger()
@@ -96,12 +97,12 @@ getCompletedOrderCount(){
    Returns order object if found, -1 if not found
 */
 getNewOrder(){											
-	global OpenOrders, CompletedOrders
+	global OpenOrders, CompletedOrders, NEW_ORDER_WAIT_TIME
 	
 	openOrdersOld		:=  OpenOrders
 	completedOrdersOld  :=  CompletedOrders
 	
-	Loop, 5{													// Wait for upto 5 seconds for new order
+	Loop, % NEW_ORDER_WAIT_TIME {								// Wait for new order to show up in OrderBook
 		readOpenOrders()
 		readCompletedOrders()
 		
@@ -121,8 +122,9 @@ getNewOrder(){
 
 /*
 	Link with Input Order
+	Linking Stop Order is optional
 */
-linkOrders( entryOrderID, stopOrderID ){
+linkOrders( entryOrderID, stopOrderID, isStopLinked ){
 	
 	global entryOrderNOW, stopOrderNOW
 	
@@ -135,12 +137,12 @@ linkOrders( entryOrderID, stopOrderID ){
 	}
 		
 	order2 := getOrderDetails( stopOrderID )
-	if( order2 == -1 ){
+	if( order2 == -1 && isStopLinked ){		
 		MsgBox, 262144,, Order %stopOrderID% Not found
 		return false
 	}
 	
-	if( order.tradingSymbol != order2.tradingSymbol  ){
+	if( isStopLinked && (order.tradingSymbol != order2.tradingSymbol)  ){
 		MsgBox, 262144,, Orders have different Trading Symbols 
 		return false	
 	}

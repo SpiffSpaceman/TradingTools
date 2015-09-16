@@ -24,10 +24,11 @@ loadSettings(){
     IniRead, DefaultStopSize,	OrderMan.ini, OrderMan, DefaultStopSize
     IniRead, MaxStopSize,   	OrderMan.ini, OrderMan, MaxStopSize
     IniRead, HKEntryPrice,   	OrderMan.ini, OrderMan, HKEntryPrice
-    IniRead, HKStopPrice,   	OrderMan.ini, OrderMan, HKStopPrice    
+    IniRead, HKStopPrice,   	OrderMan.ini, OrderMan, HKStopPrice
     IniRead, TickSize,      	OrderMan.ini, OrderMan, TickSize
     IniRead, LastWindowPosition,OrderMan.ini, OrderMan, LastWindowPosition
-    IniRead, EntryOrderType,    OrderMan.ini, OrderMan, EntryOrderType    
+    IniRead, EntryOrderType,    OrderMan.ini, OrderMan, EntryOrderType
+    IniRead, MaxSlippage,       OrderMan.ini, OrderMan, MaxSlippage
     
     IniRead, value, OrderMan.ini, OrderMan, AutoSubmit
     AutoSubmit   := value=="true"

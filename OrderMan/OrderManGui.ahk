@@ -37,7 +37,7 @@ createGUI(){
 	Gui, 1:Add, Button, gopenLinkOrdersGUI vBtnLink x+10, Link			// Link or Update
 	Gui, 1:Add, Button, gupdateOrderBtn vBtnUpdate  xp+0 yp+0 hide, Update
 	
-	Gui, 1:Add, DropDownList, vEntryOrderType w45 Choose1 ym, L|SLM
+	Gui, 1:Add, DropDownList, vEntryOrderType w45 Choose1 ym, L|SLM|SL|M // Entry Type
 	//Gui, 1:Add, DropDownList, w45 Choose1, SLM|SL
 	Gui, 1:Add, Text, vCurrentResult  w30
 	
@@ -216,8 +216,9 @@ openStatusGUI(){
 initalizeListViewVars(){
 	global
 	
-	listViewFields 	   	    := "Scrip|Status|OrderType|Buy/Sell|Qty|Price|Trigger|Order No|Time"
-	listViewOrderIDPosition := 8
+	listViewFields 	   	      := "Scrip|Status|OrderType|Buy/Sell|Qty|Price|Trigger|Order No|Time"
+	listViewOrderIDPosition   := 8
+	listViewOrderTypePosition := 3
 }
 
 addOrderRow( o ) {
@@ -249,7 +250,7 @@ updateCurrentResult(){
 	GuiControl, 1:Text, CurrentResult, %CurrentResult%	
 }
 
-orderBtn(){	
+orderBtn(){
 	global Scrip, EntryOrderType, Direction, Qty, ProdType, EntryPrice, StopPrice
 		
 	Gui, 1:Submit, NoHide										// sets variables from GUI
@@ -330,39 +331,51 @@ linkOrderPrompt(){
 }
 
 linkOrdersSubmit(){
-	global entryOrderNOW, stopOrderNOW, listViewOrderIDPosition
+	global ORDER_TYPE_LIMIT, ORDER_TYPE_MARKET, entryOrderNOW, stopOrderNOW, listViewOrderIDPosition, listViewOrderTypePosition
 	
-	Gui, 2:ListView, SysListView321							// Get Selected Orders
-	rowno := LV_GetNext()
-	if( rowno > 0 )
-		LV_GetText( entryOrderId, rowno, listViewOrderIDPosition )
+// Get Selected Orders
+	Gui, 2:ListView, SysListView321
+	rowno := LV_GetNext()									// Entry Order ListView Selected row
+	if( rowno > 0 ){
+		LV_GetText( entryOrderId,   rowno, listViewOrderIDPosition )
+		LV_GetText( entryOrdertype, rowno, listViewOrderTypePosition )
+	}
 	
 	Gui, 2:ListView, SysListView322
-	rowno := LV_GetNext()
+	rowno := LV_GetNext()									// Stop Order ListView Selected row
 	if( rowno > 0 )
 		LV_GetText( stopOrderId, rowno, listViewOrderIDPosition )
 	
+// Validations
 	if( entryOrderId == "" ){
 		MsgBox, 262144,, Select Entry Order
 		return
 	}
 	if( stopOrderId == "" ){
-		MsgBox, 262144,, Select Stop Order
-		return
+		if( entryOrdertype == ORDER_TYPE_LIMIT || entryOrdertype == ORDER_TYPE_MARKET ){
+			MsgBox, 262144,, Select Stop Order				// Allow skipping Stop order linking for SL/SLM Orders
+			return
+		}
+		else{
+			MsgBox, 262144,, Stop order is not linked, Enter Price and click Update immediately to ready Stop order
+		}		
 	}
 	if( entryOrderId == stopOrderId ){
 		MsgBox, 262144,, Selected Entry And Stop Order are same
 		return
 	}
 	
-	if( !linkOrders( entryOrderId, stopOrderId ))			// set Entry and Stop order objects
+// Link Orders in Current Context
+	if( !linkOrders( entryOrderId, stopOrderId, stopOrderId == "" ? false : true ))
 		return
 	
 	Gui, 2:Destroy
 	Gui  1:Default
 	
-	e := entryOrderNOW
-	s := stopOrderNOW
+	e 		   := entryOrderNOW
+	s 		   := stopOrderNOW	
+	entryPrice := (entryOrdertype == ORDER_TYPE_LIMIT || entryOrdertype == ORDER_TYPE_MARKET) ? order.price : order.triggerPrice		
+	
 	setGUIValues( e.totalQty, e.price, s.triggerPrice, getDirectionFromOrder(e), getOrderTypeFromOrder(e) )
 	updateCurrentResult()
 }

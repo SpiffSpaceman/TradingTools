@@ -44,6 +44,10 @@ ORDER_TYPE_MARKET			  := "MARKET"
 ORDER_TYPE_SL_LIMIT			  := "SL"
 ORDER_TYPE_SL_MARKET		  := "SL-M"
 
+ORDERBOOK_POLL_TIME			  := 2500										// Time between reading of OrderBook status by Tracker. In ms
+NEW_ORDER_WAIT_TIME			  := 5											// How many seconds to wait for New Submitted Order to appear in orderbook. 
+OPEN_ORDER_WAIT_TIME		  := 5											// How many seconds to wait for Order to be Open ( ie for validation etc to be over)
+																				// Warning message shown after wait period
 loadSettings()
 readOrderBook()
 createGUI()

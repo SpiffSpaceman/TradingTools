@@ -20,13 +20,13 @@
 	pendingStop = Stop order details for SL Entry waiting to be created on Entry order completion
 */
 createOrders( scrip, entryOrderType, stopOrderType, direction, qty, prodType, entryPrice, stopPrice ){
-	global entryOrderNOW, stopOrderNOW, pendingStop, TITLE_NOW, ORDER_TYPE_LIMIT, ORDER_TYPE_SL_LIMIT, ORDER_TYPE_SL_MARKET
+	global entryOrderNOW, stopOrderNOW, pendingStop, TITLE_NOW
 	
 	if ( !checkOpenOrderEmpty() )
 		return
 	
 // Entry
-	entry		  := getEntryForOrderType(entryOrderType, qty, prodType, entryPrice )
+	entry		  := getEntryForOrderType(entryOrderType, qty, prodType, entryPrice, direction )
 	entryOrderNOW := createNewOrder( direction, scrip, entry )
 	if( ! IsObject(entryOrderNOW)  )
 		return	
@@ -45,10 +45,10 @@ modifyOrders( scrip, entryOrderType, stopOrderType, qty, prodType, entryPrice, s
 	
 	global entryOrderNOW, stopOrderNOW	
 	
-	if( IsObject(entryOrderNOW) && entryPrice != "" ){
+	if( IsObject(entryOrderNOW) && entryPrice != "" ){		
 		
-		entry		    := getEntryForOrderType(entryOrderType, qty, prodType, entryPrice )		
 		direction 	    := getDirectionFromOrder( entryOrderNOW )			// same direction as linked order
+		entry		    := getEntryForOrderType(entryOrderType, qty, prodType, entryPrice, direction )	
 		entryOrderNOW   := modifyOrder( entryOrderNOW, direction, scrip, entry )
 	}
 	
@@ -97,14 +97,21 @@ createSLOrderOnEntryTrigger(){
 /*
 	Return Entry Order details based on Order Type
 */
-getEntryForOrderType(entryOrderType, qty, prodType, entryPrice ){
-	global ORDER_TYPE_LIMIT, ORDER_TYPE_SL_MARKET
+getEntryForOrderType(entryOrderType, qty, prodType, entryPrice, direction ){
+	global MaxSlippage, ORDER_TYPE_LIMIT, ORDER_TYPE_MARKET, ORDER_TYPE_SL_MARKET, ORDER_TYPE_SL_LIMIT
 	
 	if( entryOrderType == ORDER_TYPE_LIMIT ){
 		entry := getOrder(entryOrderType, qty, entryPrice, 0, prodType  )
 	}
+	else if( entryOrderType == ORDER_TYPE_MARKET ){
+		entry := getOrder(entryOrderType, qty, 0, 0, prodType  )
+	}
 	else if( entryOrderType == ORDER_TYPE_SL_MARKET ){
 		entry := getOrder(entryOrderType, qty, 0, entryPrice, prodType  )
+	}
+	else if( entryOrderType == ORDER_TYPE_SL_LIMIT ){
+		limitprice := direction == "B" ? entryPrice + MaxSlippage : entryPrice - MaxSlippage
+		entry 	   := getOrder(entryOrderType, qty, limitprice, entryPrice, prodType )
 	}
 	
 	return entry
@@ -180,7 +187,7 @@ modifyOrder( orderNOW,  direction, scrip, orderDetails ){
 */
 createNewOrder( direction, scrip, order ){
 	
-	global ORDER_STATUS_COMPLETE, ORDER_STATUS_OPEN, ORDER_STATUS_TRIGGER_PENDING, ORDER_STATUS_PUT, ORDER_STATUS_VP
+	global ORDER_STATUS_COMPLETE, ORDER_STATUS_OPEN, ORDER_STATUS_TRIGGER_PENDING
 	
 	readOrderBook()															// Read current status so that we can identify new order
 	
@@ -197,15 +204,9 @@ createNewOrder( direction, scrip, order ){
 			return -1
 		orderNOW := getNewOrder()
 	}
-
-	status := orderNOW.status												// check status
 	
-	Loop, 12{																// Wait for upto 3 seconds for order to be validated
-		if( status == ORDER_STATUS_PUT || status == ORDER_STATUS_VP )
-			Sleep, 250
-		else
-			break
-	}	
+	orderNOW := waitforOrderValidation( orderNOW )
+	status   := orderNOW.status
 																			// if Entry order may have failed, ask
 	if( status != ORDER_STATUS_OPEN && status != ORDER_STATUS_TRIGGER_PENDING && status != ORDER_STATUS_COMPLETE  ){
 
@@ -216,6 +217,28 @@ createNewOrder( direction, scrip, order ){
 	}
 	
 	return orderNOW
+}
+
+/*
+	Wait for order to be validated - wait if status is validation pending or put order req recieved
+*/
+waitforOrderValidation( order ){
+	global OPEN_ORDER_WAIT_TIME, ORDER_STATUS_PUT, ORDER_STATUS_VP
+	
+	Loop, % OPEN_ORDER_WAIT_TIME*4 {
+		
+		status := order.status
+
+		if( status == ORDER_STATUS_PUT || status == ORDER_STATUS_VP ){
+			Sleep, 250
+			readOrderBook()
+			order := getOrderDetails( order.nowOrderNo  )
+		}
+		else
+			break
+	}
+
+	return order
 }
 
 /*

@@ -1,20 +1,17 @@
 Test after entry complete
 	 - Trail above price allowed after complete - isEntryComplete()
-Test - Price entry, Update button Enabled if linked order is open
 
 
-Link Orders
-    - Allow Pending Stop creation with only Entry Linked - Need Stop input 
-    - modify should work already? Then just need to allow link with only entry if SL order
-    - For Open SL Entry orders
-
-Other Entry Order types
-    SL-Limit - SLM + Slippage - calculate Limit from Input Trigger
-    Market
-    Option to change order type for open order - Only Allow Limit->Market OR SL-Limit->SL-Market
+Test Link Orders - linkOrdersSubmit() 
+    - Only Entry Linked - Pending Stop creation on update click
+    - Price entry, Update button Enabled if linked order is open
 
 
 
+Cancel Open Orders
+    - Entry should not be complete
+    - Handle partially Filled orders
+    - Square Off - Market Stop order only if entry is complete - else cancel
 
 
 
@@ -40,10 +37,9 @@ Other Entry Order types
 
 
 -----------------------------------------------------------------------------------------
-Cancel Open Orders
-    - both should be open
-    - Handle partially Filled orders
-    - Square Off - Market Stop order only if entry is complete - else cancel
+Option to change order type for open order - Only Allow Limit->Market OR SL-Limit->SL-Market
+Borderless option - Right click Menu?
+Settings GUI + maybe add tabs for settings of other applications + option to change month/year in scripname
 
 option to do just 1 order without stop
 
@@ -66,14 +62,13 @@ Link Orders
 	- how to check Trading symbol against actual scrip - maybe take TradingSymbol as input in ini and use in other places too
 	- Can use as filter in read orders - so will get applied to most functions
 -----------------------------------------------------------------------------------------
-Settings GUI + maybe add tabs for settings of other applications + option to change month/year in scripname
 orderbook open - ensure no filters?
 Option for Stop orders - SL-Limit ?
-Target orders? 2 part exits
+Target orders? 
+2 part exits
 Multiple scrips, Multiple Orders 
     - One Order at a time
     - Keep array of orders and current context
     - Switch context on Scrip/Order change
     - refresh orderbook too on context change + Filter all data for specific scrip - So everything else becomes per scrip    
 thin gui less mode, just get everything as input + unique id -  create order and return uniqueid-orderid pair
-
