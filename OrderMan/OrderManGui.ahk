@@ -16,36 +16,39 @@
 */
 
 createGUI(){
-	global Qty, EntryPrice, StopTrigger, Direction, CurrentResult, BtnOrder, BtnUpdate, BtnLink, BtnUnlink, EntryStatus, StopStatus, LastWindowPosition
+	global Qty, EntryPrice, StopPrice, Direction, CurrentResult, BtnOrder, BtnUpdate, BtnLink, BtnUnlink, EntryStatus, StopStatus, LastWindowPosition, EntryOrderType
 	
 	SetFormat, FloatFast, 0.2
 		
 	Gui, 1:New, +AlwaysOnTop +Resize, OrderMan
-																		// Column 1
-	Gui, 1:Add, Edit, vQty w30
+
 	Gui, 1:Add, ListBox, vDirection gonDirectionChange h30 w20 Choose1, B|S	
+	Gui, 1:Add, Edit, vQty w30											// Column 1
 		
 	Gui, 1:Add, Text, ym, Entry											// Column 2	
 	Gui, 1:Add, Text, gstopClick, Stop
 			
 	Gui, 1:Add, Edit, vEntryPrice w55 ym gupdateCurrentResult 			// Column 3
-	Gui, 1:Add, Edit, vStopTrigger w55 gupdateCurrentResult
+	Gui, 1:Add, Edit, vStopPrice w55 gupdateCurrentResult
+		
+	Gui, 1:Add, Button, gorderBtn vBtnOrder xp-35 y+m, New				// New or Unlink
+	Gui, 1:Add, Button, gunlinkBtn vBtnUnlink hide xp+0 yp+0, Unlink	
+
+	Gui, 1:Add, Button, gopenLinkOrdersGUI vBtnLink x+10, Link			// Link or Update
+	Gui, 1:Add, Button, gupdateOrderBtn vBtnUpdate  xp+0 yp+0 hide, Update
 	
-	Gui, 1:Add, Button, gupdateOrderBtn vBtnUpdate hide, Update			// Link or Update
-	Gui, 1:Add, Button, gopenLinkOrdersGUI vBtnLink xp+0 yp+0, Link
-	
-	Gui, 1:Add, Button, gorderBtn vBtnOrder xp-50, New					// New or Unlink
-	Gui, 1:Add, Button, gunlinkBtn vBtnUnlink hide xp+0 yp+0, Unlink
+	Gui, 1:Add, DropDownList, vEntryOrderType w45 Choose1 ym, L|SLM
+	//Gui, 1:Add, DropDownList, w45 Choose1, SLM|SL
+	Gui, 1:Add, Text, vCurrentResult  w30
 	
 	Gui, 1:Add, Text, ym vEntryStatus
-	Gui, 1:Add, Text, vStopStatus
-	Gui, 1:Add, Text, vCurrentResult  w30
+	Gui, 1:Add, Text, vStopStatus	
 	
 	Gui, 1:Add, StatusBar, gstatusBarClick, 							// Status Bar - Shows link order Numbers. Double click to link manually
 	
 	Gui, 1:Show, AutoSize NoActivate %LastWindowPosition% 
 		
-	setGUIValues(Qty, 0, 0, "B")
+	setGUIValues(Qty, 0, 0, "B", EntryOrderType)
 	
 	initalizeListViewVars()
 	
@@ -62,8 +65,8 @@ updateStatus(){
 	stopLinked	:= IsObject( stopOrderNOW )
 	anyLinked	:= entryLinked || stopLinked 
 
-	entryOpen	:= entryLinked && isStatusOpen( entryOrderNOW.status )
-	stopOpen	:= stopLinked  && isStatusOpen( stopOrderNOW.status  )
+	entryOpen	:= isOrderOpen( entryOrderNOW )
+	stopOpen	:= isOrderOpen( stopOrderNOW  )
 	
 	GuiControl, % anyLinked ? "1:Disable" : "1:Enable", Direction					// Disable Direction if orders Linked
 	GuiControl, % anyLinked ? "1:Show"    : "1:Hide",   BtnUnlink					// Show Order if unlinked. If orders links show Unlink button instead
@@ -73,7 +76,7 @@ updateStatus(){
 	GuiControl, % entryOpen    || stopOpen  ? "1:Hide"  : "1:Show", BtnLink			// Else show Link
 	
 	GuiControl, % !entryLinked || entryOpen ? "1:Enable"  : "1:Disable", EntryPrice	// Enable Price entry for new orders or for linked open orders
-	GuiControl, % !stopLinked  || stopOpen  ? "1:Enable"  : "1:Disable", StopTrigger
+	GuiControl, % !stopLinked  || stopOpen  ? "1:Enable"  : "1:Disable", StopPrice
 	
 	if( entryLinked ){																// Set Status if Linked
 		shortStatus	:= getOrderShortStatus( entryOrderNOW.status )
@@ -84,8 +87,14 @@ updateStatus(){
 		GuiControl, 1:Text, EntryStatus, 
 		GuiControl, 1:Move, EntryStatus, w1
 	}
-	if( stopLinked ){
+	
+	isStopPending := isPendingStopActive()											// Is Stop waiting for Entry to trigger
+	
+	if( stopLinked || isStopPending ){
 		shortStatus	:= getOrderShortStatus( stopOrderNOW.status )
+		if(  shortStatus == "" && isStopPending )
+			shortStatus := "P"
+			
 		GuiControl, 1:Text, StopStatus, % shortStatus
 		GuiControl, 1:Move, StopStatus, % shortStatus == stopOrderNOW.status ? "w125" : "w30"
 	}
@@ -94,20 +103,20 @@ updateStatus(){
 		GuiControl, 1:Move, StopStatus, w1
 	}
 	
-	isEntryClosed := entryLinked && isStatusClosed( entryOrderNOW.status )		// If order linked, start tracking orderbook
-	isStopClosed  := stopLinked	 && isStatusClosed( stopOrderNOW.status )		// But stop if both closed
+	isEntryClosed := entryLinked && isOrderClosed( entryOrderNOW )					// If order linked, start tracking orderbook
+	isStopClosed  := stopLinked	 && isOrderClosed( stopOrderNOW )					// But stop if both closed
 	isTimerActive := (entryLinked || stopLinked) && ! (isEntryClosed && isStopClosed)
 
 	isTimerActive := isTimerActive ?  toggleStatusTracker( "on" ) : toggleStatusTracker( "off" )	
-	timeStatus    := isTimerActive ? "A" : "I"
+	timeStatus    := isTimerActive ? "ON" : "OFF"
 			
-	SB_SetText( timeStatus . "  Open: " . getOpenOrderCount() . "  Complete: " . getCompletedOrderCount() )
+	SB_SetText( "Timer: " . timeStatus . "  Open: " . getOpenOrderCount() . "  Complete: " . getCompletedOrderCount() )
 	
 	Gui, 1:Show, AutoSize NA
 }
 
 getOrderShortStatus( status ){
-	global ORDER_STATUS_OPEN, ORDER_STATUS_TRIGGER_PENDING, ORDER_STATUS_COMPLETE, ORDER_STATUS_REJECTED, ORDER_STATUS_CANCELLED
+	global
 	
 	if( status == ORDER_STATUS_OPEN )
 		return "O"
@@ -205,14 +214,15 @@ openStatusGUI(){
 }
 
 initalizeListViewVars(){
-	global listViewFields, listViewOrderIDPosition
+	global
 	
 	listViewFields 	   	    := "Scrip|Status|OrderType|Buy/Sell|Qty|Price|Trigger|Order No|Time"
 	listViewOrderIDPosition := 8
 }
 
-addOrderRow( o ) {		
-	LV_Add("", o.tradingSymbol, o.status, o.orderType, o.buySell, o.totalQty, o.price, o.triggerPrice, o.nowOrderNo, o.nowUpdateTime )
+addOrderRow( o ) {
+	if( IsObject(o) )
+		LV_Add("", o.tradingSymbol, o.status, o.orderType, o.buySell, o.totalQty, o.price, o.triggerPrice, o.nowOrderNo, o.nowUpdateTime )
 }
 
 unlinkBtn(){
@@ -222,65 +232,93 @@ unlinkBtn(){
 }
 
 setDefaultStop(){
-	global EntryPrice, StopTrigger, Direction, DefaultStopSize
+	global
 		
 	Gui, 1:Submit, NoHide			
-	StopTrigger :=  Direction == "B" ? EntryPrice-DefaultStopSize : EntryPrice+DefaultStopSize		
-	GuiControl, 1:Text, StopTrigger, %StopTrigger%
+	StopPrice :=  Direction == "B" ? EntryPrice-DefaultStopSize : EntryPrice+DefaultStopSize		
+	GuiControl, 1:Text, StopPrice, %StopPrice%
 	
 	updateCurrentResult()
 }
 
 updateCurrentResult(){
-	global EntryPrice, StopTrigger, Direction, CurrentResult
+	global
 	
 	Gui, 1:Submit, NoHide
-	CurrentResult := Direction == "B" ? StopTrigger-EntryPrice : EntryPrice-StopTrigger
+	CurrentResult := Direction == "B" ? StopPrice-EntryPrice : EntryPrice-StopPrice
 	GuiControl, 1:Text, CurrentResult, %CurrentResult%	
 }
 
 orderBtn(){	
-	global EntryPrice, StopTrigger, Direction, Qty, ProdType, Scrip
+	global Scrip, EntryOrderType, Direction, Qty, ProdType, EntryPrice, StopPrice
 		
 	Gui, 1:Submit, NoHide										// sets variables from GUI
 	
 	setEntryPrice( roundToTickSize(EntryPrice) )
-	setStopPrice(  roundToTickSize(StopTrigger) )
+	setStopPrice(  roundToTickSize(StopPrice) )
 		
 	if( !validateInput() )
 		return
 		
-	entryOrder	:= getOrder("", Qty, EntryPrice, 0,	 	      ProdType  )
-	stopOrder   := getOrder("", Qty, 0,  	     StopTrigger, ProdType  )
+	eot			:= getNowOrderType( EntryOrderType )
+	sot			:= getNowOrderType( "SLM" )	
 	
-	limitOrder( Direction, Scrip, entryOrder, stopOrder )
+	createOrders( Scrip, eot, sot, Direction, Qty, ProdType, EntryPrice, StopPrice )
 }
 
 updateOrderBtn(){
-	global EntryPrice, StopTrigger, Qty, ProdType, Scrip, entryOrderNOW, stopOrderNOW
+	global Scrip, EntryOrderType, Qty, ProdType, EntryPrice, StopPrice, entryOrderNOW, stopOrderNOW
 	
 	Gui, 1:Submit, NoHide
+	
+	setEntryPrice( roundToTickSize(EntryPrice) )
+	setStopPrice(  roundToTickSize(StopPrice) )
+	
 	if( !validateInput() )
 		return
-
+	
 	refreshLinkedOrderDetails()
 	
-	// Update if order linked and status is open/trigger pending and price has changed
+	// Update if order linked and status is open/trigger pending and price/qty has changed
+		
+	if( isOrderOpen( entryOrderNOW ) && hasOrderChanged(entryOrderNOW, EntryPrice, Qty)  )
+	{	 																	// Entry Order is open and Entry order has changed
+		entry := EntryPrice													// If entry is empty, modifyOrders will skip changing Entry Order
+	}
 	
-	isEntryParamsChanged := (entryOrderNOW.price != EntryPrice)  	   || ( entryOrderNOW.totalQty != Qty )
-	isStopParamsChanged  := (stopOrderNOW.triggerPrice != StopTrigger) || ( stopOrderNOW.totalQty  != Qty )
-	
-	if( IsObject(entryOrderNOW) && isStatusOpen(entryOrderNOW.status) && isEntryParamsChanged )
-		entryOrder	:= getOrder("", Qty, EntryPrice, 0,	 ProdType  )	
-	
-	if( IsObject(stopOrderNOW)  && isStatusOpen(stopOrderNOW.status)  && isStopParamsChanged )
-		stopOrder   := getOrder("", Qty, 0, StopTrigger, ProdType  )
-	
-	if( entryOrder != ""  ||  stopOrder != "" )	
-		modifyLimitOrder( Scrip, entryOrder, stopOrder )
+	if( (isOrderOpen( stopOrderNOW ) || !IsObject( stopOrderNOW )) && hasOrderChanged(stopOrderNOW, StopPrice, Qty) )
+	{																		// Stop Order is open or has not been created yet
+		stop := StopPrice													// 	   and Stop order has changed
+	} 																		// If stop is empty, modifyOrders will skip changing Stop Order
+		
+	if( entry != ""  ||  stop != "" ){
+		
+		eot	:= getNowOrderType( EntryOrderType )
+		sot	:= getNowOrderType( "SLM" )		
+		modifyOrders( Scrip, eot, sot, Qty, ProdType, entry, stop  )
+	}
 	else{
 		MsgBox, 262144,, Nothing to update or Order status is not open
 	}
+}
+
+/*
+	Check if Order Details in GUI is different than input order 
+*/
+hasOrderChanged( order, price, qty ){
+	global ORDER_TYPE_LIMIT, ORDER_TYPE_MARKET
+	
+	if( qty != order.totalQty)
+		return true
+	
+	type := order.orderType
+	
+	if( type == ORDER_TYPE_LIMIT || type == ORDER_TYPE_MARKET)
+		oldprice := order.price
+	else
+		oldprice := order.triggerPrice
+	
+	return price != oldprice
 }
 
 linkOrderPrompt(){
@@ -297,12 +335,12 @@ linkOrdersSubmit(){
 	Gui, 2:ListView, SysListView321							// Get Selected Orders
 	rowno := LV_GetNext()
 	if( rowno > 0 )
-		LV_GetText( entryOrderId, rowno, %listViewOrderIDPosition% )
+		LV_GetText( entryOrderId, rowno, listViewOrderIDPosition )
 	
 	Gui, 2:ListView, SysListView322
 	rowno := LV_GetNext()
 	if( rowno > 0 )
-		LV_GetText( stopOrderId, rowno, %listViewOrderIDPosition% )
+		LV_GetText( stopOrderId, rowno, listViewOrderIDPosition )
 	
 	if( entryOrderId == "" ){
 		MsgBox, 262144,, Select Entry Order
@@ -322,8 +360,10 @@ linkOrdersSubmit(){
 	
 	Gui, 2:Destroy
 	Gui  1:Default
-		
-	setGUIValues( entryOrderNOW.totalQty, entryOrderNOW.price, stopOrderNOW.triggerPrice, getDirectionFromOrder( entryOrderNOW ) )
+	
+	e := entryOrderNOW
+	s := stopOrderNOW
+	setGUIValues( e.totalQty, e.price, s.triggerPrice, getDirectionFromOrder(e), getOrderTypeFromOrder(e) )
 	updateCurrentResult()
 }
 
@@ -340,9 +380,9 @@ setEntryPrice( inEntry ){
 }
 
 setStopPrice( inStop ){
-	global StopTrigger
-	StopTrigger := inStop
-	GuiControl, 1:Text, StopTrigger, %StopTrigger%
+	global StopPrice
+	StopPrice := inStop
+	GuiControl, 1:Text, StopPrice, %StopPrice%
 }
 
 setDirection( inDirection ){
@@ -352,18 +392,25 @@ setDirection( inDirection ){
 	onDirectionChange()
 }
 
-setGUIValues( inQty, inEntry, inStop, inDirection ){
+selectEntryOrderType( inEntryOrderType ){
+	global EntryOrderType	
+	EntryOrderType := inEntryOrderType
+	GuiControl, 1:ChooseString, EntryOrderType,  %EntryOrderType%
+}
+
+setGUIValues( inQty, inEntry, inStop, inDirection, inEntryOrderType ){
 	
 	setQty( inQty )
 	setEntryPrice( inEntry )
 	setStopPrice( inStop )
 	setDirection( inDirection )	
+	selectEntryOrderType( inEntryOrderType )
 	
 	updateStatus()	
 }
 
 validateInput(){
-	global EntryPrice, StopTrigger, Direction, CurrentResult, MaxStopSize
+	global EntryPrice, StopPrice, Direction, CurrentResult, MaxStopSize
 	
 	if( Direction != "B" && Direction != "S"  ){
 		MsgBox, 262144,, Direction not set
@@ -374,20 +421,20 @@ validateInput(){
 		MsgBox, 262144,, Invalid Entry Price
 		return false
 	}
-	if( !isNumber(StopTrigger) ){
+	if( !isNumber(StopPrice) ){
 		MsgBox, 262144,, Invalid Stop Trigger Price
 		return false
 	}	
 	
-	if( !isEntryComplete() ){									// Allow to trail past Entry 
+	if( !isEntrySuccessful() ){									// Allow to trail past Entry 
 		if( Direction == "B" ){									// If Buying, stop should be below price and vv
-			if( StopTrigger >= EntryPrice  ){
+			if( StopPrice >= EntryPrice  ){
 				MsgBox, 262144,, Stop Trigger should be below Buy price
 				return false
 			}
 		}
 		else{
-			if( StopTrigger <= EntryPrice  ){
+			if( StopPrice <= EntryPrice  ){
 				MsgBox, 262144,, Stop Trigger should be above Sell price
 				return false
 			}

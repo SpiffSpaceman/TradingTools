@@ -3,13 +3,15 @@ Test after entry complete
 Test - Price entry, Update button Enabled if linked order is open
 
 
+Link Orders
+    - Allow Pending Stop creation with only Entry Linked - Need Stop input 
+    - modify should work already? Then just need to allow link with only entry if SL order
+    - For Open SL Entry orders
 
-
-Other Entry Order types - SL/SLM - Slippage, Market?  
-	Option for Stop orders - SL vs SLM
-	Use orderStatusTracker for SL Entry orders, add stop if status complete else notify 
-    Option to change order type for open order + handle filled size
-
+Other Entry Order types
+    SL-Limit - SLM + Slippage - calculate Limit from Input Trigger
+    Market
+    Option to change order type for open order - Only Allow Limit->Market OR SL-Limit->SL-Market
 
 
 
@@ -38,10 +40,12 @@ Other Entry Order types - SL/SLM - Slippage, Market?
 
 
 -----------------------------------------------------------------------------------------
-Cancel Open Orders 
+Cancel Open Orders
     - both should be open
     - Handle partially Filled orders
     - Square Off - Market Stop order only if entry is complete - else cancel
+
+option to do just 1 order without stop
 
 Partial Stop orders
     - Show filled size for Entry/Stop
@@ -62,7 +66,9 @@ Link Orders
 	- how to check Trading symbol against actual scrip - maybe take TradingSymbol as input in ini and use in other places too
 	- Can use as filter in read orders - so will get applied to most functions
 -----------------------------------------------------------------------------------------
+Settings GUI + maybe add tabs for settings of other applications + option to change month/year in scripname
 orderbook open - ensure no filters?
+Option for Stop orders - SL-Limit ?
 Target orders? 2 part exits
 Multiple scrips, Multiple Orders 
     - One Order at a time

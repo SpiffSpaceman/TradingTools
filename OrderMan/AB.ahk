@@ -16,13 +16,13 @@
 */
 
 installHotkeys(){
-	global HKEntryPrice, HKStopTrigger
+	global HKEntryPrice, HKStopPrice
 	
 	if( HKEntryPrice != "" && HKEntryPrice != "ERROR")
 		Hotkey, %HKEntryPrice%, getEntryPriceFromAB	
 	
-	if( HKStopTrigger != "" && HKStopTrigger != "ERROR")
-		Hotkey, %HKStopTrigger%, getStopPriceFromAB	
+	if( HKStopPrice != "" && HKStopPrice != "ERROR")
+		Hotkey, %HKStopPrice%, getStopPriceFromAB	
 }
 
 getEntryPriceFromAB(){
@@ -40,12 +40,17 @@ getStopPriceFromAB(){
 		guessDirection()
 	}
 }
+
 guessDirection(){
-	global EntryPrice, StopTrigger
+	global EntryPrice, StopPrice
 	
-	setDirection( EntryPrice>StopTrigger ? "B" : "S" )
+	setDirection( EntryPrice>StopPrice ? "B" : "S" )
 }
 
+/*
+	Called by HK
+	Get price from line under cursor if found, else get from tooltip text
+*/
 getPriceFromAB(){
 	IfWinActive, OrderMan
 		WinActivate, ahk_class AmiBrokerMainFrameClass

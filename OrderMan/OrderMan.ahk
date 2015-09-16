@@ -39,6 +39,10 @@ ORDER_STATUS_COMPLETE 		  := "complete"
 ORDER_STATUS_REJECTED		  := "rejected"
 ORDER_STATUS_CANCELLED		  := "cancelled"
 
+ORDER_TYPE_LIMIT			  := "LIMIT"
+ORDER_TYPE_MARKET			  := "MARKET"
+ORDER_TYPE_SL_LIMIT			  := "SL"
+ORDER_TYPE_SL_MARKET		  := "SL-M"
 
 loadSettings()
 readOrderBook()
@@ -78,6 +82,32 @@ isNumber( str ) {
 	if str is number
 		return true	
 	return false
+}
+
+getOrderTypeFromOrder( order ){
+	global
+	
+	if( order.orderType == ORDER_TYPE_LIMIT)
+		return "L"
+	else if( order.orderType == ORDER_TYPE_MARKET )
+		return "M"
+	else if( order.orderType == ORDER_TYPE_SL_LIMIT )
+		return "SL"
+	else if( order.orderType == ORDER_TYPE_SL_MARKET )
+		return "SLM"
+}
+
+getNowOrderType( ordertype ){
+	global
+	
+	if( ordertype == "L")
+		return ORDER_TYPE_LIMIT
+	else if( ordertype == "M")
+		return ORDER_TYPE_MARKET
+	else if( ordertype == "SL")
+		return ORDER_TYPE_SL_LIMIT
+	else if( ordertype == "SLM")
+		return ORDER_TYPE_SL_MARKET
 }
 
 getDirectionFromOrder( order ){

@@ -24,10 +24,10 @@ loadSettings(){
     IniRead, DefaultStopSize,	OrderMan.ini, OrderMan, DefaultStopSize
     IniRead, MaxStopSize,   	OrderMan.ini, OrderMan, MaxStopSize
     IniRead, HKEntryPrice,   	OrderMan.ini, OrderMan, HKEntryPrice
-    IniRead, HKStopTrigger,   	OrderMan.ini, OrderMan, HKStopTrigger
-    IniRead, HKStopTrigger,   	OrderMan.ini, OrderMan, HKStopTrigger
+    IniRead, HKStopPrice,   	OrderMan.ini, OrderMan, HKStopPrice    
     IniRead, TickSize,      	OrderMan.ini, OrderMan, TickSize
     IniRead, LastWindowPosition,OrderMan.ini, OrderMan, LastWindowPosition
+    IniRead, EntryOrderType,    OrderMan.ini, OrderMan, EntryOrderType    
     
     IniRead, value, OrderMan.ini, OrderMan, AutoSubmit
     AutoSubmit   := value=="true"
@@ -37,6 +37,9 @@ loadSettings(){
 	Scrip  		 := getScrip(fields[1], fields[2], fields[3], fields[4], fields[5], fields[6] )
 }
 
+/*
+  Save Current Position to Settings. Used to restore position on next start
+*/
 saveLastPosition(){
 	WinGetPos, X, Y,,, OrderMan ahk_class AutoHotkeyGUI
     value = X%X% Y%Y%

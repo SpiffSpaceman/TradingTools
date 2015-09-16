@@ -15,6 +15,9 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
+/*
+	Opens Order book and fetches all order details
+*/
 readOrderBook(){	
 	
 	openOrderBook()	
@@ -23,11 +26,17 @@ readOrderBook(){
 	readCompletedOrders()	
 }
 
+/*
+	Register Order Tracking Timer Function
+*/
 initializeStatusTracker(){
 	SetTimer, orderStatusTracker, 2500
 	SetTimer, orderStatusTracker, off
 }
 
+/*
+	Turn order book tracking on/off
+*/
 toggleStatusTracker( on_off ){
 	
 	static isTimerActive := false
@@ -47,29 +56,34 @@ toggleStatusTracker( on_off ){
 	return isTimerActive
 }
 
+/*
+	Tracker thread that reads orders in orderbook using Timer and updates stuff on change
+	Also creates pending order if Stop Entry order was triggered
+*/
 orderStatusTracker(){
 	Critical 													// Mark Timer thread Data fetch as Critical to avoid any possible Mixup with main thread ( esp with linked orders )
 																	// Marking it as critical should avoid Main thread from running
 	refreshLinkedOrderDetails()										// Otherwise can get problem with entryOrderNOW / stopOrderNOW in unlink()
+	createSLOrderOnEntryTrigger()
 	Critical , off
 	
 	updateStatus()
 }
 
 doOpenOrdersExist(){
-	global OpenOrders
+	global
 	
 	readOpenOrders()
 	return OpenOrders.size > 0 
 }
 
 getOpenOrderCount(){
-	global OpenOrders
+	global
 	return OpenOrders.size
 }
 
 getCompletedOrderCount(){
-	global CompletedOrders
+	global
 	return CompletedOrders.size
 }
 
@@ -105,9 +119,14 @@ getNewOrder(){
 	return foundOrder
 }
 
+/*
+	Link with Input Order
+*/
 linkOrders( entryOrderID, stopOrderID ){
 	
 	global entryOrderNOW, stopOrderNOW
+	
+	readOrderBook()
 	
 	order := getOrderDetails( entryOrderID )
 	if( order == -1 ){
@@ -131,23 +150,26 @@ linkOrders( entryOrderID, stopOrderID ){
 	return true
 }
 
+/*
+	Reset All Order pointers
+*/
 unlinkOrders(){
-	global entryOrderNOW, stopOrderNOW
+	global
 	
 	entryOrderNOW := -1
 	stopOrderNOW  := -1
+	pendingStop	  := -1
 }
 
 /*
 	Search input NOW order number in Order Book 
 	Returns order details if found else -1
+	Run readOrderBook() before calling getOrderDetails() to get latest data
 */
 getOrderDetails( inNowOrderNo ){
 	
 	global OpenOrders, CompletedOrders
-	
-	readOrderBook()
-	
+		
 	order := getOrderDetails_(OpenOrders,  inNowOrderNo )
 	if( order == -1 ){
 		order := getOrderDetails_(CompletedOrders,  inNowOrderNo )
@@ -155,8 +177,13 @@ getOrderDetails( inNowOrderNo ){
 	return order
 }
 
+/*
+	Read Orderbook, refresh Entry and Stop order Details
+*/
 refreshLinkedOrderDetails(){	
-	global entryOrderNOW, stopOrderNOW
+	global
+	
+	readOrderBook()
 	
 	if( IsObject(entryOrderNOW) )
 		entryOrderNOW := getOrderDetails( entryOrderNOW.nowOrderNo )
@@ -165,24 +192,34 @@ refreshLinkedOrderDetails(){
 		stopOrderNOW  := getOrderDetails( stopOrderNOW.nowOrderNo )
 }
 
-isEntryComplete(){
-	global entryOrderNOW, ORDER_STATUS_COMPLETE
+/*
+	Indicates whether Entry Order has status = complete
+*/
+isEntrySuccessful(){
+	global
 	
 	return  IsObject( entryOrderNOW ) && entryOrderNOW.status == ORDER_STATUS_COMPLETE
 }
 
-isStatusOpen( status ){
-	global ORDER_STATUS_OPEN, ORDER_STATUS_TRIGGER_PENDING, ORDER_STATUS_VP, ORDER_STATUS_PUT
-	return status==ORDER_STATUS_OPEN || status==ORDER_STATUS_TRIGGER_PENDING || status==ORDER_STATUS_VP || status==ORDER_STATUS_PUT
+/*
+	Indicates whether input order is in Order Book > Open Orders
+*/
+isOrderOpen( order ){	
+	return IsObject(order) && order.status2 == "O"
 }
 
-isStatusClosed( status ){
-	global ORDER_STATUS_COMPLETE, ORDER_STATUS_REJECTED, ORDER_STATUS_CANCELLED
-	return status==ORDER_STATUS_COMPLETE || status==ORDER_STATUS_REJECTED || status==ORDER_STATUS_CANCELLED 
+/*
+	Indicates whether input order is in Order Book > Completed Orders
+*/
+isOrderClosed( order ){
+	return IsObject(order) && order.status2 == "C"
 }
 
 // ----------
 
+/*
+	Search order with input numbet in order array
+*/
 getOrderDetails_( list, orderno){
 	Loop, % list.size {
 		i := A_Index
@@ -193,6 +230,9 @@ getOrderDetails_( list, orderno){
 	return -1
 }
 
+/*
+	Compare old and new order list and return First new order found 
+*/
 getNewOrder_( oldList, newList ){
 	
 	Loop, % newList.size {
@@ -215,7 +255,7 @@ getNewOrder_( oldList, newList ){
 }
 
 openOrderBook(){
-	global TITLE_NOW, TITLE_ORDER_BOOK
+	global
 	
 	IfWinExist,  %TITLE_ORDER_BOOK%
 		return
@@ -226,6 +266,9 @@ openOrderBook(){
 	WinMinimize, %TITLE_ORDER_BOOK%	
 }
 
+/*
+	Parse Through Order book > open orders
+*/
 readOpenOrders(){
 	global TITLE_ORDER_BOOK, OpenOrdersColumnIndex, OpenOrders
 	
@@ -262,11 +305,15 @@ readOpenOrders(){
 			else if( A_Index ==  OpenOrdersColumnIndex.nowUpdateTime ) 
 				order.nowUpdateTime := A_LoopField
 		}
+		order.status2		:= "O"								// Is Order Open or Completed
 		OpenOrders[A_Index] := order
 		OpenOrders.size++	
 	}
 }
 
+/*
+	Parse Through Order book > completed orders
+*/
 readCompletedOrders(){
 	global TITLE_ORDER_BOOK, CompletedOrdersColumnIndex, CompletedOrders
 	
@@ -305,11 +352,15 @@ readCompletedOrders(){
 			else if( A_Index ==  CompletedOrdersColumnIndex.rejectionReason ) 
 				order.rejectionReason := A_LoopField			
 		}
+		order.status2			 := "C"	
 		CompletedOrders[A_Index] := order
 		CompletedOrders.size++
 	}	
 }
 
+/*
+	Reads Column Header text of Open and Completed Orders in orderbook to look for position of required fields 
+*/
 readColumnHeaders(){
 	global	TITLE_ORDER_BOOK, OpenOrdersColumnIndex, CompletedOrdersColumnIndex
 	
@@ -335,6 +386,7 @@ readColumnHeaders(){
 	
 	extractColumnIndices( "Order Book > Completed Orders",  allHeaders, headers, CompletedOrdersColumnIndex, keys )	
 }
+
 /*
 	listIdentifier= Identifier text for the List, used in error message
 	allHeaders    = headers extracted from GetExternalHeaderText
@@ -363,6 +415,9 @@ extractColumnIndices( listIdentifier, allHeaders, targetHeaders, targetObject, t
 	}
 }
 
+/*
+	If Column that we want is not found in header, show message and exit
+*/
 checkEmpty( value, field, listName ){
 	global TITLE_ORDER_BOOK
 	

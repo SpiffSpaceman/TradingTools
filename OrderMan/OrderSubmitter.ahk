@@ -17,59 +17,144 @@
 
 /*
 	entryOrderNOW, stopOrderNOW = objects linked with our entry and stop orders in orderbook
+	pendingStop = Stop order details for SL Entry waiting to be created on Entry order completion
 */
-limitOrder( direction, scrip, entry, stop ){
-	global TITLE_NOW, entryOrderNOW, stopOrderNOW
-		
-	entry.orderType := "LIMIT"
-	entry.trigger	:= 0
-	stop.orderType	:= "SL-M"
-	stop.price		:= 0
+createOrders( scrip, entryOrderType, stopOrderType, direction, qty, prodType, entryPrice, stopPrice ){
+	global entryOrderNOW, stopOrderNOW, pendingStop, TITLE_NOW, ORDER_TYPE_LIMIT, ORDER_TYPE_SL_LIMIT, ORDER_TYPE_SL_MARKET
 	
 	if ( !checkOpenOrderEmpty() )
 		return
 	
-	entryOrderNOW := newOrderCommon(direction, scrip, entry)
-	
+// Entry
+	entry		  := getEntryForOrderType(entryOrderType, qty, prodType, entryPrice )
+	entryOrderNOW := createNewOrder( direction, scrip, entry )
 	if( ! IsObject(entryOrderNOW)  )
-		return
+		return	
 	
-	stopOrderNOW  := newOrderCommon( reverseDirection(direction), scrip, stop )
+// Stop
+	direction := reverseDirection(direction)
+	stop	  := getStopForOrderType( stopOrderType, qty, prodType, stopPrice )	
+
+	if( ! addPendingStop( entryOrderType, scrip, direction, stop ) )
+		stopOrderNOW  := createNewOrder( direction, scrip, stop )
 	
 	updateStatus()
 }
 
-modifyLimitOrder( scrip, entry, stop  ){
+modifyOrders( scrip, entryOrderType, stopOrderType, qty, prodType, entryPrice, stopPrice  ){
 	
 	global entryOrderNOW, stopOrderNOW	
 	
-	if( IsObject(entryOrderNOW) && entry != "" ){
+	if( IsObject(entryOrderNOW) && entryPrice != "" ){
 		
-		entry.orderType := "LIMIT"
-		entry.trigger	:= 0
-		
+		entry		    := getEntryForOrderType(entryOrderType, qty, prodType, entryPrice )		
 		direction 	    := getDirectionFromOrder( entryOrderNOW )			// same direction as linked order
-		entryOrderNOW   := modifyOrderCommon( entryOrderNOW, direction, scrip, entry )
+		entryOrderNOW   := modifyOrder( entryOrderNOW, direction, scrip, entry )
 	}
 	
-	if( IsObject(stopOrderNOW) && stop != "" ){
+	if( stopPrice != "" ){
 		
-		stop.orderType	:= "SL-M"
-		stop.price		:= 0
+		stop			:= getStopForOrderType( stopOrderType, qty, prodType, stopPrice  )		
+		direction 	    := getDirectionFromOrder( stopOrderNOW )		
 		
-		direction 	    := getDirectionFromOrder( stopOrderNOW )
-		stopOrderNOW    := modifyOrderCommon( stopOrderNOW, direction, scrip, stop )
+		if( isOrderOpen( stopOrderNOW ) )									// Order in Open Status - Modify it
+			stopOrderNOW    := modifyOrder( stopOrderNOW, direction, scrip, stop )
+		else if ( !IsObject( stopOrderNOW ) )								// Pending only applicable if order not created yet
+			addPendingStop( entryOrderType, scrip, direction, stop )
 	}
 	
 	updateStatus()
 }
 
-
+/*
+	Called by Tracker Thread - orderStatusTracker()
+	Create SL order when entry completes, prompt if entry fails
+*/
+createSLOrderOnEntryTrigger(){
+	global pendingStop, entryOrderNOW, stopOrderNOW
+	
+	if( pendingStop == -1 || !IsObject(pendingStop) || isOrderOpen( entryOrderNOW) )
+		return
+	
+	if( isOrderClosed(entryOrderNOW) ){										// Entry Finished. Open Stop order if status = complete else Notify
+		
+		stop		  := pendingStop
+		pendingStop   := -1	
+		stopOrderNOW  := -1
+		
+		if( !isEntrySuccessful() ){
+			MsgBox, % 262144+4,,  Breakout Entry Order Seems to have failed. Do you still want to create SL?
+			IfMsgBox No
+				return -1
+		}
+		
+		stopOrderNOW  := createNewOrder( stop.direction, stop.scrip, stop.stop )		
+	}	
+}
 
 
 // --  Private -- 
+/*
+	Return Entry Order details based on Order Type
+*/
+getEntryForOrderType(entryOrderType, qty, prodType, entryPrice ){
+	global ORDER_TYPE_LIMIT, ORDER_TYPE_SL_MARKET
+	
+	if( entryOrderType == ORDER_TYPE_LIMIT ){
+		entry := getOrder(entryOrderType, qty, entryPrice, 0, prodType  )
+	}
+	else if( entryOrderType == ORDER_TYPE_SL_MARKET ){
+		entry := getOrder(entryOrderType, qty, 0, entryPrice, prodType  )
+	}
+	
+	return entry
+}
 
-modifyOrderCommon( orderNOW,  direction, scrip, orderDetails ){
+/*
+	Return Stop Order details based on Order Type
+*/
+getStopForOrderType( stopOrderType, qty, prodType, stopPrice ){
+	global ORDER_TYPE_SL_MARKET
+	
+	if( stopOrderType == ORDER_TYPE_SL_MARKET ){
+		stop  := getOrder(stopOrderType, qty, 0, stopPrice, prodType  )
+	}	
+	
+	return stop
+}
+
+/* Adds/Modifies Pending stop for Stop Entry Orders 
+   Returns false if stop order should be created immediately
+*/
+addPendingStop( entryOrderType, scrip, direction, stop ){
+	global stopOrderNOW, pendingStop, ORDER_TYPE_SL_LIMIT, ORDER_TYPE_SL_MARKET
+	
+	if( entryOrderType == ORDER_TYPE_SL_MARKET || entryOrderType == ORDER_TYPE_SL_LIMIT ){
+		stopOrderNOW		  := -1
+		pendingStop			  := {}
+		
+		pendingStop.direction := direction
+		pendingStop.scrip	  := scrip
+		pendingStop.stop	  := stop
+		
+		return true
+	}		
+	
+	return false
+}
+
+/*
+Check if a pending stop is waiting for entry to trigger
+*/
+isPendingStopActive(){
+	global pendingStop
+	return IsObject( pendingStop )
+}
+
+/*
+	Modifies a single New Order
+*/
+modifyOrder( orderNOW,  direction, scrip, orderDetails ){
 	
 	global TITLE_BUY, TITLE_SELL	
 	
@@ -80,6 +165,8 @@ modifyOrderCommon( orderNOW,  direction, scrip, orderDetails ){
 		return
 	
 	SubmitOrderCommon( winTitle, scrip, orderDetails )						// Fill up new details and submit	
+	
+	readOrderBook()
 	orderNOW := getOrderDetails( orderNOW.nowOrderNo )						// Get updated order details
 
 	if( orderNOW = -1 ){
@@ -88,7 +175,10 @@ modifyOrderCommon( orderNOW,  direction, scrip, orderDetails ){
 	return orderNOW
 }
 
-newOrderCommon( direction, scrip, order ){
+/*
+	Creates a single New Order
+*/
+createNewOrder( direction, scrip, order ){
 	
 	global ORDER_STATUS_COMPLETE, ORDER_STATUS_OPEN, ORDER_STATUS_TRIGGER_PENDING, ORDER_STATUS_PUT, ORDER_STATUS_VP
 	
@@ -128,6 +218,9 @@ newOrderCommon( direction, scrip, order ){
 	return orderNOW
 }
 
+/*
+	Open Buy / Sell Window
+*/
 openOrderForm( direction ){
 	global TITLE_NOW, TITLE_BUY, TITLE_SELL
 	
@@ -144,6 +237,9 @@ openOrderForm( direction ){
 	return winTitle
 }
 
+/*
+	Open Buy / Sell Window for existing order
+*/
 openModifyOrderForm( orderNOW, winTitle ){
 	global TITLE_ORDER_BOOK, OpenOrdersColumnIndex
 		
@@ -171,6 +267,9 @@ openModifyOrderForm( orderNOW, winTitle ){
 	return false
 }
 
+/*
+	Fill up Buy/Sell Window and Submit
+*/
 SubmitOrder( winTitle, scrip, order ){										// Fill up opened Buy/Sell window and verify
 	
 	Control, ChooseString , % scrip.segment,     ComboBox1,  %winTitle%		// Exchange Segment - NFO/NSE etc
@@ -209,6 +308,9 @@ SubmitOrderCommon( winTitle, scrip, order ){
 	WinWaitClose, %winTitle%
 }
 
+/*
+	If Open orders exist, Notify User. Used on startup to warn
+*/
 checkOpenOrderEmpty(){
 	if( doOpenOrdersExist() ){												// Entry
 		MsgBox, % 262144+4,, Some Open Orders already exist . Continue?
