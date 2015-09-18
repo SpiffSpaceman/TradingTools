@@ -2,16 +2,15 @@ Test after entry complete
 	 - Trail above price allowed after complete - isEntryComplete()
 
 
-Test Link Orders - linkOrdersSubmit() 
-    - Only Entry Linked - Pending Stop creation on update click
-    - Price entry, Update button Enabled if linked order is open
+
+Remove OrderType Options once entry Linked / Retore if not
+MsgBox on top - gets overlapped by updateStatus() on show by Timer
 
 
 
-Cancel Open Orders
-    - Entry should not be complete
-    - Handle partially Filled orders
-    - Square Off - Market Stop order only if entry is complete - else cancel
+
+
+
 
 
 
@@ -37,11 +36,14 @@ Cancel Open Orders
 
 
 -----------------------------------------------------------------------------------------
-Option to change order type for open order - Only Allow Limit->Market OR SL-Limit->SL-Market
-Borderless option - Right click Menu?
-Settings GUI + maybe add tabs for settings of other applications + option to change month/year in scripname
+Market Entry/Exit Change
+    Option to change order type for open order - Only Allow Limit->Market OR SL-Limit->SL-Market
+    Square Off - Market Stop order only if entry is complete - else cancel
 
-option to do just 1 order without stop
+Settings GUI 
+    maybe add tabs for settings of other applications + option to change month/year in scripname
+
+option to do just 1 order without stop ?
 
 Partial Stop orders
     - Show filled size for Entry/Stop
@@ -56,14 +58,17 @@ Partial Stop orders
         Trailing Stop size should be always = Filled Size
         Need to differentiate between original stop and Trailing stop ( only when order is unfilled)
             Orignial Stop for unfilled size cannot be moved beyond Entry price
+    - Handle cancel orders
     - Square Off - Market Stop order for filled position + cancel rest
 
 Link Orders
 	- how to check Trading symbol against actual scrip - maybe take TradingSymbol as input in ini and use in other places too
 	- Can use as filter in read orders - so will get applied to most functions
 -----------------------------------------------------------------------------------------
-orderbook open - ensure no filters?
-Option for Stop orders - SL-Limit ?
+OCO Orders
+    - Cancel open order + its SL when other order Entry gets completed
+    - Notify + cancel other if a entry order failed
+Option for Stop orders - SL-Limit?
 Target orders? 
 2 part exits
 Multiple scrips, Multiple Orders 
@@ -71,4 +76,5 @@ Multiple scrips, Multiple Orders
     - Keep array of orders and current context
     - Switch context on Scrip/Order change
     - refresh orderbook too on context change + Filter all data for specific scrip - So everything else becomes per scrip    
+Pseudo GTC Orders - save orders + option to send all in 1 go + check if already open
 thin gui less mode, just get everything as input + unique id -  create order and return uniqueid-orderid pair

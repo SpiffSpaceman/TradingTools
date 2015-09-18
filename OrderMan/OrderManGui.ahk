@@ -16,7 +16,7 @@
 */
 
 createGUI(){
-	global Qty, EntryPrice, StopPrice, Direction, CurrentResult, BtnOrder, BtnUpdate, BtnLink, BtnUnlink, EntryStatus, StopStatus, LastWindowPosition, EntryOrderType
+	global Qty, EntryPrice, StopPrice, Direction, CurrentResult, BtnOrder, BtnUpdate, BtnLink, BtnUnlink, BtnCancel, EntryStatus, StopStatus, LastWindowPosition, EntryOrderType
 	
 	SetFormat, FloatFast, 0.2
 		
@@ -31,15 +31,16 @@ createGUI(){
 	Gui, 1:Add, Edit, vEntryPrice w55 ym gupdateCurrentResult 			// Column 3
 	Gui, 1:Add, Edit, vStopPrice w55 gupdateCurrentResult
 		
-	Gui, 1:Add, Button, gorderBtn vBtnOrder xp-35 y+m, New				// New or Unlink
-	Gui, 1:Add, Button, gunlinkBtn vBtnUnlink hide xp+0 yp+0, Unlink	
+	Gui, 1:Add, Button, gorderBtn vBtnOrder xp-35 y+m, New				// New or Update
+	Gui, 1:Add, Button, gupdateOrderBtn vBtnUpdate  xp+0 yp+0, Update	
 
-	Gui, 1:Add, Button, gopenLinkOrdersGUI vBtnLink x+10, Link			// Link or Update
-	Gui, 1:Add, Button, gupdateOrderBtn vBtnUpdate  xp+0 yp+0 hide, Update
-	
-	Gui, 1:Add, DropDownList, vEntryOrderType w45 Choose1 ym, L|SLM|SL|M // Entry Type
+	Gui, 1:Add, Button, gopenLinkOrdersGUI vBtnLink x+5, Link			// Link or Unlink
+	Gui, 1:Add, Button, gunlinkBtn vBtnUnlink xp+0 yp+0, Unlink		
+
+	Gui, 1:Add, DropDownList, vEntryOrderType w45 Choose1 ym, L|SL|SLM|M // Entry Type
 	//Gui, 1:Add, DropDownList, w45 Choose1, SLM|SL
 	Gui, 1:Add, Text, vCurrentResult  w30
+	Gui, 1:Add, Button, gcancelOrderBtn vBtnCancel y+14, Cancel		 		 // Cancel button
 	
 	Gui, 1:Add, Text, ym vEntryStatus
 	Gui, 1:Add, Text, vStopStatus	
@@ -73,11 +74,12 @@ updateStatus(){
 	GuiControl, % anyLinked ? "1:Hide"    : "1:Show",   BtnOrder	
 	
 	GuiControl, % entryOpen    || stopOpen  ? "1:Show"  : "1:Hide", BtnUpdate		// Show Update only if atleast one linked order is open
-	GuiControl, % entryOpen    || stopOpen  ? "1:Hide"  : "1:Show", BtnLink			// Else show Link
+	GuiControl, % entryOpen    || stopOpen  ? "1:Show"  : "1:Hide", BtnCancel		// Show Cancel Button if order linked
+	GuiControl, % entryOpen    || stopOpen  ? "1:Hide"  : "1:Show", BtnLink			// Show Link if not linked
 	
 	GuiControl, % !entryLinked || entryOpen ? "1:Enable"  : "1:Disable", EntryPrice	// Enable Price entry for new orders or for linked open orders
-	GuiControl, % !stopLinked  || stopOpen  ? "1:Enable"  : "1:Disable", StopPrice
-	
+	GuiControl, % !stopLinked  || stopOpen  ? "1:Enable"  : "1:Disable", StopPrice		
+
 	if( entryLinked ){																// Set Status if Linked
 		shortStatus	:= getOrderShortStatus( entryOrderNOW.status )
 		GuiControl, 1:Text, EntryStatus, % shortStatus
@@ -226,12 +228,6 @@ addOrderRow( o ) {
 		LV_Add("", o.tradingSymbol, o.status, o.orderType, o.buySell, o.totalQty, o.price, o.triggerPrice, o.nowOrderNo, o.nowUpdateTime )
 }
 
-unlinkBtn(){
-	toggleStatusTracker( "off" )		
-	unlinkOrders()
-	updateStatus()
-}
-
 setDefaultStop(){
 	global
 		
@@ -303,6 +299,16 @@ updateOrderBtn(){
 	}
 }
 
+unlinkBtn(){
+	toggleStatusTracker( "off" )		
+	unlinkOrders()
+	updateStatus()
+}
+
+cancelOrderBtn(){
+	cancelOrders()
+}
+
 /*
 	Check if Order Details in GUI is different than input order 
 */
@@ -357,7 +363,7 @@ linkOrdersSubmit(){
 			return
 		}
 		else{
-			MsgBox, 262144,, Stop order is not linked, Enter Price and click Update immediately to ready Stop order
+			MsgBox, 262144,, Stop order is not linked, Enter Stop Price and click Update immediately to ready Stop order
 		}		
 	}
 	if( entryOrderId == stopOrderId ){
@@ -374,9 +380,9 @@ linkOrdersSubmit(){
 	
 	e 		   := entryOrderNOW
 	s 		   := stopOrderNOW	
-	entryPrice := (entryOrdertype == ORDER_TYPE_LIMIT || entryOrdertype == ORDER_TYPE_MARKET) ? order.price : order.triggerPrice		
+	entryPrice := (entryOrdertype == ORDER_TYPE_LIMIT || entryOrdertype == ORDER_TYPE_MARKET) ? e.price : e.triggerPrice		
 	
-	setGUIValues( e.totalQty, e.price, s.triggerPrice, getDirectionFromOrder(e), getOrderTypeFromOrder(e) )
+	setGUIValues( e.totalQty, entryPrice, s.triggerPrice, getDirectionFromOrder(e), getOrderTypeFromOrder(e) )
 	updateCurrentResult()
 }
 

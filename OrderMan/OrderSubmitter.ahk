@@ -52,16 +52,41 @@ modifyOrders( scrip, entryOrderType, stopOrderType, qty, prodType, entryPrice, s
 		entryOrderNOW   := modifyOrder( entryOrderNOW, direction, scrip, entry )
 	}
 	
-	if( stopPrice != "" ){
-		
+	if( IsObject(entryOrderNOW)  && stopPrice != "" ){						// Stop can only exist if Entry Order Exist
+																			// Stop can be pending, stopOrderNOW need not exist
 		stop			:= getStopForOrderType( stopOrderType, qty, prodType, stopPrice  )		
-		direction 	    := getDirectionFromOrder( stopOrderNOW )		
+		direction 	    := reverseDirection( getDirectionFromOrder( entryOrderNOW )	)
 		
 		if( isOrderOpen( stopOrderNOW ) )									// Order in Open Status - Modify it
 			stopOrderNOW    := modifyOrder( stopOrderNOW, direction, scrip, stop )
 		else if ( !IsObject( stopOrderNOW ) )								// Pending only applicable if order not created yet
 			addPendingStop( entryOrderType, scrip, direction, stop )
 	}
+	
+	updateStatus()
+}
+
+/* 
+	cancel open orders - Entry/Stop
+*/
+cancelOrders(){
+	global entryOrderNOW, stopOrderNOW, pendingStop
+	
+	if( isEntrySuccessful() ){	
+		MsgBox, % 262144+4,,  Entry Order has already been Executed. Do you still want to cancel Stop order?
+			IfMsgBox No
+				return -1	
+	}	
+	
+	if( isOrderOpen(entryOrderNOW) && selectOpenOrder( entryOrderNOW.nowOrderNo ) ){
+		cancelSelectedOpenOrder()
+		entryOrderNOW := -1
+	}
+	if( isOrderOpen(stopOrderNOW)  && selectOpenOrder( stopOrderNOW.nowOrderNo ) ){
+		cancelSelectedOpenOrder()
+		stopOrderNOW := -1
+	}
+	pendingStop := -1
 	
 	updateStatus()
 }
@@ -264,11 +289,28 @@ openOrderForm( direction ){
 	Open Buy / Sell Window for existing order
 */
 openModifyOrderForm( orderNOW, winTitle ){
+	global TITLE_ORDER_BOOK
+		
+	if( selectOpenOrder( orderNOW.nowOrderNo ) ){
+		ControlClick, Button1, %TITLE_ORDER_BOOK%,,,, NA				
+		WinWait, %winTitle%,,5
+		
+		return true
+	}
+	
+	return false
+}
+
+/*
+	Selects input order in OrderBook > Open Orders
+	Returns true if found and selected else returns false
+*/
+selectOpenOrder( searchMeOrderNo ){
 	global TITLE_ORDER_BOOK, OpenOrdersColumnIndex
-		
+	
+	openOrderBook()	
 	orderNoColIndex := OpenOrdersColumnIndex.nowOrderNo							// column number containing NOW Order no in Order Book > open orders
-	searchMeOrderNo	:= orderNOW.nowOrderNo
-		
+	
 	Loop, 3{																	// Select order in Order Book. Search 3 times as a precaution
 		ControlGet, RowCount, List, Count, SysListView321, %TITLE_ORDER_BOOK%	// No of rows in open orders
 		ControlSend, SysListView321, {Home 2}, %TITLE_ORDER_BOOK%				// Start from top and search for order
@@ -276,10 +318,7 @@ openModifyOrderForm( orderNOW, winTitle ){
 		Loop, %RowCount%{														// Get order number of selected row and compare
 			ControlGet, RowOrderNo, List, Selected Col%orderNoColIndex%, SysListView321, %TITLE_ORDER_BOOK%
 		
-			if( RowOrderNo = searchMeOrderNo ){									// Found, Click on Modify
-				ControlClick, Button1, %TITLE_ORDER_BOOK%,,,, NA				
-				WinWait, %winTitle%,,5
-				
+			if( RowOrderNo = searchMeOrderNo ){									// Found and Selected
 				return true
 			}
 			ControlSend, SysListView321, {Down}, %TITLE_ORDER_BOOK%				// Move Down to next row if not found yet
@@ -288,6 +327,23 @@ openModifyOrderForm( orderNOW, winTitle ){
 	
 	MsgBox, Order %searchMeOrderNo% Not Found in OrderBook > Open Orders
 	return false
+}
+
+/*
+	Clicks on cancel button in orderbook, assuming order is already selected
+*/
+cancelSelectedOpenOrder(){
+	global TITLE_ORDER_BOOK
+	
+	window 		:= "NOW"
+	windowText	:= "Cancel These Order"
+	
+	ControlClick, Button3, %TITLE_ORDER_BOOK%,,,, NA				// Click Cancel
+	
+	WinWait, %window%, %windowText%, 5		
+	WinSet, Transparent, 1, %window%, %windowText%
+	
+	ControlClick, Button1, %window%, %windowText%,,, NA				// Click ok
 }
 
 /*
