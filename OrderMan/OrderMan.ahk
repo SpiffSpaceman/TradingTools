@@ -48,6 +48,7 @@ ORDERBOOK_POLL_TIME			  := 2500										// Time between reading of OrderBook st
 NEW_ORDER_WAIT_TIME			  := 5											// How many seconds to wait for New Submitted Order to appear in orderbook. 
 OPEN_ORDER_WAIT_TIME		  := 5											// How many seconds to wait for Order to be Open ( ie for validation etc to be over)
 																				// Warning message shown after wait period
+checkNOWOpen()
 loadSettings()
 readOrderBook()
 createGUI()
@@ -58,6 +59,14 @@ installHotkeys()
 return
   
 
+checkNOWOpen(){
+	global TITLE_NOW
+	IfWinNotExist, %TITLE_NOW%
+	{
+		MsgBox, NOW not found.
+		ExitApp
+	}
+}
 
 getScrip( segment, instrument, symbol, type, strikePrice, expiryIndex ){
 	scrip  := {}

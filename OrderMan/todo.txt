@@ -3,12 +3,9 @@ Test after entry complete
 
 
 
-Remove OrderType Options once entry Linked / Retore if not
-MsgBox on top - gets overlapped by updateStatus() on show by Timer
-
-
-
-
+Option to change order type for open order
+    - SL Order After Trigger - changes to Limit Order - should be editable ( unfilled ) 
+    - Square Off - Market Stop order only if entry is complete - else cancel
 
 
 
@@ -36,13 +33,8 @@ MsgBox on top - gets overlapped by updateStatus() on show by Timer
 
 
 -----------------------------------------------------------------------------------------
-Market Entry/Exit Change
-    Option to change order type for open order - Only Allow Limit->Market OR SL-Limit->SL-Market
-    Square Off - Market Stop order only if entry is complete - else cancel
-
-Settings GUI 
-    maybe add tabs for settings of other applications + option to change month/year in scripname
-
+Bug - MsgBox on top - gets overlapped by updateStatus() on show by Timer
+Settings GUI - maybe add tabs for settings of other applications + option to change month/year in scripname
 option to do just 1 order without stop ?
 
 Partial Stop orders

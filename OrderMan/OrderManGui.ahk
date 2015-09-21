@@ -40,7 +40,7 @@ createGUI(){
 	Gui, 1:Add, DropDownList, vEntryOrderType w45 Choose1 ym, L|SL|SLM|M // Entry Type
 	//Gui, 1:Add, DropDownList, w45 Choose1, SLM|SL
 	Gui, 1:Add, Text, vCurrentResult  w30
-	Gui, 1:Add, Button, gcancelOrderBtn vBtnCancel y+14, Cancel		 		 // Cancel button
+	Gui, 1:Add, Button, gcancelOrderBtn vBtnCancel y+14, Cancel		 	// Cancel button
 	
 	Gui, 1:Add, Text, ym vEntryStatus
 	Gui, 1:Add, Text, vStopStatus	
