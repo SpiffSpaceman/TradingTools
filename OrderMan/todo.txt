@@ -1,10 +1,10 @@
 Test after entry complete
-	 - Trail above price allowed after complete - isEntryComplete()
-
+    - Trail above price allowed after complete - isEntryComplete()
+    - Test After Entry - Stop movement - dont guess direction
 
 
 Option to change order type for open order
-    - SL Order After Trigger - changes to Limit Order - should be editable ( unfilled ) 
+    - SL Order After Trigger - changes to Limit Order - should be editable ( unfilled )
     - Square Off - Market Stop order only if entry is complete - else cancel
 
 
@@ -33,9 +33,14 @@ Option to change order type for open order
 
 
 -----------------------------------------------------------------------------------------
+Order Tracker - Do imp stuff more frequently. GUI update can be done once a second ( so 250ms read + Do GUI update once in 4 rounds)
+
 Bug - MsgBox on top - gets overlapped by updateStatus() on show by Timer
+
 Settings GUI - maybe add tabs for settings of other applications + option to change month/year in scripname
-option to do just 1 order without stop ?
+
+Target orders
+	- Cancel Stop
 
 Partial Stop orders
     - Show filled size for Entry/Stop
@@ -60,8 +65,8 @@ Link Orders
 OCO Orders
     - Cancel open order + its SL when other order Entry gets completed
     - Notify + cancel other if a entry order failed
+option to do just 1 order without stop?
 Option for Stop orders - SL-Limit?
-Target orders? 
 2 part exits
 Multiple scrips, Multiple Orders 
     - One Order at a time

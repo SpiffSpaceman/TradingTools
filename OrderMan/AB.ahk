@@ -44,7 +44,8 @@ getStopPriceFromAB(){
 guessDirection(){
 	global EntryPrice, StopPrice
 	
-	setDirection( EntryPrice>StopPrice ? "B" : "S" )
+	if( isEntryLinked() )												// Guess Direction if No order linked
+		setDirection( EntryPrice>StopPrice ? "B" : "S" )
 }
 
 /*

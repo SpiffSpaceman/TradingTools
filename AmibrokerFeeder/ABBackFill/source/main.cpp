@@ -31,6 +31,7 @@ int _tmain(int argc, _TCHAR* argv[]){
 
         // TickMode - Overwrite todays data with 1 min bars after market hours
         bool is_tickmode = settings.is_eod_tickmode && Util::getTime() > settings.close_minute;
+        is_tickmode      = is_tickmode || settings.is_force_tickmode;
 
         // Read Input and convert to CSV
         Reader reader( settings, is_tickmode );     

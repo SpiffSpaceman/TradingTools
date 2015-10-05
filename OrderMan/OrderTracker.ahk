@@ -217,6 +217,15 @@ isOrderClosed( order ){
 	return IsObject(order) && order.status2 == "C"
 }
 
+/*
+	Returns true if entryOrderNOW is an object
+*/
+isEntryLinked(){
+	global entryOrderNOW
+	
+	return IsObject( entryOrderNOW )
+}
+
 // ----------
 
 /*

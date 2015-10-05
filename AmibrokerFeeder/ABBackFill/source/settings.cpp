@@ -19,9 +19,10 @@ void Settings::loadSettings(){
     close_minute           = getINIString("CloseMinute");
 
     is_skip_open_minute    = getINIString("SkipOpenMinute") == "true";
-    is_skip_volume         = getINIString("SkipVolume") == "true";
-    is_intraday_mode       = getINIString("IntradayMode") == "true";
-    is_eod_tickmode        = getINIString("EODTickMode") == "true";
+    is_skip_volume         = getINIString("SkipVolume")     == "true";
+    is_intraday_mode       = getINIString("IntradayMode")   == "true";
+    is_eod_tickmode        = getINIString("EODTickMode")    == "true";
+    is_force_tickmode      = getINIString("ForceTickMode")  == "true";
 
     Util::createDirectory( csv_file_path );                            // If folder does not exist, create it
     csv_file_path.append("quotes.bfill");

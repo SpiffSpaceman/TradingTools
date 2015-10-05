@@ -18,6 +18,7 @@ public:
     bool          is_skip_volume;
     bool          is_intraday_mode;    
     bool          is_eod_tickmode;
+    bool          is_force_tickmode;
 
     void loadSettings();
 
