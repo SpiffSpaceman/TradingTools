@@ -20,19 +20,18 @@
 																			// Includes behave as though the file's contents are present at this exact position
 #SingleInstance force														// Reloads if already running
 #NoEnv																		// Recommended for new scripts
+#Warn, All, StdOut		 
 
 SendMode Input  															// Recommended for new scripts
 SetWorkingDir %A_ScriptDir%  												// Ensures a consistent starting directory
 SetTitleMatchMode, 2 														// A window's title can contain the text anywhere
 SetControlDelay, -1 														// Without this ControlClick fails sometimes. Example - Index Right click fails if mouse is over NOW
 
+START_TIME := "09:14"														// VWAP for stocks in NOW  has 09:14:XX as first row
+END_TIME   := "15:30"															// START_TIME use - waitForDataLoad() will wait for this bar 
+																				// and writeVwapData() will shift "VWAP start time = START_TIME" bar to START_TIME + 1 min
 
-// TODO
-// DT - Shift-D also causes separate d keystroke. So if Marketwatch has a scrip starting with D, it gets selected
-//		check how to avoid it.  Datatable opens correctly though, so no bug
-// Index - x,y click may fail if index list has  multiple indices and big empty space 
-// Index - check count after removing useless entries
-
+VWAPColumnIndex := ""														// Initialize some variables to avoid harmless warn errors
 
 loadSettings()																// Load settings for Timer before hotkey install
 SetTimer, PingNOW, %PingerPeriod% 											// Install Keep Alive Timer
@@ -54,11 +53,9 @@ installHotKeys(){
 }
 
 hkBackfill(){
-	global  Mode, DoIndex
-	
 	loadSettings()															// Reload settings
 	installEOD()															// Update EOD Timer
-	DoBackfill( Mode, DoIndex )	
+	DoBackfill()	
 }
 
 hkFlatTrendLine(){															// Sets End price = Start price for trend line at current mouse position
@@ -82,9 +79,9 @@ hkFlatTrendLine(){															// Sets End price = Start price for trend line 
 }
 
 
-DoBackfill( inMode, inDoIndex	){
+DoBackfill(){
 	
-	global NowWindowTitle
+	global NowWindowTitle, Mode, DoIndex
 	
 	IfWinExist, %NowWindowTitle%
 	{			
@@ -96,15 +93,15 @@ DoBackfill( inMode, inDoIndex	){
 		
 		clearFiles()
 		
-		if( inMode = "DT" ){
+		if( Mode = "DT" ){
 			dtBackFill()		
 		}
-		else if( inMode = "VWAP" )  {	
+		else if( Mode = "VWAP" )  {	
 			vwapBackFill()
 		}	
-		if( inDoIndex = "Y"){
+		if( DoIndex = "Y"){
 			indexBackFill()
-		}
+		}		
 		
 		save()
 	}
@@ -114,9 +111,13 @@ DoBackfill( inMode, inDoIndex	){
 }
 
 getExpectedDataRowCount(){
+	
 	hour 		  := A_Hour>15 ? 15 : A_Hour
 	min  		  := (A_Hour>15 || (A_Hour==15 && A_Min>30) ) ? 30 : A_Min
-	ExpectedCount := (hour - 9)*60 + (min - 15) -1							// Allow 1 less minute for border case - 
+	ExpectedCount := (hour - 9)*60 + (min - 15)
+
+	if( !isMarketClosed() )
+		ExpectedCount := ExpectedCount-1									// Allow 1 less minute for border case - 
 																			// Minute changes between data fetch and call to getExpectedDataRowCount() 
 	return ExpectedCount
 }
@@ -165,12 +166,13 @@ PingNOW(){
 		ControlClick, Button10, %NowWindowTitle%,, LEFT,,NA					// Just click on Button10  ( First INT status Button ) 
 	}
 }
+
 installEOD(){
 	global EODBackfillTriggerTime	
 	
-	targetTime  := StrSplit( EODBackfillTriggerTime, ":") 	
+	targetTime  := StrSplit( EODBackfillTriggerTime, ":")
 	timeLeft	:= (targetTime[1] - A_Hour)*60 + ( targetTime[2] - A_Min )	// Time left to Trigger EOD Backfill in mins
-	
+
 	if( timeLeft > 0 ){
 		SetTimer, EODBackfill, % (timeLeft * 60 * -1000 )					// -ve Period => Run only once
 	}
@@ -178,16 +180,44 @@ installEOD(){
 		SetTimer, EODBackfill, Delete
 	}
 }
-EODBackfill(){
-	global Mode
+
+EODBackfill(){	
 	
-	MsgBox, 4,, Do EOD Backfill ?
-	IfMsgBox Yes
-	{
-		eodMode :=  Mode == "DT" ? "DT" : "VWAP"
-		DoBackfill( eodMode, "Y" )
-	}		
+	MsgBox, 4,, Do EOD Backfill ?, 10										// 10 second Timeout
+	IfMsgBox, No
+		Return	
+
+	DoBackfill( )
 }
+
+isMarketClosed(){	
+	
+	time := A_Hour . ":" . A_Min
+	return 	! isTimeInMarketHours(time)
+}
+
+/*
+	Checks if Time is within Market Hours
+*/
+isTimeInMarketHours( time ){
+	global START_TIME, END_TIME	
+	
+	return time >= START_TIME &&  time <= END_TIME
+}
+
+/*
+	Converts from 12 to 24h HH:MM. Example "03:03:15 PM" to "15:03"
+*/
+convert24( time ){
+	timeSplit := StrSplit( time, ":") 
+	secSplit  := StrSplit( timeSplit[3], " ") 
+	
+	if( secSplit[2] == "PM" && timeSplit[1] < 12 ){							// Add 12 to Hours if PM. But not for 12
+		timeSplit[1] := timeSplit[1] + 12
+	}
+	return timeSplit[1] . ":" . timeSplit[2]
+}
+
 
 #Include Settings.ahk
 #Include DataTable.ahk

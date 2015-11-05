@@ -3,11 +3,17 @@ Test after entry complete
     - Test After Entry - Stop movement - dont guess direction
 
 
+Change L to LIM
+Cancel Orders - Verify - if open try again and notify if failed     // Once Stop order didnt cancel
+
+
+check #IfWinActive / #IfWinExist  to make HK only with AB active
+Order Tracker - Do imp stuff more frequently. GUI update can be done once a second ( so 250ms read + Do GUI update once in 4 rounds)
+
+Change to Objects? OrderBook, tracker, submitter, AB etc
 Option to change order type for open order
     - SL Order After Trigger - changes to Limit Order - should be editable ( unfilled )
-    - Square Off - Market Stop order only if entry is complete - else cancel
-
-
+    - Square Off - Market Stop order only if entry is complete - else cancel    // show cancel if not entered else squareoff
 
 
 
@@ -33,15 +39,6 @@ Option to change order type for open order
 
 
 -----------------------------------------------------------------------------------------
-Order Tracker - Do imp stuff more frequently. GUI update can be done once a second ( so 250ms read + Do GUI update once in 4 rounds)
-
-Bug - MsgBox on top - gets overlapped by updateStatus() on show by Timer
-
-Settings GUI - maybe add tabs for settings of other applications + option to change month/year in scripname
-
-Target orders
-	- Cancel Stop
-
 Partial Stop orders
     - Show filled size for Entry/Stop
     - Maybe Stop order only entered once filled and stop size modified if Entry Size increases
@@ -58,6 +55,11 @@ Partial Stop orders
     - Handle cancel orders
     - Square Off - Market Stop order for filled position + cancel rest
 
+Support Adds with Common SL
+Target orders + Cancel Stop
+    
+Bug - MsgBox on top - gets overlapped by updateStatus() on show by Timer
+Settings GUI - maybe add tabs for settings of other applications + option to change month/year in scripname
 Link Orders
 	- how to check Trading symbol against actual scrip - maybe take TradingSymbol as input in ini and use in other places too
 	- Can use as filter in read orders - so will get applied to most functions
@@ -65,13 +67,13 @@ Link Orders
 OCO Orders
     - Cancel open order + its SL when other order Entry gets completed
     - Notify + cancel other if a entry order failed
-option to do just 1 order without stop?
-Option for Stop orders - SL-Limit?
 2 part exits
 Multiple scrips, Multiple Orders 
     - One Order at a time
     - Keep array of orders and current context
     - Switch context on Scrip/Order change
     - refresh orderbook too on context change + Filter all data for specific scrip - So everything else becomes per scrip    
+option to do just 1 order without stop?
+Option for Stop orders - SL-Limit?
 Pseudo GTC Orders - save orders + option to send all in 1 go + check if already open
 thin gui less mode, just get everything as input + unique id -  create order and return uniqueid-orderid pair

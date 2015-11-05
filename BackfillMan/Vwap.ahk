@@ -24,12 +24,15 @@ vwapBackFill()
 	Loop, %VWAPCount% {
 		
 		local fields := StrSplit( VWAP%A_Index% , ",")  					// Format - HS parameters 1-6,Alias
-			
+		
+		if( fields[8] == "EOD" && !isMarketClosed() )						// Skip EOD Scrips during the day
+			continue
+		
 		openVwap( fields[1], fields[2], fields[3], fields[4], fields[5], fields[6] )
 		if( !IsObject( VWAPColumnIndex ) ){		 				
 			getVWAPColumnIndex()											// Check Required columns
 		}
-		waitForDataLoad()													// Wait for All data to load
+		waitForDataLoad( fields[7] )										// Wait for All data to load
 		writeVwapData( fields[7] )											// Write csv 	
 	}
 }
@@ -47,6 +50,8 @@ getVWAPColumnIndex(){														// Gets Position of Start time, O, H, L, C, V
 	for index, headertext in VWAPHeaders{	
 		if( headertext == "Start Time" )
 			VWAPColumnIndex.start := index
+		if( headertext == "End Time" )
+			VWAPColumnIndex.end := index
 		else if( headertext == "Open Rate" )
 			VWAPColumnIndex.open  := index
 		else if( headertext == "High Rate" )
@@ -60,6 +65,7 @@ getVWAPColumnIndex(){														// Gets Position of Start time, O, H, L, C, V
 	}
 	
 	checkEmpty( VWAPColumnIndex.start, "Start Time"  )
+	checkEmpty( VWAPColumnIndex.start, "End Time"  )
 	checkEmpty( VWAPColumnIndex.open,  "Open Rate"  )
 	checkEmpty( VWAPColumnIndex.high,  "High Rate"  )
 	checkEmpty( VWAPColumnIndex.low,   "Low Rate"  )
@@ -95,10 +101,9 @@ openVwap( inParam1,inParam2,inParam3,inParam4,inParam5,inParam6 ){
 	ControlSend,    Edit1, {Enter}, %VWAPWindowTitle%						// Request Data		
 }
 
-
-waitForDataLoad(){															// Wait for all data to load. Verifies that all data from now till 09:15 has been loaded
-	
-	global VWAPWindowTitle, VWAPColumnIndex
+waitForDataLoad( alias ){													// Wait for all data to load. Verifies that all data from now till 09:15 has been loaded
+																			// NOTE - If VWAP window is closed before all data is loaded, sometimes remaining data 
+	global VWAPWindowTitle, VWAPColumnIndex									//     gets spilled	to Next Scrip's VWAP data in NOW
 	
 	ExpectedCount := getExpectedDataRowCount()
 	
@@ -109,14 +114,25 @@ waitForDataLoad(){															// Wait for all data to load. Verifies that all
 		Sleep 500
 	}
 	
-	Loop {																	// Count matched, but there can be duplicates in VWAP stats - so confirm after removing duplicates
-		rowCount := 0
+	Loop {																	// Count matched, but there can be duplicates in VWAP stats
+		rowCount := 0														// So confirm after removing duplicates. And Count Only quotes within market hours
 		ControlGet, vwapTime, List, % "Col" . VWAPColumnIndex.start, SysListView321, %VWAPWindowTitle%				// Start Time Column only
 		Sort, vwapTime, U 																							// Sort, Remove duplicates		
 		Loop, Parse, vwapTime, `n  																					// Get Number of rows
 		{
-			rowCount++
-		}		
+			time := convert24( A_LoopField )
+			if( isTimeInMarketHours( time ) ) 
+				rowCount++			
+		}
+		if( Mod(A_Index, 20 )==0  &&  rowCount < ExpectedCount  ){			// Ask Every 20 seconds if all data not received
+			missingCount := ExpectedCount - rowCount
+			MsgBox, 4, %alias% - Waiting, VWAP data for %alias% has %missingCount% minutes missing. Is Data still loading?
+			IfMsgBox No	
+				MsgBox, 4,  %alias% - Waiting, Do you still want to Backfill %alias% with this data ?
+					IfMsgBox yes
+						break
+		}
+			
 		if( rowCount >= ExpectedCount )
 			break
 		Sleep 1000
@@ -125,7 +141,7 @@ waitForDataLoad(){															// Wait for all data to load. Verifies that all
 
 // Columns Expected Order - Start time, O, H, L, C, V
 writeVwapData( alias ){
-	global VWAPWindowTitle, VWAPBackfillFileName, VWAPSleepTime, VWAPColumnIndex
+	global VWAPWindowTitle, VWAPBackfillFileName, VWAPSleepTime, VWAPColumnIndex, START_TIME
 		
 	ControlGet, vwapStats, List, , SysListView321, %VWAPWindowTitle%		// Copy Data into vwapStats
 	WinClose, %VWAPWindowTitle%		 										// Close HS		
@@ -147,6 +163,8 @@ writeVwapData( alias ){
 		{				
 			if( A_Index ==  VWAPColumnIndex.start ) 
 				start = %A_LoopField% 
+			if( A_Index ==  VWAPColumnIndex.end ) 
+				end	  = %A_LoopField% 
 			if( A_Index ==  VWAPColumnIndex.open ) 
 				open  = %A_LoopField% 
 			if( A_Index ==  VWAPColumnIndex.high ) 
@@ -158,8 +176,14 @@ writeVwapData( alias ){
 			if( A_Index ==  VWAPColumnIndex.vol ) 
 				vol   = %A_LoopField% 				
 		}
+		
+		timeSplit := StrSplit( start, ":") 									// Workaround fix - 1st Bar for Stocks is from 09:14:XX to 09:15:XX		
+		if( START_TIME  ==  (timeSplit[1] . ":" . timeSplit[2]) )			// Set this bar's time as 09:15:00
+			start := timeSplit[1] . ":" . ( timeSplit[2] + 1 )  . ":00 AM"		
+		
 		File.WriteLine(  start . " " . open . " " . high . " " . low . " " . close . " " . vol   )
 	}	
 	
 	file.Close()															// Flushes buffer
 }
+

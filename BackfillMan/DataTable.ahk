@@ -30,6 +30,9 @@ dtBackFill(){
 	Loop, %DTCount% {
 				
 		local fields := StrSplit( DT%A_Index% , ",")  						// Format - TradingSymbol,Alias
+		
+		if( fields[3] == "EOD" && !isMarketClosed() )						// Skip EOD Scrips during the day
+			continue
 				
 		openDataTable( fields[1], 0 )		
 		writeDTData( fields[2] )
@@ -42,11 +45,14 @@ indexBackFill(){															// NOTE - This wont work if Index has scroll bars
 	Loop, %IndexCount% {
 		
 		local fields := StrSplit( Index%A_Index% , ",")  					// Format - IndexSymbol,Alias
-			
+		
+		if( fields[3] == "EOD" && !isMarketClosed() )						// Skip EOD Scrips during the day
+			continue
+		
 		openIndexDataTable( fields[1] )			
 		writeDTData( fields[2] )		
 	}	
-	
+
 	closeNestPlusChart()													// Close Nest Plus chart when All done
 }
 
@@ -164,6 +170,7 @@ waitForDTData( symbol  ){
 openIndexDataTable( inIndexSymbol ){
 	
 	global  NowWindowTitle, DTWindowTitle		
+	RowSymbol := ""
 	
 	WinClose, %DTWindowTitle%	 											// Close DT If already Opened	
 	ControlGet,  RowCount, List, Count, SysListView324, %NowWindowTitle%	// No of rows in Index Dialog	
@@ -226,6 +233,7 @@ closeNestPlusChart(){
     MouseGetPos, oldx, oldy
 	
 	SetTitleMatchMode, RegEx
+	hidden := false
 	IfWinNotActive, .*%NowWindowTitle%.*|.*%DTWindowTitle%.*
 	{																		// Hide Window to avoid showing it when another window  is active
 		WinSet, Transparent, 1, %NowWindowTitle%							// 0 seems to have extra side effects, Window gets minimized?

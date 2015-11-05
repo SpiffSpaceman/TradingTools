@@ -7,16 +7,21 @@
 #include "util.h"
 #include <iostream>
 
+// invert SkipVolume - ShowVolume
+
 // TODO - Allow overriding ini parameters using input args. param=value.
 	// put args key value in map. Use common funtion in settings.ini to check args before ini.
 
-// TODO - Volume only if no quote in minute else find empty second and update extremes with 0 volume. 
-	// Or If Extremes of a minute match already + enough quotes in a minute - skip?
-	// and if diff, just take the highest and lowest tick bars and extend them 
+// Volume
+	// Save quotes - RTDman - in ram drive csv, use $TICKMODE 1 backfill, recreate last 30 min data with saved ticks+backfill data
+	// Volume only if no quote in minute else find empty second and update extremes with 0 volume.
+	// For each minute, if no rtd bars - use backfill bar with volume
+	// Or If Extremes of a minute match already + enough quotes in a minute - skip?	
+	// If extremes mismatch, update Highest and lowest ticks with backfill extreme as an approximation
     // Delete second quotes, just leave last 30 mins ( configurable ) 
     // Remove Volume Skip option
     // Open Minute - Still import if no data in AB and volume available    
-// Or alternately - save quotes in RTDman, use $TICKMODE 1 backfill, recreate last 30 min data with saved ticks+backfill data
+
 
 int _tmain(int argc, _TCHAR* argv[]){
 

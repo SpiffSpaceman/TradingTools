@@ -19,11 +19,18 @@
 #Include %A_ScriptDir%														// Set Include Directory path
 #SingleInstance force														// Reloads if already running
 #NoEnv																		// Recommended for new scripts
+#Warn, All, StdOut
 
 SendMode Input  															// Recommended for new scripts
 SetWorkingDir %A_ScriptDir%  												// Ensures a consistent starting directory
 SetTitleMatchMode, 2 														// A window's title can contain the text anywhere
 SetControlDelay, -1 														// Without this ControlClick fails sometimes
+
+ OpenOrdersColumnIndex 		  := ""
+ CompletedOrdersColumnIndex	  := ""
+ entryOrderNOW 				  := -1
+ stopOrderNOW				  := -1
+ pendingStop				  := -1
 
 TITLE_NOW		 			  := "NOW 1.13"									// window titles
 TITLE_ORDER_BOOK			  := "Order Book -"
@@ -69,15 +76,15 @@ checkNOWOpen(){
 }
 
 getScrip( segment, instrument, symbol, type, strikePrice, expiryIndex ){
-	scrip  := {}
-	scrip.segment		:= segment
-	scrip.instrument	:= instrument
-	scrip.symbol		:= symbol
-	scrip.type			:= type
-	scrip.strikePrice	:= strikePrice
-	scrip.expiryIndex   := expiryIndex
+	scrip_properties  := {}
+	scrip_properties.segment		:= segment
+	scrip_properties.instrument	:= instrument
+	scrip_properties.symbol		:= symbol
+	scrip_properties.type			:= type
+	scrip_properties.strikePrice	:= strikePrice
+	scrip_properties.expiryIndex   := expiryIndex
 	
-	return scrip
+	return scrip_properties
 }
 
 getOrder( orderType, qty, price, triggerprice, prodType   ){

@@ -339,12 +339,16 @@ linkOrderPrompt(){
 linkOrdersSubmit(){
 	global ORDER_TYPE_LIMIT, ORDER_TYPE_MARKET, entryOrderNOW, stopOrderNOW, listViewOrderIDPosition, listViewOrderTypePosition
 	
+	entry_OrderId   = ""
+	entry_Ordertype = ""
+	stopOrderId	    = ""	
+	
 // Get Selected Orders
 	Gui, 2:ListView, SysListView321
 	rowno := LV_GetNext()									// Entry Order ListView Selected row
 	if( rowno > 0 ){
-		LV_GetText( entryOrderId,   rowno, listViewOrderIDPosition )
-		LV_GetText( entryOrdertype, rowno, listViewOrderTypePosition )
+		LV_GetText( entry_OrderId,   rowno, listViewOrderIDPosition )
+		LV_GetText( entry_Ordertype, rowno, listViewOrderTypePosition )
 	}
 	
 	Gui, 2:ListView, SysListView322
@@ -353,12 +357,12 @@ linkOrdersSubmit(){
 		LV_GetText( stopOrderId, rowno, listViewOrderIDPosition )
 	
 // Validations
-	if( entryOrderId == "" ){
+	if( entry_OrderId == "" ){
 		MsgBox, 262144,, Select Entry Order
 		return
 	}
 	if( stopOrderId == "" ){
-		if( entryOrdertype == ORDER_TYPE_LIMIT || entryOrdertype == ORDER_TYPE_MARKET ){
+		if( entry_Ordertype == ORDER_TYPE_LIMIT || entry_Ordertype == ORDER_TYPE_MARKET ){
 			MsgBox, 262144,, Select Stop Order				// Allow skipping Stop order linking for SL/SLM Orders
 			return
 		}
@@ -366,23 +370,23 @@ linkOrdersSubmit(){
 			MsgBox, 262144,, Stop order is not linked, Enter Stop Price and click Update immediately to ready Stop order
 		}		
 	}
-	if( entryOrderId == stopOrderId ){
+	if( entry_OrderId == stopOrderId ){
 		MsgBox, 262144,, Selected Entry And Stop Order are same
 		return
 	}
 	
 // Link Orders in Current Context
-	if( !linkOrders( entryOrderId, stopOrderId, stopOrderId == "" ? false : true ))
+	if( !linkOrders( entry_OrderId, stopOrderId, stopOrderId == "" ? false : true ))
 		return
 	
 	Gui, 2:Destroy
 	Gui  1:Default
 	
-	e 		   := entryOrderNOW
-	s 		   := stopOrderNOW	
-	entryPrice := (entryOrdertype == ORDER_TYPE_LIMIT || entryOrdertype == ORDER_TYPE_MARKET) ? e.price : e.triggerPrice		
+	e 		    := entryOrderNOW
+	s 		    := stopOrderNOW	
+	entry_price := (entry_Ordertype == ORDER_TYPE_LIMIT || entry_Ordertype == ORDER_TYPE_MARKET) ? e.price : e.triggerPrice		
 	
-	setGUIValues( e.totalQty, entryPrice, s.triggerPrice, getDirectionFromOrder(e), getOrderTypeFromOrder(e) )
+	setGUIValues( e.totalQty, entry_price, s.triggerPrice, getDirectionFromOrder(e), getOrderTypeFromOrder(e) )
 	updateCurrentResult()
 }
 

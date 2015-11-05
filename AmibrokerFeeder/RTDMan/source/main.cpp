@@ -6,17 +6,18 @@
 #include <iostream>
 
 
-// TODO
-    // Change month in future / options scrips if cannot connect + detect last thrusday has passed + check current date month + setting to enable
-    
-    
+// TODO        
+	// Util::getLong / getDouble - Use Try Catch when converting from string
+		// Also check references - handle bad data
+	
     // RTD Callback - Use array and construct bars in AB thread
-        // More accurate mins - some data gets shifter now
+        // More accurate mins - some data gets shifted now
         // Immediate update - use events instead of sleep. Manage minute change
-        // Integrate with backfill - IPC call input, another thread - Use TICKMODE backfill + reconstruct last ~30 mins with rtd+backfill data
-            // If extremes mismatch, update Highest and lowest ticks with backfill extreme as an approximation
-            // For each minute, if no rtd bars - use backfill bar with volume. But, RTD may have that volume pushed to future mins?            
-            
+        // Integrate with backfill - Export all ticks to another file per scrip - append data            
+       
+	// Change month in future / options scrips if cannot connect + detect last thrusday has passed + check current date month + setting to enable
+		// Or just do it in OrderMan GUI
+		
     // Bell - Change wav + in project 
     // Bug - Negative Volume ? 
             // Atleast set volume to 0. Currently check for ==0 but not <0

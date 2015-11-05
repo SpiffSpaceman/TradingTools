@@ -47,20 +47,20 @@ modifyOrders( scrip, entryOrderType, stopOrderType, qty, prodType, entryPrice, s
 	
 	if( IsObject(entryOrderNOW) && entryPrice != "" ){		
 		
-		direction 	    := getDirectionFromOrder( entryOrderNOW )			// same direction as linked order
-		entry		    := getEntryForOrderType(entryOrderType, qty, prodType, entryPrice, direction )	
-		entryOrderNOW   := modifyOrder( entryOrderNOW, direction, scrip, entry )
+		orderDirection  := getDirectionFromOrder( entryOrderNOW )			// same direction as linked order
+		entry		    := getEntryForOrderType(entryOrderType, qty, prodType, entryPrice, orderDirection )	
+		entryOrderNOW   := modifyOrder( entryOrderNOW, orderDirection, scrip, entry )
 	}
 	
 	if( IsObject(entryOrderNOW)  && stopPrice != "" ){						// Stop can only exist if Entry Order Exist
 																			// Stop can be pending, stopOrderNOW need not exist
 		stop			:= getStopForOrderType( stopOrderType, qty, prodType, stopPrice  )		
-		direction 	    := reverseDirection( getDirectionFromOrder( entryOrderNOW )	)
+		stopDirection   := reverseDirection( getDirectionFromOrder( entryOrderNOW )	)
 		
 		if( isOrderOpen( stopOrderNOW ) )									// Order in Open Status - Modify it
-			stopOrderNOW    := modifyOrder( stopOrderNOW, direction, scrip, stop )
+			stopOrderNOW    := modifyOrder( stopOrderNOW, stopDirection, scrip, stop )
 		else if ( !IsObject( stopOrderNOW ) )								// Pending only applicable if order not created yet
-			addPendingStop( entryOrderType, scrip, direction, stop )
+			addPendingStop( entryOrderType, scrip, stopDirection, stop )
 	}
 	
 	updateStatus()

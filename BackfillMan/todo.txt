@@ -1,0 +1,33 @@
+
+Data-table + Index Code
+	Datatable - Row Count in Datatable - Wont work if No of days > 1 - Need to verify each minute too for date = today
+	Handle Timeout better- prompt to skip/use partial data
+
+Better Volume, Price Merge
+
+Better Error Handling			
+	Make list of Failed Scrips and prompt to retry
+		- list out missing bars if less 
+		- Can also try both DT and VWAP
+	GUI 
+		- option to cancel/skip Scrip
+		- option to run manually for selected scrips, even EOD
+	
+
+
+
+
+	
+
+	
+	
+	
+	
+	
+	
+MultiDay Backfill + Daily Backfill? + Filter out outside market time quotes 
+	Handle Hostorical Charts, including for index - Shows text "Historical Chart" instead of "IntraDay Chart" - Will have to switch using menu	
+DT - Shift-D also causes separate d keystroke. So if Marketwatch has a scrip starting with D, it gets selected
+	check how to avoid it.  Datatable opens correctly though, so no bug
+Index - x,y click may fail if index list has  multiple indices and big empty space 
+Index - check count after removing useless entries
