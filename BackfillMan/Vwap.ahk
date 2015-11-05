@@ -32,8 +32,8 @@ vwapBackFill()
 		if( !IsObject( VWAPColumnIndex ) ){		 				
 			getVWAPColumnIndex()											// Check Required columns
 		}
-		waitForDataLoad( fields[7] )										// Wait for All data to load
-		writeVwapData( fields[7] )											// Write csv 	
+		if( waitForDataLoad( fields[7] ) )									// Wait for All data to load
+			writeVwapData( fields[7] )										// Write csv if data loaded
 	}
 }
 
@@ -107,7 +107,7 @@ waitForDataLoad( alias ){													// Wait for all data to load. Verifies tha
 	
 	ExpectedCount := getExpectedDataRowCount()
 	
-	Loop {
+	Loop {																	// Initial Simple Wait without checking for contents
 		ControlGet, rowCount, List, Count, SysListView321, %VWAPWindowTitle%
 		if( rowCount >= ExpectedCount )
 			break
@@ -124,19 +124,25 @@ waitForDataLoad( alias ){													// Wait for all data to load. Verifies tha
 			if( isTimeInMarketHours( time ) ) 
 				rowCount++			
 		}
-		if( Mod(A_Index, 20 )==0  &&  rowCount < ExpectedCount  ){			// Ask Every 20 seconds if all data not received
+		
+		if( rowCount >= ExpectedCount ){									// All data loaded
+			return true
+		}
+
+		if( Mod(A_Index, 20 )==0  ){										// Ask Every 20 seconds if all data has not yet been received
 			missingCount := ExpectedCount - rowCount
 			MsgBox, 4, %alias% - Waiting, VWAP data for %alias% has %missingCount% minutes missing. Is Data still loading?
 			IfMsgBox No	
 				MsgBox, 4,  %alias% - Waiting, Do you still want to Backfill %alias% with this data ?
 					IfMsgBox yes
-						break
+						return true
+					Else
+						return false
 		}
-			
-		if( rowCount >= ExpectedCount )
-			break
-		Sleep 1000
+		Sleep 1000		
 	}
+	
+	return false
 }
 
 // Columns Expected Order - Start time, O, H, L, C, V

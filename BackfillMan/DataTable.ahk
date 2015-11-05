@@ -34,8 +34,8 @@ dtBackFill(){
 		if( fields[3] == "EOD" && !isMarketClosed() )						// Skip EOD Scrips during the day
 			continue
 				
-		openDataTable( fields[1], 0 )		
-		writeDTData( fields[2] )
+		if( openDataTable( fields[1], 0 ) )									// Write Scrip data if loaded
+			writeDTData( fields[2] )
 	}	
 }
 
@@ -49,8 +49,8 @@ indexBackFill(){															// NOTE - This wont work if Index has scroll bars
 		if( fields[3] == "EOD" && !isMarketClosed() )						// Skip EOD Scrips during the day
 			continue
 		
-		openIndexDataTable( fields[1] )			
-		writeDTData( fields[2] )		
+		if( openIndexDataTable( fields[1] ) )
+			writeDTData( fields[2] )
 	}	
 
 	closeNestPlusChart()													// Close Nest Plus chart when All done
@@ -107,8 +107,10 @@ openDataTable( inTradingSymbol, retryCount ){
 		openDataTable( inTradingSymbol, retryCount+1  )
 	}
 	
-	waitForDTData( inTradingSymbol )	
+	isDataLoaded := waitForDTData( inTradingSymbol )	
 	WinMinimize, %DTWindowTitle% 
+	
+	return isDataLoaded
 }
 
 waitforDTOpen( symbol, i, maxI, waitTime  ){								// returns true if Datatable is open
@@ -147,24 +149,27 @@ waitForDTData( symbol  ){
 	Loop {
 		ControlGet, rowCount, List, Count, SysListView321, %DTWindowTitle% 
 	
-		if( rowCount >= ExpectedCount ){
-			break
-		}		
-		if( A_Index > 20 ){
+		if( rowCount >= ExpectedCount ){									// Data Loaded
+			return true
+		}
+		
+		if( A_Index == 10 ){
 			WinRestore, %DTWindowTitle%										// sometimes data doesnt load if window is minimized ? 
 		}
-		/*
-		if( A_Index >= 40 && rowCount >= (ExpectedCount-5) ){				// Allow upto 5 missing minutes
-			break
+		if( Mod(A_Index, 20 )==0 ){											// Ask Every 20 seconds if all data has not yet been received
+			missingCount := ExpectedCount - rowCount
+			MsgBox, 4, %symbol% - Waiting, DataTable for %symbol% has %missingCount% minutes missing. Is Data still loading?
+			IfMsgBox No
+				MsgBox, 4,  %symbol% - Waiting, Do you still want to Backfill %symbol% with this data ?
+					IfMsgBox yes
+						return true
+					Else
+						return false
 		}
-		*/
-		if( A_Index > 120  ){
-			MsgBox, DT does not have all data. Timeout.
-			Exit
-		}				
-		
-		Sleep 500
+		Sleep 1000
 	}
+	
+	return false
 }
 
 openIndexDataTable( inIndexSymbol ){
@@ -212,8 +217,10 @@ openIndexDataTable( inIndexSymbol ){
 	}
 	Until waitforDTOpen( inIndexSymbol, A_Index, 5, 5 )						// Check upto 5 times. Check every 5 seconds
 
-	waitForDTData( inIndexSymbol )
+	isDataLoaded := waitForDTData( inIndexSymbol )
 	WinMinimize, %DTWindowTitle%
+	
+	return isDataLoaded
 }
 
 /* Click Works on NestChart close button But ControlClick does not work
