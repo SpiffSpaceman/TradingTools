@@ -1,7 +1,10 @@
 
-Data-table + Index Code
+test Skip when data not loaded for VWAP/DT
+
+
+
+Data-table + Index Code	
 	Datatable - Row Count in Datatable - Wont work if No of days > 1 - Need to verify each minute too for date = today
-	Handle Timeout better- prompt to skip/use partial data
 
 Better Volume, Price Merge
 
