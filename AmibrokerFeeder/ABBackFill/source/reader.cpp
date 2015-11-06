@@ -78,7 +78,7 @@ bool Reader::parseVWAPToCsv(){
         
         Util::splitString( line , ' ', split ) ;                                       // Data. Expected format is 
                                                                                        // "09:15:00 AM 6447.00 6465.00 6439.55 6444.40 318900"  
-        if( (!settings.is_skip_volume && split.size() != 7)                            // Time AM/PM O H L C V            
+        if( (settings.is_backfill_volume && split.size() != 7)                         // Time AM/PM O H L C V            
           ){
             std::stringstream msg;                                                     
             msg << "Could Not Parse Line. Split Size - " << split.size() << " Line - " << line;
@@ -166,7 +166,7 @@ void  Reader::postParse( const std::string &ticker, const std::string &date, con
         return; 
     if( !is_tickmode && settings.is_skip_open_minute && settings.open_minute == time )          // Skip 09:15:00
         return;                                                                                 // TickMode - dont skip first min, dont skip volume    
-    if( !is_tickmode && settings.is_skip_volume )
+    if( !is_tickmode && !settings.is_backfill_volume )
         volume = "0";
     
     // $FORMAT Ticker, Date_YMD, Time, Open, High, Low, Close, Volume

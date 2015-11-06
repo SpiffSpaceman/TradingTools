@@ -113,65 +113,6 @@ openDataTable( inTradingSymbol, retryCount ){
 	return isDataLoaded
 }
 
-waitforDTOpen( symbol, i, maxI, waitTime  ){								// returns true if Datatable is open
-	global DTWindowTitle
-	
-	SetTitleMatchMode, RegEx
-	
-	WinWait, %DTWindowTitle%.*%symbol%,, 1									// Wait for Data Table to open - Look for DTWindowTitle and Scrip name
-	IfWinExist, Update Holdings/Collateral									// Workaround fix - When NOW is active, sometimes opening DT also opens Update Holdings
-	{																			// So close it. Check why this opens
-		WinClose, Update Holdings/Collateral
-		SetTitleMatchMode, 2
-		return false
-	}
-	WinWait, %DTWindowTitle%.*%symbol%,, % (waitTime-1)
-	
-	SetTitleMatchMode, 2													// If not opened, we will call openDataTable again
-		
-	if ErrorLevel {															// Sometimes shortcut does not work with NOW focussed , try again
-		checkPlusLoginPrompt()
-		if( i >= maxI ){
-			MsgBox, DataTable for %symbol% did not open.	
-			Exit
-		}		
-		return false
-	}
-	
-	return true
-}
-
-waitForDTData( symbol  ){
-	global DTWindowTitle
-		
-	ExpectedCount := getExpectedDataRowCount()								// Assuming NestPlus No of days is set to 1 day 
-																			// Still, NestPlus seems to load latest first which should also work
-	Loop {
-		ControlGet, rowCount, List, Count, SysListView321, %DTWindowTitle% 
-	
-		if( rowCount >= ExpectedCount ){									// Data Loaded
-			return true
-		}
-		
-		if( A_Index == 10 ){
-			WinRestore, %DTWindowTitle%										// sometimes data doesnt load if window is minimized ? 
-		}
-		if( Mod(A_Index, 20 )==0 ){											// Ask Every 20 seconds if all data has not yet been received
-			missingCount := ExpectedCount - rowCount
-			MsgBox, 4, %symbol% - Waiting, DataTable for %symbol% has %missingCount% minutes missing. Is Data still loading?
-			IfMsgBox No
-				MsgBox, 4,  %symbol% - Waiting, Do you still want to Backfill %symbol% with this data ?
-					IfMsgBox yes
-						return true
-					Else
-						return false
-		}
-		Sleep 1000
-	}
-	
-	return false
-}
-
 openIndexDataTable( inIndexSymbol ){
 	
 	global  NowWindowTitle, DTWindowTitle		
@@ -221,6 +162,87 @@ openIndexDataTable( inIndexSymbol ){
 	WinMinimize, %DTWindowTitle%
 	
 	return isDataLoaded
+}
+
+waitforDTOpen( symbol, i, maxI, waitTime  ){								// returns true if Datatable is open
+	global DTWindowTitle
+	
+	SetTitleMatchMode, RegEx
+	
+	WinWait, %DTWindowTitle%.*%symbol%,, 1									// Wait for Data Table to open - Look for DTWindowTitle and Scrip name
+	IfWinExist, Update Holdings/Collateral									// Workaround fix - When NOW is active, sometimes opening DT also opens Update Holdings
+	{																			// So close it. Check why this opens
+		WinClose, Update Holdings/Collateral
+		SetTitleMatchMode, 2
+		return false
+	}
+	WinWait, %DTWindowTitle%.*%symbol%,, % (waitTime-1)
+	
+	SetTitleMatchMode, 2													// If not opened, we will call openDataTable again
+		
+	if ErrorLevel {															// Sometimes shortcut does not work with NOW focussed , try again
+		checkPlusLoginPrompt()
+		if( i >= maxI ){
+			MsgBox, DataTable for %symbol% did not open.	
+			Exit
+		}		
+		return false
+	}
+	
+	return true
+}
+
+waitForDTData( symbol  ){
+	global DTWindowTitle
+		
+	ExpectedCount := getExpectedDataRowCount()								// Assuming NestPlus No of days is set to 1 day 
+																			// Still, NestPlus seems to load latest first which should also work
+	Loop {
+		ControlGet, rowCount, List, Count, SysListView321, %DTWindowTitle% 
+	
+		if( rowCount >= ExpectedCount ){									// Initial Simple Wait without checking for contents
+			break		
+		}
+		Sleep 500
+	}	
+
+	Loop {																	// Check all data loaded. Count only valid intraday quotes		
+		rowCount := 0														// Ignore duplicates. And Count Only quotes within market hour Today
+		ControlGet, date_time, List, Col2, SysListView321, %DTWindowTitle%	// Assuming Date Time Column at default position
+		Sort, date_time, U 													// Sort, Remove duplicates		
+		Loop, Parse, date_time, `n  										// Get Number of rows
+		{
+			dateTimeSplit   := StrSplit( A_LoopField, " ") 					// 05-11-2015 15:29:00
+			if( !isDateToday( dateTimeSplit[1] )  )
+				continue
+			
+			timeSplit := StrSplit( dateTimeSplit[2], ":")
+			
+			if( isTimeInMarketHours( timeSplit[1] . ":" . timeSplit[2] ) )  
+				rowCount++
+		}
+		
+		if( rowCount >= ExpectedCount ){									// All data loaded
+			return true
+		}	
+	
+		if( A_Index == 10 ){
+			WinRestore, %DTWindowTitle%										// sometimes data doesnt load if window is minimized ? 
+		}
+		if( Mod(A_Index, 20 )==0 ){											// Ask Every 20 seconds if all data has not yet been received
+			missingCount := ExpectedCount - rowCount
+			MsgBox, 4, %symbol% - Waiting, DataTable for %symbol% has %missingCount% minutes missing. Is Data still loading?
+			IfMsgBox No
+				MsgBox, 4,  %symbol% - Waiting, Do you still want to Backfill %symbol% with this data ?
+					IfMsgBox yes
+						return true
+					Else
+						return false
+		}
+		Sleep 1000
+	}
+	
+	return false
 }
 
 /* Click Works on NestChart close button But ControlClick does not work

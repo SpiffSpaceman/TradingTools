@@ -7,11 +7,6 @@
 #include "util.h"
 #include <iostream>
 
-// invert SkipVolume - ShowVolume
-
-// TODO - Allow overriding ini parameters using input args. param=value.
-	// put args key value in map. Use common funtion in settings.ini to check args before ini.
-
 // Volume
 	// Save quotes - RTDman - in ram drive csv, use $TICKMODE 1 backfill, recreate last 30 min data with saved ticks+backfill data
 	// Volume only if no quote in minute else find empty second and update extremes with 0 volume.
@@ -22,6 +17,8 @@
     // Remove Volume Skip option
     // Open Minute - Still import if no data in AB and volume available    
 
+// TODO - Allow overriding ini parameters using input args. param=value.
+	// put args key value in map. Use common funtion in settings.ini to check args before ini.
 
 int _tmain(int argc, _TCHAR* argv[]){
 

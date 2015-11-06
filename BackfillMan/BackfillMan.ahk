@@ -205,6 +205,11 @@ isTimeInMarketHours( time ){
 	return time >= START_TIME &&  time <= END_TIME
 }
 
+// 05-11-2015
+isDateToday( date ) {
+	return (  date == (A_DD . "-" . A_MM . "-" . A_YYYY )   )
+}
+
 /*
 	Converts from 12 to 24h HH:MM. Example "03:03:15 PM" to "15:03"
 */
@@ -218,6 +223,16 @@ convert24( time ){
 	return timeSplit[1] . ":" . timeSplit[2]
 }
 
+timer( mode ){
+	static start := 0
+	
+	if( mode == "start" ) {
+		start := A_TickCount
+	}
+	if( mode == "end" ) {
+		return (A_TickCount - start )
+	}
+}
 
 #Include Settings.ahk
 #Include DataTable.ahk

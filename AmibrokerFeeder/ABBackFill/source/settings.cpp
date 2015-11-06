@@ -19,7 +19,7 @@ void Settings::loadSettings(){
     close_minute           = getINIString("CloseMinute");
 
     is_skip_open_minute    = getINIString("SkipOpenMinute") == "true";
-    is_skip_volume         = getINIString("SkipVolume")     == "true";
+    is_backfill_volume     = getINIString("BackfillVolume") == "true";
     is_intraday_mode       = getINIString("IntradayMode")   == "true";
     is_eod_tickmode        = getINIString("EODTickMode")    == "true";
     is_force_tickmode      = getINIString("ForceTickMode")  == "true";
