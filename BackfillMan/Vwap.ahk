@@ -107,10 +107,10 @@ waitForDataLoad( alias ){													// Wait for all data to load. Verifies tha
 	
 	ExpectedCount := getExpectedDataRowCount()
 	
-	Loop {																	// Initial Simple Wait without checking for contents
+	Loop, 10 {																// Initial Simple Wait without checking for contents. Wait Max 5 seconds
 		ControlGet, rowCount, List, Count, SysListView321, %VWAPWindowTitle%
 		if( rowCount >= ExpectedCount )
-			break
+			break		
 		Sleep 500
 	}
 	
@@ -120,7 +120,10 @@ waitForDataLoad( alias ){													// Wait for all data to load. Verifies tha
 		Sort, vwapTime, U 																							// Sort, Remove duplicates		
 		Loop, Parse, vwapTime, `n  																					// Get Number of rows
 		{
-			time := convert24( A_LoopField )
+			time := convert24HHMM( A_LoopField )
+			if( isVWAPStartTimeFixNeeded( time ) )
+				time := fixStartTime( time )
+				
 			if( isTimeInMarketHours( time ) ) 
 				rowCount++			
 		}
@@ -133,11 +136,13 @@ waitForDataLoad( alias ){													// Wait for all data to load. Verifies tha
 			missingCount := ExpectedCount - rowCount
 			MsgBox, 4, %alias% - Waiting, VWAP data for %alias% has %missingCount% minutes missing. Is Data still loading?
 			IfMsgBox No	
+			{
 				MsgBox, 4,  %alias% - Waiting, Do you still want to Backfill %alias% with this data ?
-					IfMsgBox yes
-						return true
-					Else
-						return false
+				IfMsgBox yes
+					return true
+				Else
+					return false
+			}
 		}
 		Sleep 1000		
 	}
@@ -147,7 +152,7 @@ waitForDataLoad( alias ){													// Wait for all data to load. Verifies tha
 
 // Columns Expected Order - Start time, O, H, L, C, V
 writeVwapData( alias ){
-	global VWAPWindowTitle, VWAPBackfillFileName, VWAPSleepTime, VWAPColumnIndex, START_TIME
+	global VWAPWindowTitle, VWAPBackfillFileName, VWAPSleepTime, VWAPColumnIndex, START_TIME, START_HOUR
 		
 	ControlGet, vwapStats, List, , SysListView321, %VWAPWindowTitle%		// Copy Data into vwapStats
 	WinClose, %VWAPWindowTitle%		 										// Close HS		
@@ -181,12 +186,19 @@ writeVwapData( alias ){
 				close = %A_LoopField% 
 			if( A_Index ==  VWAPColumnIndex.vol ) 
 				vol   = %A_LoopField% 				
+		}		
+		
+		time := convert24HHMM( start )
+		
+		if( isVWAPStartTimeFixNeeded( time ) ){		 						// Workaround fix - 1st Bar for Stocks is from 09:14:XX to 09:15:XX
+																			// Set this bar's time as 09:15:00			
+			timeSplit := StrSplit( start, ":") 										
+			if(  START_HOUR >= 12  )			
+				start := timeSplit[1] . ":" . ( timeSplit[2] + 1 )  . ":00 PM"
+			else
+				start := timeSplit[1] . ":" . ( timeSplit[2] + 1 )  . ":00 AM"
 		}
-		
-		timeSplit := StrSplit( start, ":") 									// Workaround fix - 1st Bar for Stocks is from 09:14:XX to 09:15:XX		
-		if( START_TIME  ==  (timeSplit[1] . ":" . timeSplit[2]) )			// Set this bar's time as 09:15:00
-			start := timeSplit[1] . ":" . ( timeSplit[2] + 1 )  . ":00 AM"		
-		
+
 		File.WriteLine(  start . " " . open . " " . high . " " . low . " " . close . " " . vol   )
 	}	
 	

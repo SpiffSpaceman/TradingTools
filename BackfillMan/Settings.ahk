@@ -17,6 +17,7 @@
 
 loadSettings(){
 	local value																// All variables global except these
+	local split
 	
 	IniRead, Mode, BackfillMan.ini, BackfillMan, Mode
 	IniRead, DoIndex, BackfillMan.ini, BackfillMan, DoIndex
@@ -35,6 +36,18 @@ loadSettings(){
 	
 	IniRead, value, BackfillMan.ini, BackfillMan, PingerPeriod	
 	PingerPeriod  :=  value * 60 * 1000										// Mins to ms	
+
+	IniRead, START_TIME, 			 BackfillMan.ini, BackfillMan, StartTime
+	IniRead, END_TIME, 				 BackfillMan.ini, BackfillMan, EndTime
+
+	split 			:= StrSplit( START_TIME, ":") 
+	START_HOUR		:= split[1]
+	START_MIN		:= split[2]
+	START_TIME_VWAP := subMinute( split[1], split[2] )
+	
+	split 		:= StrSplit( END_TIME, ":") 
+	END_HOUR	:= split[1]
+	END_MIN		:= split[2]
 
 	VWAPCount = 0
 	Loop{	

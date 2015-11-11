@@ -37,7 +37,7 @@ createGUI(){
 	Gui, 1:Add, Button, gopenLinkOrdersGUI vBtnLink x+5, Link			// Link or Unlink
 	Gui, 1:Add, Button, gunlinkBtn vBtnUnlink xp+0 yp+0, Unlink		
 
-	Gui, 1:Add, DropDownList, vEntryOrderType w45 Choose1 ym, L|SL|SLM|M // Entry Type
+	Gui, 1:Add, DropDownList, vEntryOrderType w45 Choose1 ym, LIM|SL|SLM|M // Entry Type
 	//Gui, 1:Add, DropDownList, w45 Choose1, SLM|SL
 	Gui, 1:Add, Text, vCurrentResult  w30
 	Gui, 1:Add, Button, gcancelOrderBtn vBtnCancel y+14, Cancel		 	// Cancel button
@@ -71,11 +71,11 @@ updateStatus(){
 	
 	GuiControl, % anyLinked ? "1:Disable" : "1:Enable", Direction					// Disable Direction if orders Linked
 	GuiControl, % anyLinked ? "1:Show"    : "1:Hide",   BtnUnlink					// Show Order if unlinked. If orders links show Unlink button instead
+	GuiControl, % anyLinked	? "1:Hide"    : "1:Show",   BtnLink						// Show Link if not linked
 	GuiControl, % anyLinked ? "1:Hide"    : "1:Show",   BtnOrder	
 	
 	GuiControl, % entryOpen    || stopOpen  ? "1:Show"  : "1:Hide", BtnUpdate		// Show Update only if atleast one linked order is open
-	GuiControl, % entryOpen    || stopOpen  ? "1:Show"  : "1:Hide", BtnCancel		// Show Cancel Button if order linked
-	GuiControl, % entryOpen    || stopOpen  ? "1:Hide"  : "1:Show", BtnLink			// Show Link if not linked
+	GuiControl, % entryOpen    || stopOpen  ? "1:Show"  : "1:Hide", BtnCancel		// Show Cancel Button if order linked	
 	
 	GuiControl, % !entryLinked || entryOpen ? "1:Enable"  : "1:Disable", EntryPrice	// Enable Price entry for new orders or for linked open orders
 	GuiControl, % !stopLinked  || stopOpen  ? "1:Enable"  : "1:Disable", StopPrice		

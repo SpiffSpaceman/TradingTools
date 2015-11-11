@@ -27,10 +27,6 @@ SetWorkingDir %A_ScriptDir%  												// Ensures a consistent starting direct
 SetTitleMatchMode, 2 														// A window's title can contain the text anywhere
 SetControlDelay, -1 														// Without this ControlClick fails sometimes. Example - Index Right click fails if mouse is over NOW
 
-START_TIME := "09:14"														// VWAP for stocks in NOW  has 09:14:XX as first row
-END_TIME   := "15:30"															// START_TIME use - waitForDataLoad() will wait for this bar 
-																				// and writeVwapData() will shift "VWAP start time = START_TIME" bar to START_TIME + 1 min
-
 VWAPColumnIndex := ""														// Initialize some variables to avoid harmless warn errors
 
 loadSettings()																// Load settings for Timer before hotkey install
@@ -111,10 +107,11 @@ DoBackfill(){
 }
 
 getExpectedDataRowCount(){
-	
-	hour 		  := A_Hour>15 ? 15 : A_Hour
-	min  		  := (A_Hour>15 || (A_Hour==15 && A_Min>30) ) ? 30 : A_Min
-	ExpectedCount := (hour - 9)*60 + (min - 15)
+	global START_HOUR, START_MIN, END_HOUR, END_MIN
+
+	hour 		  := A_Hour>END_HOUR ? END_HOUR : A_Hour
+	min  		  := (A_Hour>END_HOUR || (A_Hour==END_HOUR && A_Min>END_MIN) ) ? END_MIN : A_Min
+	ExpectedCount := (hour - START_HOUR)*60 + (min - START_MIN)								
 
 	if( !isMarketClosed() )
 		ExpectedCount := ExpectedCount-1									// Allow 1 less minute for border case - 
@@ -201,7 +198,7 @@ isMarketClosed(){
 */
 isTimeInMarketHours( time ){
 	global START_TIME, END_TIME	
-	
+
 	return time >= START_TIME &&  time <= END_TIME
 }
 
@@ -211,17 +208,59 @@ isDateToday( date ) {
 }
 
 /*
-	Converts from 12 to 24h HH:MM. Example "03:03:15 PM" to "15:03"
+	Converts from 12h hh:mm:ss to 24h HH:MM. Example "03:03:15 PM" to "15:03"	
 */
-convert24( time ){
+convert24HHMM( time ){
+
 	timeSplit := StrSplit( time, ":") 
 	secSplit  := StrSplit( timeSplit[3], " ") 
 	
 	if( secSplit[2] == "PM" && timeSplit[1] < 12 ){							// Add 12 to Hours if PM. But not for 12
 		timeSplit[1] := timeSplit[1] + 12
 	}
+	
 	return timeSplit[1] . ":" . timeSplit[2]
 }
+
+
+/*
+  VWAP for stocks in NOW has 09:14:XX as first row. Change it to 09:15
+*/ 
+isVWAPStartTimeFixNeeded( time ){
+	global START_TIME_VWAP
+	
+	return (time == START_TIME_VWAP)
+}
+
+/*
+	Input - HH:MM  (24hr)
+*/
+fixStartTime( time ){	
+	if( isVWAPStartTimeFixNeeded( time ) ){
+		timeSplit := StrSplit( time, ":") 
+		time 	  := addMinute( timeSplit[1], timeSplit[2] )			
+	}
+	return time
+}
+
+/*
+	Adds 1 to minute - used in VWAP to move first minute
+	Returns time in HH:MM
+*/
+addMinute( HH, MM ){
+	if( MM == 59 )
+		return % (HH+1) . ":00"
+	else
+		return % HH . ":" . (MM+1)
+}
+
+subMinute( HH, MM ){
+	if( MM == 00 )
+		return % (HH-1) . ":59"
+	else
+		return % HH . ":" . (MM-1)
+}
+ 
 
 timer( mode ){
 	static start := 0

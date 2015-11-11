@@ -78,11 +78,11 @@ checkNOWOpen(){
 getScrip( segment, instrument, symbol, type, strikePrice, expiryIndex ){
 	scrip_properties  := {}
 	scrip_properties.segment		:= segment
-	scrip_properties.instrument	:= instrument
-	scrip_properties.symbol		:= symbol
+	scrip_properties.instrument		:= instrument
+	scrip_properties.symbol			:= symbol
 	scrip_properties.type			:= type
 	scrip_properties.strikePrice	:= strikePrice
-	scrip_properties.expiryIndex   := expiryIndex
+	scrip_properties.expiryIndex    := expiryIndex
 	
 	return scrip_properties
 }
@@ -108,7 +108,7 @@ getOrderTypeFromOrder( order ){
 	global
 	
 	if( order.orderType == ORDER_TYPE_LIMIT)
-		return "L"
+		return "LIM"
 	else if( order.orderType == ORDER_TYPE_MARKET )
 		return "M"
 	else if( order.orderType == ORDER_TYPE_SL_LIMIT )
@@ -120,7 +120,7 @@ getOrderTypeFromOrder( order ){
 getNowOrderType( ordertype ){
 	global
 	
-	if( ordertype == "L")
+	if( ordertype == "LIM")
 		return ORDER_TYPE_LIMIT
 	else if( ordertype == "M")
 		return ORDER_TYPE_MARKET

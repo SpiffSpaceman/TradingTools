@@ -197,10 +197,10 @@ waitForDTData( symbol  ){
 		
 	ExpectedCount := getExpectedDataRowCount()								// Assuming NestPlus No of days is set to 1 day 
 																			// Still, NestPlus seems to load latest first which should also work
-	Loop {
+	Loop, 10 {
 		ControlGet, rowCount, List, Count, SysListView321, %DTWindowTitle% 
 	
-		if( rowCount >= ExpectedCount ){									// Initial Simple Wait without checking for contents
+		if( rowCount >= ExpectedCount ){									// Initial Simple Wait without checking for contents. Wait Max 5 seconds
 			break		
 		}
 		Sleep 500
@@ -233,11 +233,13 @@ waitForDTData( symbol  ){
 			missingCount := ExpectedCount - rowCount
 			MsgBox, 4, %symbol% - Waiting, DataTable for %symbol% has %missingCount% minutes missing. Is Data still loading?
 			IfMsgBox No
+			{
 				MsgBox, 4,  %symbol% - Waiting, Do you still want to Backfill %symbol% with this data ?
-					IfMsgBox yes
-						return true
-					Else
-						return false
+				IfMsgBox yes
+					return true
+				Else
+					return false
+			}
 		}
 		Sleep 1000
 	}

@@ -1,19 +1,25 @@
+
+guessDirection() - test - should be !isEntryLinked()?
+After complete - both link and unlink visible
+Change L to LIM
 Test after entry complete
     - Trail above price allowed after complete - isEntryComplete()
     - Test After Entry - Stop movement - dont guess direction
 
 
-Change L to LIM
+
+
+
 Cancel Orders - Verify - if open try again and notify if failed     // Once Stop order didnt cancel
+Roundoff - Long - Entry Up, Exit Down
 
-
-check #IfWinActive / #IfWinExist  to make HK only with AB active
-Order Tracker - Do imp stuff more frequently. GUI update can be done once a second ( so 250ms read + Do GUI update once in 4 rounds)
-
-Change to Objects? OrderBook, tracker, submitter, AB etc
 Option to change order type for open order
     - SL Order After Trigger - changes to Limit Order - should be editable ( unfilled )
-    - Square Off - Market Stop order only if entry is complete - else cancel    // show cancel if not entered else squareoff
+    - Square Off - Market Stop order only if entry is complete - else cancel    // show cancel if not entered else squareoff    
+check #IfWinActive / #IfWinExist  to make HK only with AB active
+Order Tracker - Do imp stuff more frequently. GUI update can be done once a second ( so 250ms read + Do GUI update once in 4 rounds)
+Change to Objects? OrderBook, tracker, submitter, AB etc
+
 
 
 
@@ -39,6 +45,8 @@ Option to change order type for open order
 
 
 -----------------------------------------------------------------------------------------
+Position Conversion option
+    - MIS to NRML/CNC + square off some if no margin
 Partial Stop orders
     - Show filled size for Entry/Stop
     - Maybe Stop order only entered once filled and stop size modified if Entry Size increases
@@ -54,7 +62,6 @@ Partial Stop orders
             Orignial Stop for unfilled size cannot be moved beyond Entry price
     - Handle cancel orders
     - Square Off - Market Stop order for filled position + cancel rest
-
 Support Adds with Common SL
 Target orders + Cancel Stop
     
