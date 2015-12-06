@@ -138,6 +138,7 @@ reverseDirection( direction ){
 	return direction == "B" ? "S" : "B"
 }
 
+// Ceil / Floor
 roundToTickSize( price ){
 	global TickSize	
 	return Round(  price / TickSize ) * TickSize

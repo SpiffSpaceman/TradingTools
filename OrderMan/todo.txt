@@ -1,24 +1,10 @@
-
-guessDirection() - test - should be !isEntryLinked()?
-After complete - both link and unlink visible
-Change L to LIM
-Test after entry complete
-    - Trail above price allowed after complete - isEntryComplete()
-    - Test After Entry - Stop movement - dont guess direction
+       
+Change to Objects? Order, OrderGroup, Context, OrderBook, Submitter, AB, GUI, GUI actions, util etc
 
 
 
 
 
-Cancel Orders - Verify - if open try again and notify if failed     // Once Stop order didnt cancel
-Roundoff - Long - Entry Up, Exit Down
-
-Option to change order type for open order
-    - SL Order After Trigger - changes to Limit Order - should be editable ( unfilled )
-    - Square Off - Market Stop order only if entry is complete - else cancel    // show cancel if not entered else squareoff    
-check #IfWinActive / #IfWinExist  to make HK only with AB active
-Order Tracker - Do imp stuff more frequently. GUI update can be done once a second ( so 250ms read + Do GUI update once in 4 rounds)
-Change to Objects? OrderBook, tracker, submitter, AB etc
 
 
 
@@ -45,8 +31,23 @@ Change to Objects? OrderBook, tracker, submitter, AB etc
 
 
 -----------------------------------------------------------------------------------------
-Position Conversion option
-    - MIS to NRML/CNC + square off some if no margin
+check #IfWinActive / #IfWinExist  to make HK only with AB active
+Roundoff - Long - Entry Up, Stop Down
+    mouse cursor scroll - move by tick size    
+Cancel Orders - Stop not cancelled
+    Verify - if open try again and notify if failed
+Ring Alarm / Notify at 15:17 if open orders
+    Automatic squareoff at 15:19    
+check - Dont allow entry update when entry area disabled    // ie when Already entered
+Order Tracker - Do imp stuff more frequently. GUI update can be done once a second ( so 250ms read + Do GUI update once in 4 rounds)
+-----------------------------------------------------------------------------------------
+Support Adds with Common SL
+    Show Orders in List
+Target orders + OCO Stop - warn if too close as both can trigger
+-----------------------------------------------------------------------------------------
+Option to change order type for open order
+    - SL Order After Trigger - changes to Limit Order - should be editable ( unfilled )
+    - Square Off - Market Stop order only if entry is complete - else cancel    // show cancel if not entered else squareoff
 Partial Stop orders
     - Show filled size for Entry/Stop
     - Maybe Stop order only entered once filled and stop size modified if Entry Size increases
@@ -62,9 +63,10 @@ Partial Stop orders
             Orignial Stop for unfilled size cannot be moved beyond Entry price
     - Handle cancel orders
     - Square Off - Market Stop order for filled position + cancel rest
-Support Adds with Common SL
-Target orders + Cancel Stop
-    
+-----------------------------------------------------------------------------------------
+Partial exits
+Position Conversion option
+    - MIS to NRML/CNC + square off some if no margin    
 Bug - MsgBox on top - gets overlapped by updateStatus() on show by Timer
 Settings GUI - maybe add tabs for settings of other applications + option to change month/year in scripname
 Link Orders
@@ -74,13 +76,11 @@ Link Orders
 OCO Orders
     - Cancel open order + its SL when other order Entry gets completed
     - Notify + cancel other if a entry order failed
-2 part exits
 Multiple scrips, Multiple Orders 
     - One Order at a time
     - Keep array of orders and current context
     - Switch context on Scrip/Order change
     - refresh orderbook too on context change + Filter all data for specific scrip - So everything else becomes per scrip    
 option to do just 1 order without stop?
-Option for Stop orders - SL-Limit?
+Option for Stop orders - SL-Limit + detect if slipped?
 Pseudo GTC Orders - save orders + option to send all in 1 go + check if already open
-thin gui less mode, just get everything as input + unique id -  create order and return uniqueid-orderid pair

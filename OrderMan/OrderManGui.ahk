@@ -60,7 +60,7 @@ createGUI(){
 	Update status bar, GUI controls state and Timer state based on order status
 */
 updateStatus(){
-	global entryOrderNOW, stopOrderNOW, ORDER_STATUS_OPEN, EntryStatus, StopStatus	
+	global entryOrderNOW, stopOrderNOW, ORDER_STATUS_OPEN, EntryStatus, StopStatus, EntryPrice, StopPrice
 	
 	entryLinked := IsObject( entryOrderNOW )
 	stopLinked	:= IsObject( stopOrderNOW )
@@ -79,6 +79,16 @@ updateStatus(){
 	
 	GuiControl, % !entryLinked || entryOpen ? "1:Enable"  : "1:Disable", EntryPrice	// Enable Price entry for new orders or for linked open orders
 	GuiControl, % !stopLinked  || stopOpen  ? "1:Enable"  : "1:Disable", StopPrice		
+
+	entryAverage := entryOrderNOW.averagePrice
+	stopAverage  := stopOrderNOW.averagePrice
+	
+	if( entryAverage != "" && entryAverage != EntryPrice && isEntrySuccessful()    ){
+		setEntryPrice( entryAverage )												// Update Entry Price with Average Price after entry complete
+	}
+	if( stopAverage != "" && stopAverage != StopPrice && isStopSuccessful() ){
+		setStopPrice( stopAverage )													// Update Entry Price with Average Price after entry complete
+	}
 
 	if( entryLinked ){																// Set Status if Linked
 		shortStatus	:= getOrderShortStatus( entryOrderNOW.status )
@@ -218,14 +228,14 @@ openStatusGUI(){
 initalizeListViewVars(){
 	global
 	
-	listViewFields 	   	      := "Scrip|Status|OrderType|Buy/Sell|Qty|Price|Trigger|Order No|Time"
-	listViewOrderIDPosition   := 8
+	listViewFields 	   	      := "Scrip|Status|OrderType|Buy/Sell|Qty|Price|Trigger|Average|Order No|Time"
+	listViewOrderIDPosition   := 9
 	listViewOrderTypePosition := 3
 }
 
 addOrderRow( o ) {
 	if( IsObject(o) )
-		LV_Add("", o.tradingSymbol, o.status, o.orderType, o.buySell, o.totalQty, o.price, o.triggerPrice, o.nowOrderNo, o.nowUpdateTime )
+		LV_Add("", o.tradingSymbol, o.status, o.orderType, o.buySell, o.totalQty, o.price, o.triggerPrice, o.averagePrice, o.nowOrderNo, o.nowUpdateTime )
 }
 
 setDefaultStop(){
@@ -339,9 +349,9 @@ linkOrderPrompt(){
 linkOrdersSubmit(){
 	global ORDER_TYPE_LIMIT, ORDER_TYPE_MARKET, entryOrderNOW, stopOrderNOW, listViewOrderIDPosition, listViewOrderTypePosition
 	
-	entry_OrderId   = ""
-	entry_Ordertype = ""
-	stopOrderId	    = ""	
+	entry_OrderId   := ""
+	entry_Ordertype := ""
+	stopOrderId	    := ""	
 	
 // Get Selected Orders
 	Gui, 2:ListView, SysListView321

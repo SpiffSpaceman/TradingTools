@@ -3,29 +3,39 @@ Better Volume, Price Merge
 	Export data from RTDMan
 	Merge data in ABBackfill
 
+Data loading check
+	Move to ABBackfill + Return code - esp for Datatable 
+	verify scrip name
+	Detect if data is loading instead of asking - wait time + check count diff + show alert once
+		- Bigger timeout for asking
+	
 
 
 
-Datatable 	
-	- Get Date Time column position instead of assuming 2
+Datatable
+	- Get Date Time column position instead of assuming 2	
 Better Error Handling			
 	Make list of Failed Scrips and prompt to retry with both VWAP / DT
 	GUI 
 		- option to cancel/skip Scrip
 		- option to run manually for selected scrips, even EOD
+MultiDay Backfill + Filter out outside market time quotes 
+	Allow Input Date Range for DataTable
+
+	
+
+	
+	
+	
+	
 
 
 
 	
+Daily Backfill?	
+	Handle Hostorical Charts, including for index
+		Shows text "Historical Chart" instead of "IntraDay Chart" - Will have to switch using menu
 
-	
-	
-	
-	
-	
-	
-MultiDay Backfill + Daily Backfill? + Filter out outside market time quotes 
-	Handle Hostorical Charts, including for index - Shows text "Historical Chart" instead of "IntraDay Chart" - Will have to switch using menu
 
 DT - Shift-D also causes separate d keystroke. So if Marketwatch has a scrip starting with D, it gets selected
 	check how to avoid it.  Datatable opens correctly though, so no bug

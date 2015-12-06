@@ -204,6 +204,15 @@ isEntrySuccessful(){
 }
 
 /*
+	Indicates whether Stop Order has status = complete
+*/
+isStopSuccessful(){
+	global
+	
+	return  IsObject( stopOrderNOW ) && stopOrderNOW.status == ORDER_STATUS_COMPLETE
+}
+
+/*
 	Indicates whether input order is in Order Book > Open Orders
 */
 isOrderOpen( order ){	
@@ -309,6 +318,8 @@ readOpenOrders(){
 				order.price 		 := A_LoopField
 			else if( A_Index ==  OpenOrdersColumnIndex.triggerPrice ) 
 				order.triggerPrice  := A_LoopField
+			else if( A_Index ==  OpenOrdersColumnIndex.averagePrice ) 
+				order.averagePrice  := A_LoopField
 			else if( A_Index ==  OpenOrdersColumnIndex.status ) 
 				order.status 		 := A_LoopField
 			else if( A_Index ==  OpenOrdersColumnIndex.nowOrderNo ) 
@@ -354,6 +365,8 @@ readCompletedOrders(){
 				order.price 		 := A_LoopField
 			else if( A_Index ==  CompletedOrdersColumnIndex.triggerPrice ) 
 				order.triggerPrice   := A_LoopField
+			else if( A_Index ==  CompletedOrdersColumnIndex.averagePrice ) 
+				order.averagePrice   := A_LoopField
 			else if( A_Index ==  CompletedOrdersColumnIndex.status ) 
 				order.status 		 := A_LoopField
 			else if( A_Index ==  CompletedOrdersColumnIndex.nowOrderNo ) 
@@ -385,15 +398,15 @@ readColumnHeaders(){
 // Open Orders
 	// Read column header texts and extract position for columns that we need
 	allHeaders  := GetExternalHeaderText( TITLE_ORDER_BOOK, "SysHeader321")		
-	headers		:= ["Order Type", "Buy/Sell", "Trading Symbol", "Total Qty", "Pending Qty", "Price", "TriggerPrice", "Status", "NOWOrderNo", "NOW UpdateTime"]
-	keys		:= ["orderType",  "buySell",  "tradingSymbol",  "totalQty",  "pendingQty",  "price", "triggerPrice", "status", "nowOrderNo", "nowUpdateTime"]			
+	headers		:= ["Order Type", "Buy/Sell", "Trading Symbol", "Total Qty", "Pending Qty", "Price", "TriggerPrice", "Average Price", "Status", "NOWOrderNo", "NOW UpdateTime"]
+	keys		:= ["orderType",  "buySell",  "tradingSymbol",  "totalQty",  "pendingQty",  "price", "triggerPrice", "averagePrice" , "status", "nowOrderNo", "nowUpdateTime"]			
 	
 	extractColumnIndices( "Order Book > Open Orders",  allHeaders, headers, OpenOrdersColumnIndex, keys )
 	
 // Completed Orders
 	allHeaders  := GetExternalHeaderText( TITLE_ORDER_BOOK, "SysHeader322")
-	headers		:= ["Order Type", "Buy/Sell", "Trading Symbol", "Total Qty", "Pending Qty", "Price", "TriggerPrice", "Status", "NOWOrderNo", "NOW UpdateTime", "Rejection Reason"]
-	keys		:= ["orderType",  "buySell",  "tradingSymbol",  "totalQty",  "pendingQty",  "price", "triggerPrice", "status", "nowOrderNo", "nowUpdateTime", "rejectionReason"]
+	headers		:= ["Order Type", "Buy/Sell", "Trading Symbol", "Total Qty", "Pending Qty", "Price", "TriggerPrice", "Average Price", "Status", "NOWOrderNo", "NOW UpdateTime", "Rejection Reason"]
+	keys		:= ["orderType",  "buySell",  "tradingSymbol",  "totalQty",  "pendingQty",  "price", "triggerPrice", "averagePrice" , "status", "nowOrderNo", "nowUpdateTime", "rejectionReason"]
 	
 	extractColumnIndices( "Order Book > Completed Orders",  allHeaders, headers, CompletedOrdersColumnIndex, keys )	
 }
