@@ -1,6 +1,20 @@
-       
-Change to Objects? Order, OrderGroup, Context, OrderBook, Submitter, AB, GUI, GUI actions, util etc
 
+Test
+    Trigger Stop
+    Trigger Stop after linking (with pending order)
+    Read code for more use cases
+
+
+
+
+Cancel Orders     
+    Stop not cancelled sometimes
+        Verify - if open try again and notify if failed    
+    Status Open count not updated
+Link unlink
+    - Save order nos + scrip to ini and load from it on startup if any open
+    - handle pending
+    - Unlink clears it
 
 
 
@@ -32,19 +46,20 @@ Change to Objects? Order, OrderGroup, Context, OrderBook, Submitter, AB, GUI, GU
 
 -----------------------------------------------------------------------------------------
 check #IfWinActive / #IfWinExist  to make HK only with AB active
+Dont allow entry update when entry area disabled    // ie when Already entered
+
 Roundoff - Long - Entry Up, Stop Down
     mouse cursor scroll - move by tick size    
-Cancel Orders - Stop not cancelled
-    Verify - if open try again and notify if failed
-Ring Alarm / Notify at 15:17 if open orders
-    Automatic squareoff at 15:19    
-check - Dont allow entry update when entry area disabled    // ie when Already entered
 Order Tracker - Do imp stuff more frequently. GUI update can be done once a second ( so 250ms read + Do GUI update once in 4 rounds)
 -----------------------------------------------------------------------------------------
 Support Adds with Common SL
     Show Orders in List
-Target orders + OCO Stop - warn if too close as both can trigger
+Target orders + OCO Stop 
+    - warn if too close as both can trigger
+    - Partial exits 
 -----------------------------------------------------------------------------------------
+Ring Alarm / Notify at 15:17 if open orders
+    Automatic squareoff at 15:19    
 Option to change order type for open order
     - SL Order After Trigger - changes to Limit Order - should be editable ( unfilled )
     - Square Off - Market Stop order only if entry is complete - else cancel    // show cancel if not entered else squareoff
@@ -64,7 +79,6 @@ Partial Stop orders
     - Handle cancel orders
     - Square Off - Market Stop order for filled position + cancel rest
 -----------------------------------------------------------------------------------------
-Partial exits
 Position Conversion option
     - MIS to NRML/CNC + square off some if no margin    
 Bug - MsgBox on top - gets overlapped by updateStatus() on show by Timer

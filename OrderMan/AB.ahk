@@ -42,9 +42,9 @@ getStopPriceFromAB(){
 }
 
 guessDirection(){
-	global EntryPrice, StopPrice
-	
-	if( !isEntryLinked() )												// Guess Direction if No order linked
+	global contextObj, EntryPrice, StopPrice
+
+	if( !contextObj.getCurrentTrade().isEntryLinked() )						// Guess Direction if No order linked
 		setDirection( EntryPrice>StopPrice ? "B" : "S" )
 }
 
@@ -64,7 +64,7 @@ getPriceFromAB(){
 			price := getPriceAtCursorTooltip()
 		BlockInput, MouseMoveOff
 
-		return roundToTickSize( price )		
+		return UtilClass.roundToTickSize( price )		
 	}
 	else
 		return -1

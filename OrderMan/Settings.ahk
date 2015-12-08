@@ -15,6 +15,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
+
+
 loadSettings(){
 	
 	local value												// All variables global by default
@@ -35,7 +37,9 @@ loadSettings(){
         
     IniRead, value,	OrderMan.ini, OrderMan, Scrip    
 	local fields := StrSplit( value , ",")
-	Scrip  		 := getScrip(fields[1], fields[2], fields[3], fields[4], fields[5], fields[6] )
+    
+    selectedScrip := new ScripClass
+    selectedScrip.setInput( fields[1], fields[2], fields[3], fields[4], fields[5], fields[6] )  
 }
 
 /*

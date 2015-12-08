@@ -26,12 +26,6 @@ SetWorkingDir %A_ScriptDir%  												// Ensures a consistent starting direct
 SetTitleMatchMode, 2 														// A window's title can contain the text anywhere
 SetControlDelay, -1 														// Without this ControlClick fails sometimes
 
- OpenOrdersColumnIndex 		  := ""
- CompletedOrdersColumnIndex	  := ""
- entryOrderNOW 				  := -1
- stopOrderNOW				  := -1
- pendingStop				  := -1
-
 TITLE_NOW		 			  := "NOW 1.13"									// window titles
 TITLE_ORDER_BOOK			  := "Order Book -"
 TITLE_BUY					  := "Buy Order Entry"
@@ -51,104 +45,55 @@ ORDER_TYPE_MARKET			  := "MARKET"
 ORDER_TYPE_SL_LIMIT			  := "SL"
 ORDER_TYPE_SL_MARKET		  := "SL-M"
 
+ORDER_TYPE_GUI_LIMIT		  := "LIM"
+ORDER_TYPE_GUI_MARKET		  := "M"
+ORDER_TYPE_GUI_SL_LIMIT		  := "SL"
+ORDER_TYPE_GUI_SL_MARKET	  := "SLM"
+
 ORDERBOOK_POLL_TIME			  := 2500										// Time between reading of OrderBook status by Tracker. In ms
 NEW_ORDER_WAIT_TIME			  := 5											// How many seconds to wait for New Submitted Order to appear in orderbook. 
 OPEN_ORDER_WAIT_TIME		  := 5											// How many seconds to wait for Order to be Open ( ie for validation etc to be over)
 																				// Warning message shown after wait period
-checkNOWOpen()
+
+orderbookObj := new OrderbookClass                                          // Keep Class string in class names to avoid conflict - can get overwritten by object of same name
+contextObj   := new ContextClass                                            // without new, class members are not initialized
+
+UtilClass.checkNOWOpen()
 loadSettings()
-readOrderBook()
+orderbookObj.read()
 createGUI()
 linkOrderPrompt()
 initializeStatusTracker()
 installHotkeys()
 
-return
-  
+return  
 
-checkNOWOpen(){
-	global TITLE_NOW
-	IfWinNotExist, %TITLE_NOW%
-	{
-		MsgBox, NOW not found.
-		ExitApp
+// Ask to link if open orders exist on startup
+linkOrderPrompt(){
+	global orderbookObj
+
+	if( orderbookObj.doOpenOrdersExist() ) {		
+		MsgBox, % 262144+4,, Open Orders exist, Link with Existing order?
+			IfMsgBox Yes
+				openLinkOrdersGUI()
 	}
 }
 
-getScrip( segment, instrument, symbol, type, strikePrice, expiryIndex ){
-	scrip_properties  := {}
-	scrip_properties.segment		:= segment
-	scrip_properties.instrument		:= instrument
-	scrip_properties.symbol			:= symbol
-	scrip_properties.type			:= type
-	scrip_properties.strikePrice	:= strikePrice
-	scrip_properties.expiryIndex    := expiryIndex
-	
-	return scrip_properties
-}
 
-getOrder( orderType, qty, price, triggerprice, prodType   ){
-	order := {}
-	order.orderType := orderType
-	order.qty 		:= qty
-	order.price		:= price
-	order.trigger 	:= triggerprice
-	order.prodType  := prodType
-	
-	return order
-}
-
-isNumber( str ) {
-	if str is number
-		return true	
-	return false
-}
-
-getOrderTypeFromOrder( order ){
-	global
-	
-	if( order.orderType == ORDER_TYPE_LIMIT)
-		return "LIM"
-	else if( order.orderType == ORDER_TYPE_MARKET )
-		return "M"
-	else if( order.orderType == ORDER_TYPE_SL_LIMIT )
-		return "SL"
-	else if( order.orderType == ORDER_TYPE_SL_MARKET )
-		return "SLM"
-}
-
-getNowOrderType( ordertype ){
-	global
-	
-	if( ordertype == "LIM")
-		return ORDER_TYPE_LIMIT
-	else if( ordertype == "M")
-		return ORDER_TYPE_MARKET
-	else if( ordertype == "SL")
-		return ORDER_TYPE_SL_LIMIT
-	else if( ordertype == "SLM")
-		return ORDER_TYPE_SL_MARKET
-}
-
-getDirectionFromOrder( order ){
-	return order.buySell == "BUY" ? "B" : "S"	
-}
-
-reverseDirection( direction ){
-	return direction == "B" ? "S" : "B"
-}
-
-// Ceil / Floor
-roundToTickSize( price ){
-	global TickSize	
-	return Round(  price / TickSize ) * TickSize
-}
 
 #include Settings.ahk
-#include OrderSubmitter.ahk
+#include Scrip.ahk
+#include OrderDetails.ahk
+#include Order.ahk
+#include Trade.ahk
+#include Context.ahk
+#include Orderbook.ahk
 #include OrderTracker.ahk
-#include OrderManGui.ahk
+#include Gui.ahk
+#include GuiActions.ahk
 #include AB.ahk
+#include Util.ahk
+
 
 #CommentFlag ;
 #include Lib/__ExternalHeaderLib.ahk										; External Library to read Column Headers
