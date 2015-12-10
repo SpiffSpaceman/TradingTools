@@ -33,7 +33,7 @@ class OrderClass{
 	isCreated		:= false
 
 
-	setOrderInput( orderType, direction, qty, price, triggerprice, prodType, scrip  ){			
+	setOrderInput( orderType, direction, qty, price, triggerprice, prodType, scrip  ){
 		this._input.orderType := orderType
 		this._input.direction := direction
 		this._input.qty 	  := qty
@@ -48,26 +48,25 @@ class OrderClass{
 	}
 	
 	
-	/*
+	
 	getInput(){
 		return this._input
 	}
-	*/
+	
 	getOrderDetails(){
 		return this._orderDetails
 	}
 	
-	isClosed(){																// Indicates whether order is in Order Book > Completed Orders 	TODO IsObject?
-		return this._orderDetails.status2 == "C"
+	isClosed(){																// Indicates whether order is in Order Book > Completed Orders
+		return this._orderDetails.isClosed()
 	}
 	
-	isOpen(){																// Indicates whether order is in Order Book > Open Orders		TODO IsObject?
-		return this._orderDetails.status2 == "O"
+	isOpen(){																// Indicates whether order is in Order Book > Open Orders
+		return this._orderDetails.isOpen()
 	}	
 	
-	isComplete(){															// Indicates whether order status is "Complete"
-		global
-		return this._orderDetails.status == ORDER_STATUS_COMPLETE
+	isComplete(){															// Indicates whether order status is "Complete"		
+		return this._orderDetails.isComplete()
 	}
 
 	getGUIDirection(){
@@ -77,28 +76,30 @@ class OrderClass{
 	getGUIOrderType(){
 		global
 		
-		otype := this._orderDetails.orderType
+		local nowtype := this._orderDetails.orderType
 		
-		if( otype == ORDER_TYPE_LIMIT)
+		if( nowtype == ORDER_TYPE_LIMIT)
 			return ORDER_TYPE_GUI_LIMIT
-		else if( otype == ORDER_TYPE_MARKET )
+		else if( nowtype == ORDER_TYPE_MARKET )
 			return ORDER_TYPE_GUI_MARKET
-		else if( otype == ORDER_TYPE_SL_LIMIT )
+		else if( nowtype == ORDER_TYPE_SL_LIMIT )
 			return ORDER_TYPE_GUI_SL_LIMIT
-		else if( otype == ORDER_TYPE_SL_MARKET )
+		else if( nowtype == ORDER_TYPE_SL_MARKET )
 			return ORDER_TYPE_GUI_SL_MARKET
 	}
 	
-	getNowOrderType( ordertype ){											// static function
+	getNowOrderType(){														// Convert froom GUI ordertype save in _input to what is expected by NOW
 		global
 		
-		if( ordertype == ORDER_TYPE_GUI_LIMIT )
+		local guitype := this._input.orderType
+		
+		if( guitype == ORDER_TYPE_GUI_LIMIT )
 			return ORDER_TYPE_LIMIT
-		else if( ordertype == ORDER_TYPE_GUI_MARKET )
+		else if( guitype == ORDER_TYPE_GUI_MARKET )
 			return ORDER_TYPE_MARKET
-		else if( ordertype == ORDER_TYPE_GUI_SL_LIMIT )
+		else if( guitype == ORDER_TYPE_GUI_SL_LIMIT )
 			return ORDER_TYPE_SL_LIMIT
-		else if( ordertype == ORDER_TYPE_GUI_SL_MARKET )
+		else if( guitype == ORDER_TYPE_GUI_SL_MARKET )
 			return ORDER_TYPE_SL_MARKET
 	}		
 
@@ -164,15 +165,37 @@ class OrderClass{
 	}	
 
 	/* Cancel Order through orderbook
+	   Returns true if order is Closed else false
 	*/
 	cancel(){
 		global orderbookObj
+
+		if( !this.isOpen() ) 												// Only cancel open orders
+			return true
+
+		Loop, 5 {															// Try upto 5 times 
+			selected := orderbookObj.selectOpenOrder( this._orderDetails.nowOrderNo )
+			if( selected ){
+				orderbookObj.cancelSelectedOpenOrder()
+			}
+																			// Wait for some time for Orderbook to update
+			Sleep, 250														// orderbookObj.read() and orderbookObj.selectOpenOrder() should happen together
+																			// else selectOpenOrder() will be on old data
+			orderbookObj.read()
+			this.reloadDetails()
+			
+			if( this.isClosed() ){											// verify cancelled
+				_orderDetails == -1
+				return true
+			}
+		}		
 		
-		if( this.isOpen() && orderbookObj.selectOpenOrder( this._orderDetails.nowOrderNo ) ){
-			orderbookObj.cancelSelectedOpenOrder()
-			// TODO confirm cancelled else retry
-			_orderDetails := -1
+		if( !selected  ){
+			orderno := this._orderDetails.nowOrderNo
+			MsgBox, Order %orderno% Not Found in OrderBook > Open Orders
 		}
+
+		return false														// cancel failed
 	}
 
 	/*	Reload _orderDetails from Orderbook. Call orderbookObj.read() first
@@ -181,7 +204,6 @@ class OrderClass{
 		global orderbookObj
 		this._orderDetails := orderbookObj.getOrderDetails( this._orderDetails.nowOrderNo )	// Get updated order details from orderbook
 	}
-
 
 
 // -- Private ---
@@ -193,15 +215,21 @@ class OrderClass{
 	_openOrderForm(){
 		global TITLE_NOW, TITLE_BUY, TITLE_SELL
 		
-		if( this._input.direction == "B" ){
-			winTitle := TITLE_BUY
-			WinMenuSelectItem, %TITLE_NOW%,, Orders and Trades, Buy Order Entry	// F1 F2 F3 sometimes (rarely) does not work. Menu Does
+		Loop, 5{															// Try upto 5 times
+			if( this._input.direction == "B" ){
+				winTitle := TITLE_BUY
+				WinMenuSelectItem, %TITLE_NOW%,, Orders and Trades, Buy Order Entry	// F1 F2 F3 sometimes (rarely) does not work. Menu Does
+			}
+			else if( this._input.direction == "S" ){
+				winTitle := TITLE_SELL
+				WinMenuSelectItem, %TITLE_NOW%,, Orders and Trades, Sell Order Entry
+			}		
+			WinWait, %winTitle%,,2
+			if !ErrorLevel
+				break
 		}
-		else if( this._input.direction == "S" ){
-			winTitle := TITLE_SELL
-			WinMenuSelectItem, %TITLE_NOW%,, Orders and Trades, Sell Order Entry
-		}		
-		WinWait, %winTitle%,,5
+		if ErrorLevel
+			MsgBox, Could not open Buy/Sell Window
 		
 		return winTitle
 	}
@@ -210,7 +238,8 @@ class OrderClass{
 	*/
 	_submitOrder( winTitle ){												// Fill up opened Buy/Sell window and verify
 
-		scrip := this._input.scrip
+		scrip     := this._input.scrip
+		ordertype := this.getNowOrderType()
 		
 		Control, ChooseString , % scrip.segment,     ComboBox1,  %winTitle%			// Exchange Segment - NFO/NSE etc
 		Control, ChooseString , % scrip.instrument,  ComboBox5,  %winTitle%			// Inst Name - FUTIDX / EQ  etc
@@ -219,7 +248,7 @@ class OrderClass{
 		Control, ChooseString , % scrip.strikePrice, ComboBox8,  %winTitle%			// Strike Price for options
 		Control, Choose		  , % scrip.expiryIndex, ComboBox9,  %winTitle%			// Expiry Date - Set by Position Index (1/2 etc)
 
-		Control, ChooseString , % this._input.orderType, ComboBox3,  %winTitle%		// Order Type - LIMIT/MARKET/SL/SL-M
+		Control, ChooseString , % ordertype, 		  	 ComboBox3,  %winTitle%		// Order Type - LIMIT/MARKET/SL/SL-M
 		Control, ChooseString , % this._input.prodType,  ComboBox10, %winTitle%		// Prod Type - MIS/NRML/CNC
 		Control, ChooseString , DAY, 	   			 	 ComboBox11, %winTitle%		// Validity - Day/IOC
 		

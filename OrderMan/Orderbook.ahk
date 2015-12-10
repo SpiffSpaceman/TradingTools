@@ -209,13 +209,19 @@ class OrderbookClass{
 		global TITLE_ORDER_BOOK
 			
 		if( this.selectOpenOrder( nowOrderNo ) ){
-			ControlClick, Button1, %TITLE_ORDER_BOOK%,,,, NA				
-			WinWait, %winTitle%,,5
-			
-			return true
+			Loop, 5{
+				ControlClick, Button1, %TITLE_ORDER_BOOK%,,,, NA				
+				WinWait, %winTitle%,,2
+				if !ErrorLevel
+					return true
+			}			
+			MsgBox, Could not open Buy/Sell Window
+			return false
 		}
-		
-		return false
+		else{
+			MsgBox, Order %nowOrderNo% Not Found in OrderBook > Open Orders
+			return false
+		}
 	}	
 
 	/*	Selects input order in OrderBook > Open Orders
@@ -239,9 +245,8 @@ class OrderbookClass{
 				}
 				ControlSend, SysListView321, {Down}, %TITLE_ORDER_BOOK%				// Move Down to next row if not found yet
 			}				
-		}
-		
-		MsgBox, Order %searchMeOrderNo% Not Found in OrderBook > Open Orders
+		}		
+
 		return false
 	}
 

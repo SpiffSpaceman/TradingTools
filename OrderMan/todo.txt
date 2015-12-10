@@ -1,28 +1,21 @@
 
 Test
-    Trigger Stop
-    Trigger Stop after linking (with pending order)
+    Trigger Stop + order no saved once stop is created
+    Trigger Stop after linking (with pending order) 
     Read code for more use cases
 
 
 
 
-Cancel Orders     
-    Stop not cancelled sometimes
-        Verify - if open try again and notify if failed    
-    Status Open count not updated
-Link unlink
-    - Save order nos + scrip to ini and load from it on startup if any open
-    - handle pending
-    - Unlink clears it
 
 
 
 
 
 
-
-
+Order Tracker - Do imp stuff more frequently. GUI update can be done once a second ( so 250ms read + Do GUI update once in 4 rounds)
+check #IfWinActive / #IfWinExist  to make HK only with AB active
+Dont allow entry update through AB when entry area disabled    // ie when Already entered
 
 
 
@@ -45,18 +38,15 @@ Link unlink
 
 
 -----------------------------------------------------------------------------------------
-check #IfWinActive / #IfWinExist  to make HK only with AB active
-Dont allow entry update when entry area disabled    // ie when Already entered
-
 Roundoff - Long - Entry Up, Stop Down
-    mouse cursor scroll - move by tick size    
-Order Tracker - Do imp stuff more frequently. GUI update can be done once a second ( so 250ms read + Do GUI update once in 4 rounds)
+    mouse cursor scroll - move by tick size ?
 -----------------------------------------------------------------------------------------
 Support Adds with Common SL
-    Show Orders in List
+    Show Orders in List / Show Position + Stop 
+    Position class in Trade + calculate from orders
 Target orders + OCO Stop 
-    - warn if too close as both can trigger
-    - Partial exits 
+    - warn if too close as both can trigger  
+check current price and warn if posible bad order based on ordertype    
 -----------------------------------------------------------------------------------------
 Ring Alarm / Notify at 15:17 if open orders
     Automatic squareoff at 15:19    
@@ -78,6 +68,7 @@ Partial Stop orders
             Orignial Stop for unfilled size cannot be moved beyond Entry price
     - Handle cancel orders
     - Square Off - Market Stop order for filled position + cancel rest
+    - Partial exits, Target
 -----------------------------------------------------------------------------------------
 Position Conversion option
     - MIS to NRML/CNC + square off some if no margin    

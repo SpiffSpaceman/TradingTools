@@ -27,12 +27,9 @@ orderBtn(){
 		
 	if( !validateInput() )
 		return
-		
-	eot		:= OrderClass.getNowOrderType( EntryOrderType )
-	sot		:= OrderClass.getNowOrderType( "SLM" )	
-	
+
 	trade 	:= contextObj.getCurrentTrade()
-	trade.create( selectedScrip, eot, sot, Direction, Qty, ProdType, EntryPrice, StopPrice )
+	trade.create( selectedScrip, EntryOrderType, "SLM", Direction, Qty, ProdType, EntryPrice, StopPrice )
 	
 }
 
@@ -51,11 +48,9 @@ updateOrderBtn(){
 		return
 		
 	trade.reload()
-		
-	// Update if order linked and status is open/trigger pending and price/qty has changed
-	entry := ""
-	stop  := ""
-	
+
+	entry := ""																// Update if order linked and status is open/trigger pending and price/qty has changed
+	stop  := ""	
 	if( trade.isEntryOpen() && hasOrderChanged( trade.entryOrder.getOrderDetails(), EntryPrice, Qty)  )
 	{	 																	// Entry Order is open and Entry order has changed
 		entry := EntryPrice													// If entry is empty, trade.update() will skip changing Entry Order
@@ -67,11 +62,7 @@ updateOrderBtn(){
 	}
 		
 	if( entry != ""  ||  stop != "" ){
-		
-		eot	:= OrderClass.getNowOrderType( EntryOrderType )
-		sot	:= OrderClass.getNowOrderType( "SLM" )		
-		
-		trade.update( selectedScrip, eot, sot, Qty, ProdType, entry, stop  )
+		trade.update( selectedScrip, EntryOrderType, "SLM", Qty, ProdType, entry, stop  )
 	}
 	else{
 		MsgBox, 262144,, Nothing to update or Order status is not open
@@ -174,16 +165,11 @@ linkOrdersSubmit(){
 		return
 	
 	Gui, 2:Destroy
-	Gui  1:Default
+	Gui  1:Default	
 	
-	e   := trade.entryOrder
-	eod := e.getOrderDetails()
-	sod := trade.stopOrder.getOrderDetails()
+	loadTradeInputToGui()									// Load Gui with data from Order->Input	
 	
-	entry_price := (entry_Ordertype == ORDER_TYPE_LIMIT || entry_Ordertype == ORDER_TYPE_MARKET) ? eod.price : eod.triggerPrice		
-	
-	setGUIValues( eod.totalQty, entry_price, sod.triggerPrice, e.getGUIDirection(), e.getGUIOrderType() )
-	updateCurrentResult()
+	trade.save()											// Manually Linked orders - save order nos to ini
 }
 
 

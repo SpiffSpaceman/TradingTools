@@ -60,19 +60,27 @@ contextObj   := new ContextClass                                            // w
 
 UtilClass.checkNOWOpen()
 loadSettings()
+initializeStatusTracker()
+
 orderbookObj.read()
 createGUI()
 linkOrderPrompt()
-initializeStatusTracker()
+
 installHotkeys()
 
 return  
 
-// Ask to link if open orders exist on startup
 linkOrderPrompt(){
-	global orderbookObj
+	global orderbookObj, contextObj
 
-	if( orderbookObj.doOpenOrdersExist() ) {		
+    trade := contextObj.getCurrentTrade()    
+  
+	if( orderbookObj.doOpenOrdersExist() ) {
+        if( trade.loadOrders() ){                                           // Load open orders if saved Else Ask to link manually
+            loadTradeInputToGui()
+            return
+        }
+      
 		MsgBox, % 262144+4,, Open Orders exist, Link with Existing order?
 			IfMsgBox Yes
 				openLinkOrdersGUI()

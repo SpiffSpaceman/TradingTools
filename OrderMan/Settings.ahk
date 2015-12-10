@@ -31,6 +31,7 @@ loadSettings(){
     IniRead, LastWindowPosition,OrderMan.ini, OrderMan, LastWindowPosition
     IniRead, EntryOrderType,    OrderMan.ini, OrderMan, EntryOrderType
     IniRead, MaxSlippage,       OrderMan.ini, OrderMan, MaxSlippage
+    IniRead, SavedOrders,       OrderMan.ini, OrderMan, SavedOrders    
     
     IniRead, value, OrderMan.ini, OrderMan, AutoSubmit
     AutoSubmit   := value=="true"
@@ -50,3 +51,11 @@ saveLastPosition(){
     value = X%X% Y%Y%
 	IniWrite, %value%, OrderMan.ini, OrderMan, LastWindowPosition
 }
+
+/*
+  Save orders. Used to load open trade on startup
+*/
+saveOrders( savestring ){    
+    IniWrite, %savestring%, OrderMan.ini, OrderMan, SavedOrders
+}
+

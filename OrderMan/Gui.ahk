@@ -218,6 +218,21 @@ updateStatus(){
 	Gui, 1:Show, AutoSize NA
 }
 
+/*  Loads Trade from TradeClass>OrderClass>InputClass into GUI
+	Used when linking to existing orders
+*/
+loadTradeInputToGui(){
+	global contextObj, ORDER_TYPE_GUI_LIMIT, ORDER_TYPE_GUI_MARKET
+	
+	trade := contextObj.getCurrentTrade()
+	entry := trade.entryOrder.getInput()
+	stop  := trade.stopOrder.getInput()
+	
+	entry_price := (entry.orderType == ORDER_TYPE_GUI_LIMIT || entry.orderType == ORDER_TYPE_GUI_MARKET) ? entry.price : entry.trigger			
+	setGUIValues( entry.qty, entry_price, stop.trigger, entry.direction, entry.orderType )
+	updateCurrentResult()
+}
+
 setGUIValues( inQty, inEntry, inStop, inDirection, inEntryOrderType ){
 	
 	setQty( inQty )

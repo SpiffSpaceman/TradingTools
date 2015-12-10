@@ -20,8 +20,8 @@
 */
 initializeStatusTracker(){
 	global ORDERBOOK_POLL_TIME
-	SetTimer, orderStatusTracker, % ORDERBOOK_POLL_TIME
-	SetTimer, orderStatusTracker, off
+	SetTimer, orderStatusTracker, % ORDERBOOK_POLL_TIME	
+	toggleStatusTracker( "off" )
 }
 
 /* Turn order book tracking on/off
@@ -30,17 +30,14 @@ toggleStatusTracker( on_off ){
 	
 	static isTimerActive := false
 	
-	if( on_off == "on" ){
-		if( !isTimerActive ){
-			isTimerActive := true
-			SetTimer, orderStatusTracker, on
-		}
+	if( on_off == "on" ){		
+		isTimerActive := true
+		SetTimer, orderStatusTracker, on
+		
 	}
 	else if( on_off == "off"  ){
-		if( isTimerActive ){
-			isTimerActive := false
-			SetTimer, orderStatusTracker, off
-		}
+		isTimerActive := false
+		SetTimer, orderStatusTracker, off
 	}
 	return isTimerActive
 }
