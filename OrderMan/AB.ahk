@@ -18,6 +18,8 @@
 installHotkeys(){
 	global HKEntryPrice, HKStopPrice
 	
+	Hotkey, IfWinActive, ahk_class AmiBrokerMainFrameClass					// Context sensitive HK - only active if window is active
+	
 	if( HKEntryPrice != "" && HKEntryPrice != "ERROR")
 		Hotkey, %HKEntryPrice%, getEntryPriceFromAB	
 	

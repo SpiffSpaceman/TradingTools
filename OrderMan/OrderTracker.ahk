@@ -46,7 +46,9 @@ toggleStatusTracker( on_off ){
 	Also creates pending order if Stop Entry order was triggered
 */
 orderStatusTracker(){
-	global contextObj
+	global contextObj, GUI_POLL_TIME_MULTIPLE
+	
+	static i := 0
 	
 	trade := contextObj.getCurrentTrade()	
 	
@@ -56,7 +58,9 @@ orderStatusTracker(){
 	trade.trackerCallback()
 	Critical , off
 	
-	updateStatus()
+	if(  mod(i, GUI_POLL_TIME_MULTIPLE) == 0 )						// Update GUI less frequently
+		updateStatus()
+	i++
 }
 
 
