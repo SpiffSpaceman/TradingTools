@@ -1,4 +1,4 @@
-
+    
 Test
     Trigger Stop + order no saved once stop is created
     Trigger Stop after linking (with pending order) 
@@ -6,34 +6,36 @@ Test
 
 
 
-Roundoff - Long - Entry Up, Stop Down
-    mouse cursor scroll - move by tick size ?
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
------------------------------------------------------------------------------------------
 Support Adds with Common SL
     Show Orders in List / Show Position + Stop 
     Position class in Trade + calculate from orders
+    Show Position Below in ListView - Qty, Avg Price, Stop
+    Entry Area Changes to Add once Entry Triggered
+
 Target orders + OCO Stop 
     - warn if too close as both can trigger  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 -----------------------------------------------------------------------------------------
-check current price and warn if posible bad order based on ordertype 
 Partial Stop orders
     - Show filled size for Entry/Stop
     - Maybe Stop order only entered once filled and stop size modified if Entry Size increases
@@ -57,6 +59,7 @@ Partial Stop orders
 
 
 -----------------------------------------------------------------------------------------
+check current price and warn if posible bad order based on ordertype 
 Ring Alarm / Notify at 15:17 if open orders
     Verify Admin position
     Automatic squareoff at 15:19        

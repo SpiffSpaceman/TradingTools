@@ -8,6 +8,23 @@ class UtilClass{
 			ExitApp
 		}
 	}
+	
+	/*
+	roundToTickSize( price ){
+		global TickSize	
+		return Round(  price / TickSize ) * TickSize
+	}
+	*/
+	
+	ceilToTickSize( price ){
+		global TickSize	
+		return Ceil(  price / TickSize ) * TickSize
+	}
+	
+	floorToTickSize( price ){
+		global TickSize	
+		return Floor(  price / TickSize ) * TickSize
+	}
 
 	isNumber( str ) {
 		if str is number
@@ -15,11 +32,6 @@ class UtilClass{
 		return false
 	}
 
-	roundToTickSize( price ){	// Ceil / Floor
-		global TickSize	
-		return Round(  price / TickSize ) * TickSize
-	}
-	
 	reverseDirection( direction ){
 		return direction == "B" ? "S" : "B"
 	}

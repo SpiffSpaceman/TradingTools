@@ -16,7 +16,7 @@
 */
 
 createGUI(){
-	global Qty, EntryPrice, StopPrice, Direction, CurrentResult, BtnOrder, BtnUpdate, BtnLink, BtnUnlink, BtnCancel, EntryStatus, StopStatus, LastWindowPosition, EntryOrderType
+	global Qty, EntryPrice, StopPrice, Direction, CurrentResult, BtnOrder, BtnUpdate, BtnLink, BtnUnlink, BtnCancel, EntryStatus, StopStatus, LastWindowPosition, EntryOrderType, EntryUpDown, StopUpDown
 	
 	SetFormat, FloatFast, 0.2
 		
@@ -36,13 +36,16 @@ createGUI(){
 
 	Gui, 1:Add, Button, gopenLinkOrdersGUI vBtnLink x+5, Link			// Link or Unlink
 	Gui, 1:Add, Button, gunlinkBtn vBtnUnlink xp+0 yp+0, Unlink		
-
+																		// Column 4 
+	Gui, 1:Add, UpDown, vEntryUpDown gOnEntryUpDown Range0-1 -16 hp x+0 ym
+	Gui, 1:Add, UpDown, vStopUpDown  gOnStopUpDown  Range0-1 -16 hp y+m
+																		// Column 5
 	Gui, 1:Add, DropDownList, vEntryOrderType w45 Choose1 ym, LIM|SL|SLM|M // Entry Type
 	//Gui, 1:Add, DropDownList, w45 Choose1, SLM|SL
 	Gui, 1:Add, Text, vCurrentResult  w30
 	Gui, 1:Add, Button, gcancelOrderBtn vBtnCancel y+14, Cancel		 	// Cancel button
 	
-	Gui, 1:Add, Text, ym vEntryStatus
+	Gui, 1:Add, Text, ym vEntryStatus									// Column 6
 	Gui, 1:Add, Text, vStopStatus	
 	
 	Gui, 1:Add, StatusBar, gstatusBarClick, 							// Status Bar - Shows link order Numbers. Double click to link manually
@@ -180,10 +183,10 @@ updateStatus(){
 	stopAverage  	  := stopOrderDetails.averagePrice
 	
 	if( entryAverage != "" && entryAverage != EntryPrice && trade.isEntrySuccessful()   ){
-		setEntryPrice( entryAverage )												// Update Entry Price with Average Price after entry complete
+		setEntryPrice( entryAverage, entryAverage )									// Update Entry Price with Average Price after entry complete
 	}
 	if( stopAverage != "" && stopAverage != StopPrice && trade.isStopSuccessful() ){
-		setStopPrice( stopAverage )													// Update Entry Price with Average Price after entry complete
+		setStopPrice( stopAverage, stopAverage )									// Update Entry Price with Average Price after entry complete
 	}
 
 	if( entryLinked ){																// Set Status if Linked
@@ -236,8 +239,8 @@ loadTradeInputToGui(){
 setGUIValues( inQty, inEntry, inStop, inDirection, inEntryOrderType ){
 	
 	setQty( inQty )
-	setEntryPrice( inEntry )
-	setStopPrice( inStop )
+	setEntryPrice( inEntry, inEntry )
+	setStopPrice( inStop, inStop )
 	setDirection( inDirection )	
 	selectEntryOrderType( inEntryOrderType )
 	
@@ -250,15 +253,21 @@ setQty( inQty ){
 	GuiControl, 1:Text, Qty,  %Qty%
 }
 
-setEntryPrice( inEntry ){
-	global EntryPrice
-	EntryPrice := inEntry
+/* EntryPriceActual should contain the original values taken from AB
+*/
+setEntryPrice( inEntry, inEntryPriceActual){
+	global EntryPrice, EntryPriceActual
+	EntryPrice 		 := inEntry
+	EntryPriceActual := inEntryPriceActual
 	GuiControl, 1:Text, EntryPrice,  %EntryPrice%
 }
 
-setStopPrice( inStop ){
-	global StopPrice
-	StopPrice := inStop
+/* StopPriceActual should contain the original values taken from AB
+*/
+setStopPrice( inStop, inStopPriceActual ){
+	global StopPrice, StopPriceActual
+	StopPrice 		:= inStop
+	StopPriceActual := inStopPriceActual
 	GuiControl, 1:Text, StopPrice, %StopPrice%
 }
 

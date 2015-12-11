@@ -22,8 +22,7 @@ orderBtn(){
 		
 	Gui, 1:Submit, NoHide										// sets variables from GUI
 	
-	setEntryPrice( UtilClass.roundToTickSize(EntryPrice) )
-	setStopPrice(  UtilClass.roundToTickSize(StopPrice) )
+	adjustPrices( EntryPrice, StopPrice)
 		
 	if( !validateInput() )
 		return
@@ -41,8 +40,7 @@ updateOrderBtn(){
 	
 	Gui, 1:Submit, NoHide
 	
-	setEntryPrice( UtilClass.roundToTickSize(EntryPrice) )
-	setStopPrice(  UtilClass.roundToTickSize(StopPrice) )
+	adjustPrices( EntryPrice, StopPrice)
 	
 	if( !validateInput() )
 		return
@@ -115,6 +113,20 @@ onDirectionChange(){
 	
 	updateCurrentResult()												// Also submits		
 	Gui, Color, % Direction == "B" ? "33cc66" : "ff9933"
+}
+
+OnEntryUpDown(){
+	global EntryUpDown, TickSize, EntryPrice
+	
+	EntryPrice := (EntryUpDown == 1) ? EntryPrice + TickSize : EntryPrice - TickSize	
+	setEntryPrice( EntryPrice, EntryPrice )
+}
+
+OnStopUpDown(){
+	global StopUpDown, TickSize, StopPrice
+	
+	StopPrice := (StopUpDown == 1) ? StopPrice + TickSize : StopPrice - TickSize	
+	setStopPrice( StopPrice, StopPrice )
 }
 
 /* Links Context to selected existing orders

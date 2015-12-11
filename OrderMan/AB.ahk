@@ -28,27 +28,67 @@ installHotkeys(){
 }
 
 getEntryPriceFromAB(){
+	global EntryPriceActual, StopPrice
+	
 	price := getPriceFromAB()
-	if( price > 0 ){
-		setEntryPrice( price )
-		guessDirection()
+	if( price > 0 ){		
+		EntryPriceActual := price
+		_guessDirection( price, StopPrice )
+		adjustPrices( price, StopPrice )
 	}
 }
 
 getStopPriceFromAB(){
+	global EntryPrice, StopPriceActual
+	
 	price := getPriceFromAB()
-	if( price > 0 ){
-		setStopPrice( price )
-		guessDirection()
+	if( price > 0 ){		
+		StopPriceActual := price
+		_guessDirection( EntryPrice, price )
+		adjustPrices( EntryPrice, price )
 	}
 }
 
-guessDirection(){
-	global contextObj, EntryPrice, StopPrice
+_guessDirection( entry, stop ){
+	global contextObj
 
-	if( !contextObj.getCurrentTrade().isEntryLinked() )						// Guess Direction if No order linked
-		setDirection( EntryPrice>StopPrice ? "B" : "S" )
+	if( !contextObj.getCurrentTrade().isEntryLinked() ){					// Guess Direction if No order linked
+		setDirection( entry > stop ? "B" : "S")
+	}
 }
+
+/* Adjust prices to tick size based on direction
+ */
+adjustPrices( entry, stop ){
+	global Direction, EntryPriceActual, StopPriceActual
+	
+	if( Direction == "B" )
+		_longPriceAdjust()
+	else
+		_shortPriceAdjust()
+}
+
+/* Adjust prices to tick size for buy order
+   Entry price shift up and stop price shift down    
+   NOTE - EntryPriceActual/StopPriceActual should contain the original values taken from AB
+ */
+_longPriceAdjust(){
+	global EntryPriceActual, StopPriceActual
+	
+	setEntryPrice( UtilClass.ceilToTickSize(EntryPriceActual), EntryPriceActual )		
+	setStopPrice( UtilClass.floorToTickSize(StopPriceActual), StopPriceActual )		
+}
+
+/* Adjust prices to tick size for sell order
+   Entry price shift down and stop price shift up
+ */
+_shortPriceAdjust(){
+	global EntryPriceActual, StopPriceActual
+	
+	setEntryPrice( UtilClass.floorToTickSize(EntryPriceActual), EntryPriceActual )		
+	setStopPrice( UtilClass.ceilToTickSize(StopPriceActual), StopPriceActual )		
+}
+
 
 /*
 	Called by HK
@@ -66,7 +106,7 @@ getPriceFromAB(){
 			price := getPriceAtCursorTooltip()
 		BlockInput, MouseMoveOff
 
-		return UtilClass.roundToTickSize( price )		
+		return price
 	}
 	else
 		return -1
