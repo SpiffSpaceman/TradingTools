@@ -17,14 +17,16 @@
 
 class TradeClass{
 	
-	scrip			:= ""
-	direction		:= ""													// B/S
-	entryOrder		:= -1
-	stopOrder  		:= -1
+	scrip			 := ""
+	direction		 := ""													// B/S
+	newEntryOrder	 := -1
+	stopOrder  		 := -1	
 	
-	isStopPending	:= false												// Is Stop Waiting for Entry order to trigger?			
-	
-	
+	isStopPending 	 := false												// Is Stop Waiting for Entry/Add order to trigger?
+	positionSize	 := 0
+
+	executedEntryOrderList := []											// List of executed entry/add orders
+																			// entryOrder contains details of current unexecuted order shown in GUI and _entryOrderList has all of executed orders
 	
 	
 	/*	open new Trade by creating Entry/Stop/Target orders	
@@ -33,64 +35,137 @@ class TradeClass{
 		
 		global TITLE_NOW
 	
-		if ( !this._checkOpenOrderEmpty() )
+		if ( this.positionSize == 0 && !this._checkOpenOrderEmpty() )
 			return
 		
 		this.scrip  	:= inScrip
 		this.direction	:= direction
 		
-		this.entryOrder := new OrderClass
+		this.newEntryOrder := new OrderClass
 		this._setupEntryOrderInput( entryOrderType, qty, prodType, entryPrice, direction, inScrip )
+		this.newEntryOrder.create()											// Create Entry Order and update Details from Orderbook
 		
-		this.stopOrder 	:= new OrderClass
-		this._setupStopOrderInput(  stopOrderType,  qty, prodType, stopPrice,  UtilClass.reverseDirection(direction), inScrip )
+		if( ! this.newEntryOrder.isCreated  )
+			return
+		
+		isNewStopPending  := this._isStopPending( entryOrderType )
+		
+		if( this.stopOrder.isCreated   ){										
+			
+			this._setStopPrice( stopPrice )										// 1) Already have a position - update its stop price
+			if( !isNewStopPending) {											// 2) If Add order stop is not pending, increase existing stop size	
+				this._mergeStopSize()												// Else it will be set as pending below and merged when entry trigger				
+			}
+			
+			this.stopOrder.update()
+		}
+		else{																	// Stop order not yet created => This is Stop for initial Entry order
+																				// 	When adding, we will always have stop of Existing position			
+			this.stopOrder 	:= new OrderClass									// Create Stop Order. Keep it pending if entry waiting for trigger		
+			this._setupStopOrderInput(  stopOrderType,  qty, prodType, stopPrice,  UtilClass.reverseDirection(direction), inScrip )
+			if( !isNewStopPending )
+				this.stopOrder.create()
+		}
 
-		this.entryOrder.create()												// Create Entry Order and update Details from Orderbook
-		if( ! this.entryOrder.isCreated  )
-			return	
-					
-		if( this._isPendingStop( entryOrderType )){								// Create Stop Order. Keep it pending if entry waiting for trigger
-			this.isStopPending := true
-		}
-		else{
-			this.stopOrder.create()
-		}
+		this.isStopPending := isNewStopPending									// Just mark as pending. Actual Size of Pending Stop will be set when triggered
 		
 		this.save()
 		updateStatus()
 	}		
 	
-	/*	Update Trade - Update Entry/Stop/Target orders	
+	/*	Update Trade - Update Entry/Stop/Target orders			
 	*/
 	update( inScrip, entryOrderType, stopOrderType, qty, prodType, entryPrice, stopPrice  ){
 				
-		if( this.isEntryLinked() && entryPrice != "" ){		
+		if( this.isNewEntryLinked() && entryPrice != "" ){		
 			
-			orderDirection  := this.entryOrder.getGUIDirection()				// same direction as linked order			
-			this._setupEntryOrderInput( entryOrderType, qty, prodType, entryPrice, orderDirection, inScrip )		// TODO- no need to  update scrip?
-			this.entryOrder.update()
+			orderDirection  := this.newEntryOrder.getGUIDirection()				// same direction as linked order			
+			this._setupEntryOrderInput( entryOrderType, qty, prodType, entryPrice, orderDirection, inScrip )
+			this.newEntryOrder.update()
 		}
 		
-		if( this.isEntryLinked()  && stopPrice != "" ){							// Stop can only exist if Entry Order Exist
-																				// Stop can be pending, stopOrder need not exist
-			stopDirection   := UtilClass.reverseDirection( this.entryOrder.getGUIDirection() )
-			this._setupStopOrderInput( stopOrderType, qty, prodType, stopPrice, stopDirection, inScrip )			// TODO- no need to update scrip?
-			
-			if( this.stopOrder.isOpen() )										// Order in Open Status - Modify it
-				this.stopOrder.update()
-			else if ( !this.isStopLinked() )									// Pending only applicable if order not created yet
-				this.isStopPending := true
-		}
-				
+		this._updateStop( inScrip, stopOrderType, qty, prodType, stopPrice )
+
 		this.save()	
 		updateStatus()
+	}
+	
+	/* Update Stop order
+		1. Allow update of Stop order for open Entry Order, Stops can be pending
+		2. Allow update of Stop order for executed Entry Order but no open Add order. Stops cannot be pending
+		3. Allow update of Stop order for open Add Order + Executed Entry/Add orders. Stops can be pending
+	*/
+	_updateStop( inScrip, stopOrderType, qty, prodType, stopPrice ){
+		
+		if(  stopPrice == "" )
+			return
+		
+		stopDirection	:= UtilClass.reverseDirection( this.direction )
+	
+		if( this.isNewEntryLinked() && !this.isEntryOrderExecuted()   ){			// 1. Update Stop Order for Open Entry Order. No Executed Enty/Add orders
+
+			this._setupStopOrderInput( stopOrderType, qty, prodType, stopPrice, stopDirection, inScrip )			
+			if( !this.isStopPending )
+				this.stopOrder.update()
+		}
+		else if( !this.isNewEntryLinked() && this.isEntryOrderExecuted()   ){		// 2. Update Stop Order for Executed Entry orders. No open Add order
+			this._setupStopOrderInput( stopOrderType, this.positionSize, prodType, stopPrice, stopDirection, inScrip )
+			this.stopOrder.update()
+		}
+		else if( this.isNewEntryLinked() && this.isEntryOrderExecuted()  ){			// 3. We have stops for both open and executed orders
+		
+			stopQty	:= this.positionSize + (this.isStopPending ? 0 : qty)			// If add order's stop is pending, Increasing stop size will be handled later on trigger, but update stop price if changed
+																					// If No Pending order => Stop size = open + executed position				
+			this._setupStopOrderInput( stopOrderType, stopQty, prodType, stopPrice, stopDirection, inScrip )
+			this.stopOrder.update()
+		}
+		else{		// should not happen
+			MsgBox, 262144,, Bug in _updateStop(). No stop order to update
+		}
+	}
+	
+	/*	Called by Tracker Thread - orderStatusTracker()
+		Create pending SL order when entry completes
+	*/
+	trackerCallback(){
+
+		if( this.newEntryOrder.isClosed() ){									// Entry Finished
+		
+			if( this.isEntrySuccessful()  ){									// Entry Successful - Add Entry Order to Position by inserting in executedEntryOrderList
+				
+				if(  this.isStopPending )										// We have pending stop order - Create/Update Stop order if Entry was successful
+					this._triggerPendingStop()
+			
+				this.positionSize += this.newEntryOrder.getOrderDetails().totalQty
+				this.executedEntryOrderList.Push( this.newEntryOrder )
+			}		
+			else{																// Entry Order Failed
+				if( this.isStopPending  ){
+					this.isStopPending := false					
+					MsgBox, 262144,,  Breakout Entry Order has failed. Pending stop cancelled					
+				}
+				else{
+					if( this.isEntryOrderExecuted() ){							// LIMIT/Market Order Failed - Reduce Stop Qty
+						this.stopOrder.getInput().qty := this.positionSize		// Reset stop size to current position size, without entryOrder
+						this.stopOrder.update()
+					}
+					else														// Position empty, cancel stop order
+						this.stopOrder.cancel()
+					
+					MsgBox, 262144,, Entry/Add Order Failed. Stop order has been reverted / cancelled
+				}
+			}
+
+			this.newEntryOrder := -1 											// Unlink Entry Order to allow adds	
+			this.save()
+		}	
 	}
 	
 	/*	cancel open orders - Entry/Stop/Pending Stop/Target
 	*/
 	cancel(){
 		
-		if( this.isEntrySuccessful() ){	
+		if( this.isEntrySuccessful() ){										// Should never happen
 			MsgBox, % 262144+4,,  Entry Order has already been Executed. Do you still want to cancel Stop order?
 				IfMsgBox No
 					return -1	
@@ -98,25 +173,31 @@ class TradeClass{
 		
 		toggleStatusTracker( "off" )										// Turn off tracker before cancelling orders
 		
-		if( this.isEntryLinked() ){
-			if( ! this.entryOrder.cancel() ){
+		if( this.isNewEntryLinked() ){
+			if( ! this.newEntryOrder.cancel() ){
 				toggleStatusTracker( "on" )
 				MsgBox, 262144,, Entry cancellation failed
 				return
+			}
+			this.newEntryOrder := -1
+		}
+
+		if( this.isStopLinked() ){
+			if( this.isEntryOrderExecuted() ){								// Reduce Stop size to size of executed orders
+				this.stopOrder.setInputQty( this.positionSize )
+				this.stopOrder.update()				
+			}
+			else{
+				if( ! this.stopOrder.cancel() ){
+					toggleStatusTracker( "on" )
+					MsgBox, 262144,, Entry cancellation failed
+					return
+				}
+				this.stopOrder := -1				
 			}
 		}
 		
-		if( this.isStopLinked() ){
-			if( ! this.stopOrder.cancel() ){
-				toggleStatusTracker( "on" )
-				MsgBox, 262144,, Entry cancellation failed
-				return
-			}
-		}		
-		
-		this.isStopPending := false
-		this.entryOrder    := -1
-		this.stopOrder 	   := -1
+		this.isStopPending  := false
 		
 		this.save()
 		updateStatus()
@@ -126,49 +207,182 @@ class TradeClass{
 		Used on startup to link to open orders on last exit
 	*/
 	save(){		
-		if( this.isStopPending )
-			savestring := this.entryOrder.getOrderDetails().nowOrderNo . "," . "Pending," . this.stopOrder.getInput().trigger
-		else
-			savestring := this.entryOrder.getOrderDetails().nowOrderNo . "," . this.stopOrder.getOrderDetails().nowOrderNo
+		
+		openEntryString := this.newEntryOrder.getOrderDetails().nowOrderNo		
+		stopString 		:= this.stopOrder.getOrderDetails().nowOrderNo . ( "," . this.isStopPending . "," . this.stopOrder.getInput().trigger ) 		
+		
+		executedEntryString := ""
+		For index, value in this.executedEntryOrderList{
+			executedEntryString := executedEntryString . value.getOrderDetails().nowOrderNo . ","
+		}		
+		
+		savestring  := openEntryString . ":" . stopstring . ":" executedEntryString
 			 
 		saveOrders( savestring )			
 	}
-	
 	
 	loadOrders(){
 		global SavedOrders, orderbookObj
 				
 		orderbookObj.read()
 		
-		fields 		 := StrSplit( SavedOrders , ",") 
-		entryOrderID := fields[1]
-		stopOrderID  := fields[2]
+		fields 					 := StrSplit( SavedOrders , ":") 
+		entryOrderID			 := fields[1]
+		executedEntryOrderIDList := fields[3]
+		
+		stopstring   := fields[2]
+		fields 	     := StrSplit( stopstring , ",")		
+		stopOrderID  := fields[1]
+		isPending    := fields[2]
+		pendingPrice := fields[3]
 				
-		if( stopOrderID == "Pending"  ){
-
-			entryOrder := orderbookObj.getOrderDetails( entryOrderID )			// Link if entry order is open, with stop still pending for entry trigger
-			
-			if( entryOrder.isOpen() ){				
-				this.linkOrders( entryOrderID, "", false )
-							
-				_stop_price 	   := fields[3]									// Setup Pending order Input
-				this.isStopPending := true				
-				entryInput		   := this.entryOrder.getInput()
-				this.stopOrder 	   := new OrderClass				
-				this._setupStopOrderInput( "SLM",  entryInput.qty, entryInput.prodType, _stop_price,  UtilClass.reverseDirection(entryInput.direction), entryInput.scrip )
-
-				return true
-			}
+		return this.linkOrders( true, entryOrderID, executedEntryOrderIDList, stopOrderID, isPending, pendingPrice  )		
+	}
+	
+	/*	Link with Input Order
+		Linking Stop Order is optional
+		Does not call this.save() - should be called by caller. loadOrders()->linkOrders() does not need to save
+	*/
+	linkOrders( isSilent, entryOrderID, executedEntryOrderIDList, stopOrderID, isPending, pendingPrice  ){
+		global orderbookObj
+		
+		orderbookObj.read()
+		entryOrderDetails   := orderbookObj.getOrderDetails( entryOrderID )
+		stopOrderDetails    := orderbookObj.getOrderDetails( stopOrderID )		
+		
+		newEntryOrderExists := IsObject(entryOrderDetails)
+		stopOrderExists		:= IsObject(stopOrderDetails)
+		
+		if( newEntryOrderExists && stopOrderExists && entryOrderDetails.tradingSymbol != stopOrderDetails.tradingSymbol ){
+			UtilClass.conditionalMessage(isSilent, "Trading Symbol does not match for Entry and Stop Order"  ) 					
+			return false
 		}		
-		else{
-			stopOrder := orderbookObj.getOrderDetails( stopOrderID )			// Link if stop order is open, ie positon is still open
-			if( stopOrder.isOpen() ){			
-				this.linkOrders( entryOrderID, stopOrderID, true )	
-				return true
-			}			
+		
+		entryOrderListObj := []
+		positionSize  	  := 0
+		
+		if( executedEntryOrderIDList != ""){										// Fetch Executed Orders			
+			
+			ts := newEntryOrderExists ? entryOrderDetails.tradingSymbol : stopOrderDetails.tradingSymbol
+			
+			Loop, parse, executedEntryOrderIDList, `,
+			{				
+				orderID    	 := A_LoopField
+				orderDetails := orderbookObj.getOrderDetails( orderID )
+				
+				if( orderID == "" )													// Extra Comma at the end
+					break
+				
+				if( !IsObject(orderDetails) ){
+					UtilClass.conditionalMessage(isSilent, "Add Order " . orderID . " Not found"  ) 					
+					return false
+				}
+				if( ts != orderDetails.tradingSymbol ){
+					UtilClass.conditionalMessage(isSilent, "Add Order Trading Symbol does not match"  ) 					
+					return false
+				}
+				
+				order 			:= new OrderClass
+				order.isCreated := true
+				order.setOrderDetails( orderDetails )				
+				
+				entryOrderListObj.Push( order )
+				positionSize += orderDetails.totalQty
+			}
 		}
 		
-		return false
+		
+		newEntrySize := newEntryOrderExists ? entryOrderDetails.totalQty : 0
+		stopSize	 := stopOrderDetails.totalQty
+																					// Validations
+		if( isPending && !entryOrderDetails.isOpen() ){								// If Pending stop, then entry order must be open
+			UtilClass.conditionalMessage(isSilent, "Entry Order is not Open" )
+			return false
+		}
+		
+		if( positionSize > 0 ){														// If some entry/add orders are complete, then stop must be open
+			if( !stopOrderDetails.isOpen() ){										// Should never happen with manual linking from link button
+				UtilClass.conditionalMessage(isSilent, "Stop Order is not Open"  )
+				return false
+			}			
+			
+			expectedStopSize := isPending ? positionSize : positionSize + newEntrySize			
+			if( stopSize != expectedStopSize){
+				UtilClass.conditionalMessage(isSilent, "Stop Size does not match with Entry position size"  )
+				return false	
+			}
+		}
+		else{																		// If no executed orders, then entry must exist. Also stop should be open or pending
+			if( !newEntryOrderExists ){
+				UtilClass.conditionalMessage(isSilent, "Order " . entryOrderID " Not found" )
+				return false
+			}
+			if( isPending && stopOrderExists ) {
+				UtilClass.conditionalMessage(isSilent, "No Entry position linked against stop order" )
+				return false
+			}
+			if( !isPending &&  !stopOrderDetails.isOpen() ){
+				UtilClass.conditionalMessage(isSilent, "No Pending/Open Stop Order Found covering Entry" )
+				return false
+			}
+			if( !isPending &&  newEntrySize != stopSize ){
+				UtilClass.conditionalMessage(isSilent, "Stop Size does not match with Entry size"  )
+				return false
+			}
+		}		
+
+	// Validations over - Load Data
+		
+		this.newEntryOrder  := new OrderClass
+		this.stopOrder 		:= new OrderClass
+		
+		if( newEntryOrderExists ){
+			this.newEntryOrder.setOrderDetails( entryOrderDetails ) 
+			this.newEntryOrder.isCreated := true
+			this._loadOrderInputFromOrderbook( this.newEntryOrder )					// OrderClass.InputClass
+		} 		
+		if( stopOrderExists ){			
+			this.stopOrder.setOrderDetails( stopOrderDetails ) 
+			this.stopOrder.isCreated := true
+			this._loadOrderInputFromOrderbook( this.stopOrder )
+		}		
+		
+		this.executedEntryOrderList  := entryOrderListObj
+		this.positionSize			 := positionSize
+		
+		if( !newEntryOrderExists ){													// No New Order => We may have Executed Entry Orders. Use the latest Executed Order and copy Input
+			o := this._getLastExecutedInputOrder()
+			if( IsObject(o) )
+				this._loadOrderInputFromOrderbook( o )
+				i := o.getInput()
+				this.newEntryOrder.setOrderInput( i.orderType, i.direction, i.qty, i.price, i.trigger, i.prodType, i.scrip )
+		} 
+		if( isPending ){
+			this.isStopPending := true
+			entryInput		   := this.newEntryOrder.getInput()
+			
+			if( pendingPrice == 0 && stopOrderExists)								// In manual Linking, use stop order price as pending price
+				pendingPrice := this.stopOrder.getInput().trigger
+			this._setupStopOrderInput( "SLM",  entryInput.qty, entryInput.prodType, pendingPrice,  UtilClass.reverseDirection(entryInput.direction), entryInput.scrip )
+		}		
+		
+		this.scrip 					 := this.newEntryOrder.getInput().scrip
+		this.direction  			 := this.newEntryOrder.getInput().direction		
+
+		return true
+	}
+
+	/*	Reset All Order pointers
+	*/
+	unlinkOrders(){
+		
+		this.newEntryOrder	:= -1												// Current Entry/Add order - Not yet executed
+		this.stopOrder 		:= -1												// Single stop order covering all executed orders + open entryOrder
+		this.isStopPending	:= false											// Is Stop pending for entryOrder to Complete - Applicable for SL/SL M orders
+		this.positionSize   := 0												// Sum of all successfully executed Orders' qty
+		this.executedEntryOrderList := []										// List of successfully executed Orders
+		
+		this.save()
 	}
 	
 	/* Reload order details from orderbook
@@ -177,90 +391,22 @@ class TradeClass{
 		global orderbookObj
 		
 		orderbookObj.read()
-		if( this.isEntryLinked() )
-			this.entryOrder.reloadDetails()
+		if( this.isNewEntryLinked() )
+			this.newEntryOrder.reloadDetails()
 		if( this.isStopLinked() )
 			this.stopOrder.reloadDetails()
 	}
 	
-	/*	Link with Input Order
-		Linking Stop Order is optional
-		Does not call this.save() - should be called by caller. loadOrders()->linkOrders() does not need to save
+	/*	New Entry Order Open ? - Returns true if newEntryOrder is an object and is linked with an order in orderbook
 	*/
-	linkOrders( entryOrderID, stopOrderID, isStopLinked ){
-		global orderbookObj
-		
-		orderbookObj.read()		
-		entryOrderDetails := orderbookObj.getOrderDetails( entryOrderID )
-		stopOrderDetails  := orderbookObj.getOrderDetails( stopOrderID )
-		
-		if( entryOrderDetails == -1 ){
-			MsgBox, 262144,, Order %entryOrderID% Not found
-			return false
-		}
-		if( stopOrderDetails == -1 && isStopLinked ){		
-			MsgBox, 262144,, Order %stopOrderID% Not found
-			return false
-		}		
-		if( isStopLinked && (entryOrderDetails.tradingSymbol != stopOrderDetails.tradingSymbol)  ){
-			MsgBox, 262144,, Orders have different Trading Symbols 
-			return false	
-		}
-				
-		this.entryOrder  := new OrderClass
-		this.entryOrder.updateOrderDetails( entryOrderDetails ) 
-		this.entryOrder.isCreated := true
-				
-		if( isStopLinked  && IsObject(stopOrderDetails)  ){
-			this.stopOrder 	:= new OrderClass
-			this.stopOrder.updateOrderDetails( stopOrderDetails ) 
-			this.stopOrder.isCreated := true
-		}
-
-		this._loadOrderInputFromOrderbook()										// OrderClass.InputClass
-		this.scrip 		:= this.entryOrder.getInput().scrip
-		this.direction  := this.entryOrder.getInput().direction
-		
-		return true
-	}
-
-	/*	Reset All Order pointers
-	*/
-	unlinkOrders(){
-		
-		this.entryOrder		:= -1
-		this.stopOrder 		:= -1
-		this.isStopPending	:= false
-		
-		this.save()
+	isNewEntryLinked(){		
+		return IsObject( this.newEntryOrder )  && IsObject(this.newEntryOrder.getOrderDetails()) 
 	}
 	
-	/*	Called by Tracker Thread - orderStatusTracker()
-		Create pending SL order when entry completes
+	/*	Returns true if atleast one Entry order has been executed - ie we have open position
 	*/
-	trackerCallback(){		
-
-		if( this.isStopPending && this.entryOrder.isClosed() ){					// Entry Finished and we have pending stop order.
-																				// Open Stop order if status = complete else Notify
-			if( !this.entryOrder.isEntrySuccessful() ){
-				MsgBox, % 262144+4,,  Breakout Entry Order Seems to have failed. Do you still want to create SL?
-				IfMsgBox No
-				{
-					this.isStopPending := false
-					return -1
-				}
-			}
-			
-			this.stopOrder.create()
-			this.isStopPending := false
-			this.save()
-		}
-	}
-	
-	/*	Returns true if entryOrder is an object and is linked with an order in orderbook
-	*/
-	isEntryLinked(){		
-		return IsObject( this.entryOrder )  && IsObject(this.entryOrder.getOrderDetails()) 
+	isEntryOrderExecuted(){
+		return  this.positionSize > 0
 	}
 	
 	/*	Returns true if stopOrder is an object and is linked with an order in orderbook
@@ -270,9 +416,11 @@ class TradeClass{
 	}
 
 	/*	Indicates whether Entry Order has status = complete
+		Note this wont remain true for too long. trackerCallback will move succesful order to executedEntryOrderList.
+		This is meant for use in callback
 	*/
 	isEntrySuccessful(){		
-		return  IsObject( this.entryOrder ) && this.entryOrder.isComplete()
+		return  IsObject( this.newEntryOrder ) && this.newEntryOrder.isComplete()
 	}
 
 	/*	Indicates whether Stop Order has status = complete
@@ -284,7 +432,7 @@ class TradeClass{
 	/*	Indicates whether Entry Order is in Order Book > Open Orders	
 	*/
 	isEntryOpen(){
-		return  IsObject( this.entryOrder ) && this.entryOrder.isOpen()
+		return  IsObject( this.newEntryOrder ) && this.newEntryOrder.isOpen()
 	}
 	
 	/*	Indicates whether Stop Order  is in Order Book > Open Orders	
@@ -296,7 +444,7 @@ class TradeClass{
 	/*	Indicates whether Entry Order is in Order Book > Completed Orders	
 	*/
 	isEntryClosed(){
-		return  IsObject( this.entryOrder ) && this.entryOrder.isClosed()
+		return  IsObject( this.newEntryOrder ) && this.newEntryOrder.isClosed()
 	}
 	
 	/*	Indicates whether Entry Order is in Order Book > Completed Orders	
@@ -310,27 +458,48 @@ class TradeClass{
 
 // -- Private ---
 
+	_triggerPendingStop(){
+
+		this._mergeStopSize()
+
+		if( this.stopOrder.isCreated ){										// If stop order already exists ( ie Entry Order was add )
+			this.stopOrder.update()											//	  then take added qty from entry order and add to stop order
+		}
+		else{			
+			this.stopOrder.create()			
+		}
+		this.isStopPending := false
+		this.save()		
+	}
+	
+	/* Take added qty from entry order and add to stop order	 
+	 * Stop size = Executed Orders + Current open order
+	 * positionSize will be 0 when there is no Existing position
+	*/
+	_mergeStopSize(){
+		this.stopOrder.getInput().qty := this.positionSize + this.newEntryOrder.getOrderDetails().totalQty		
+	}
 
 	/*	Set Entry Order Input details based on Order Type
 	*/
 	_setupEntryOrderInput( entryOrderType, qty, prodType, entryPrice, direction, scrip ){
 		global MaxSlippage, ORDER_TYPE_GUI_LIMIT, ORDER_TYPE_GUI_MARKET, ORDER_TYPE_GUI_SL_MARKET, ORDER_TYPE_GUI_SL_LIMIT
 		
-		if( !IsObject( this.entryOrder ) )
-			this.entryOrder := new OrderClass
+		if( !IsObject( this.newEntryOrder ) )
+			this.newEntryOrder := new OrderClass
 				
 		if( entryOrderType == ORDER_TYPE_GUI_LIMIT ){
-			this.entryOrder.setOrderInput( entryOrderType, direction, qty, entryPrice, 0, prodType, scrip )
+			this.newEntryOrder.setOrderInput( entryOrderType, direction, qty, entryPrice, 0, prodType, scrip )
 		}
 		else if( entryOrderType == ORDER_TYPE_GUI_MARKET ){
-			this.entryOrder.setOrderInput( entryOrderType, direction, qty, 0, 0, prodType, scrip  )
+			this.newEntryOrder.setOrderInput( entryOrderType, direction, qty, 0, 0, prodType, scrip  )
 		}
 		else if( entryOrderType == ORDER_TYPE_GUI_SL_MARKET ){
-			this.entryOrder.setOrderInput( entryOrderType, direction, qty, 0, entryPrice, prodType, scrip  )
+			this.newEntryOrder.setOrderInput( entryOrderType, direction, qty, 0, entryPrice, prodType, scrip  )
 		}
 		else if( entryOrderType == ORDER_TYPE_GUI_SL_LIMIT ){
 			limitprice := direction == "B" ? entryPrice + MaxSlippage : entryPrice - MaxSlippage		
-			this.entryOrder.setOrderInput( entryOrderType, direction, qty, limitprice, entryPrice, prodType, scrip )
+			this.newEntryOrder.setOrderInput( entryOrderType, direction, qty, limitprice, entryPrice, prodType, scrip )
 		}
 		else{			// should not happen
 			MsgBox, 262144,, Entry Ordertype: %entryOrderType% is invalid
@@ -350,12 +519,27 @@ class TradeClass{
 		}	
 		else{			// should not happen
 			MsgBox, 262144,, Stop Ordertype: %stopOrderType% is invalid
-		}		
+		}
+	}
+	
+	/* Update Stop price - Set price / trigger price based on ordertype		
+	*/
+	_setStopPrice( price ){
+		global ORDER_TYPE_GUI_SL_MARKET
+		
+		stopOrderType := this.stopOrder.getInput().orderType
+		
+		if( stopOrderType == ORDER_TYPE_GUI_SL_MARKET ){
+			this.stopOrder.setInputPrice( 0, price )
+		}	
+		else{			// should not happen
+			MsgBox, 262144,, Stop Ordertype: %stopOrderType% is invalid
+		}
 	}
 		
 	/*  Returns false if stop order should be created immediately
 	*/
-	_isPendingStop( entryOrderType ){
+	_isStopPending( entryOrderType ){
 		global
 		return ( entryOrderType == ORDER_TYPE_GUI_SL_LIMIT || entryOrderType == ORDER_TYPE_GUI_SL_MARKET )
 	}
@@ -377,17 +561,31 @@ class TradeClass{
 		Used to link to existing orders
 		Call orderbookObj.read() before calling this
 	*/
-	_loadOrderInputFromOrderbook(){
+	_loadOrderInputFromOrderbook(  order ){
 		
 		global selectedScrip, ProdType
 		
-		e   := this.entryOrder
-		s   := this.stopOrder		
-		eod := e.getOrderDetails()
-		sod := s.getOrderDetails()				
+		od := order.getOrderDetails()		
 		
-		e.setOrderInput( e.getGUIOrderType(), e.getGUIDirection(), eod.totalQty, eod.price, eod.triggerPrice, ProdType, selectedScrip )
-		s.setOrderInput( s.getGUIOrderType(), s.getGUIDirection(), sod.totalQty, sod.price, sod.triggerPrice, ProdType, selectedScrip )
+		if( IsObject( od ) )
+			order.setOrderInput( order.getGUIOrderType(), order.getGUIDirection(), od.totalQty, od.price, od.triggerPrice, ProdType, selectedScrip )		
+	}
+	
+	_getLastExecutedInputOrder(){
+		
+		highestOrderNo := ""
+		lastEntryOrder := -1
+		
+		For index, value in this.executedEntryOrderList{
+			
+			orderno := value.getOrderDetails().nowOrderNo		
+			if( highestOrderNo == "" || highestOrderNo < orderno ){
+				lastEntryOrder := value
+				highestOrderNo := orderno
+			}		
+		}	
+
+		return lastEntryOrder
 	}
 }
 

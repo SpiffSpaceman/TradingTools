@@ -1,20 +1,32 @@
+
+
+Bugs
+    - Limit Order Add - Keeps Add button visible?
+Test 
+    - Limit Order Add
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     
-Test
-    Trigger Stop + order no saved once stop is created
-    Trigger Stop after linking (with pending order) 
-    Read code for more use cases
+    
 
 
 
 
-Support Adds with Common SL
-    Show Orders in List / Show Position + Stop 
-    Position class in Trade + calculate from orders
-    Show Position Below in ListView - Qty, Avg Price, Stop
-    Entry Area Changes to Add once Entry Triggered
 
-Target orders + OCO Stop 
-    - warn if too close as both can trigger  
 
 
 
@@ -36,7 +48,17 @@ Target orders + OCO Stop
 
 
 -----------------------------------------------------------------------------------------
-Partial Stop orders
+Keep B/S window on top    
+Linked Order Details 
+    - Expand Window after search
+    - refresh button?
+    - Add pending stop details to linked order 
+Position Status - Current Risk based on Stop price / avg price
+-----------------------------------------------------------------------------------------
+Target orders + OCO Stop 
+    - warn if too close as both can trigger
+-----------------------------------------------------------------------------------------
+Partial Stop orders 
     - Show filled size for Entry/Stop
     - Maybe Stop order only entered once filled and stop size modified if Entry Size increases
         - But should always have protective stop for limit orders ( and so also for SL-Limit orders once triggered ) 
@@ -59,13 +81,19 @@ Partial Stop orders
 
 
 -----------------------------------------------------------------------------------------
+Option to change order type for open order
+    - SL Order After Trigger - changes to Limit Order - should be editable ( unfilled )
+    - Square Off - Market Stop order only if entry is complete - else cancel    // show cancel if not entered else squareoff    
+status bar - message updates + list
 check current price and warn if posible bad order based on ordertype 
 Ring Alarm / Notify at 15:17 if open orders
     Verify Admin position
-    Automatic squareoff at 15:19        
-Option to change order type for open order
-    - SL Order After Trigger - changes to Limit Order - should be editable ( unfilled )
-    - Square Off - Market Stop order only if entry is complete - else cancel    // show cancel if not entered else squareoff
+    Automatic squareoff at 15:19
+-----------------------------------------------------------------------------------------
+SAR
+OCO Orders
+    - Cancel open order + its SL when other order Entry gets completed
+    - Notify + cancel other if a entry order failed
 -----------------------------------------------------------------------------------------
 Position Conversion option
     - MIS to NRML/CNC + square off some if no margin    
@@ -75,9 +103,6 @@ Link Orders
 	- how to check Trading symbol against actual scrip - maybe take TradingSymbol as input in ini and use in other places too
 	- Can use as filter in read orders - so will get applied to most functions
 -----------------------------------------------------------------------------------------
-OCO Orders
-    - Cancel open order + its SL when other order Entry gets completed
-    - Notify + cancel other if a entry order failed
 Multiple scrips, Multiple Orders 
     - One Order at a time
     - Keep array of orders and current context

@@ -18,7 +18,7 @@
 
 
 class OrderClass{
-	class InputClass{														// Input taken from GUI / Settings		
+	class InputClass{														// Input taken from GUI / Settings - Used to create/update Order
 		orderType	:= ""
 		direction	:= ""
 		qty			:= ""
@@ -41,9 +41,18 @@ class OrderClass{
 		this._input.trigger   := triggerprice
 		this._input.prodType  := prodType
 		this._input.scrip  	  := scrip									// scrip object
-	}		
+	}	
 
-	updateOrderDetails( newdata ){
+	setInputPrice( price, triggerprice)  {
+		this._input.price 	  := price
+		this._input.trigger   := triggerprice
+	}
+	
+	setInputQty( qty ){
+		this._input.qty := qty
+	}
+	
+	setOrderDetails( newdata ){
 		this._orderDetails := newdata
 	}
 	
@@ -70,7 +79,8 @@ class OrderClass{
 	}
 
 	getGUIDirection(){
-		return this._orderDetails.buySell == "BUY" ? "B" : "S"	
+		global ORDER_DIRECTION_BUY
+		return this._orderDetails.buySell == ORDER_DIRECTION_BUY ? "B" : "S"	
 	}
 	
 	getGUIOrderType(){
@@ -116,13 +126,18 @@ class OrderClass{
 		
 		orderbookObj.read()														// Read current status so that we can identify new order
 		winTitle			:= this._openOrderForm()
-		this._submitOrder( winTitle )		
-		this._orderDetails  := orderbookObj.getNewOrder()
+		
+		toggleStatusTracker("off")												// Turn off Tracker thread during order creation
+																				// Otherwise it can also read orderbook in between and we will not be able to 
+		this._submitOrder( winTitle )											// detect newly created order.
+		this._orderDetails  := orderbookObj.getNewOrder()						// Tracker thread can be on when this create() is for adds
+		
+		toggleStatusTracker("on")
 
-		if( this._orderDetails == -1 ){											// New order found in Orderbook ?
+		if( !IsObject(this._orderDetails) ){									// New order found in Orderbook ?
 			
 			identifier := UtilClass.orderIdentifier( this._input.direction, this._input.price, this._input.trigger) 
-			MsgBox, % 262144+4,,  Order( %identifier%  ) Not Found yet in Order Book. Do you want to continue?
+			MsgBox, % 262144+4,,  Order( %identifier%  ) Not Found yet in Order Book. Was the Order Created?
 			IfMsgBox No
 				return -1
 			this._orderDetails := orderbookObj.getNewOrder()
@@ -144,9 +159,12 @@ class OrderClass{
 
 	/*	Modifies order. Input Details should be set before calling this
 	*/
-	update(){
+	update(){		
 		
 		global orderbookObj, TITLE_BUY, TITLE_SELL
+		
+		if( ! this._hasOrderChanged() )
+			return
 		
 		winTitle := this._input.direction == "B" ? TITLE_BUY : TITLE_SELL	
 		
@@ -159,7 +177,7 @@ class OrderClass{
 		orderbookObj.read()
 		this.reloadDetails()														// Get updated order details from orderbook
 
-		if( this._orderDetails = -1 ){
+		if( !IsObject( this._orderDetails )){
 			MsgBox, % 262144,,  Bug? - Updated Order not found in Orderbook after Modification
 		}		
 	}	
@@ -208,7 +226,21 @@ class OrderClass{
 
 // -- Private ---
 
-
+	/* Compares input with orderDetails to check if order has changed
+		compares  ordertype, qty, price, trigger price
+	*/
+	_hasOrderChanged(){
+		if( this._input.orderType != this.getGUIOrderType() )
+			return true
+		if( this._input.qty 	  != this._orderDetails.totalQty )
+			return true
+		if( this._input.price     != this._orderDetails.price )
+			return true
+		if( this._input.trigger   != this._orderDetails.triggerPrice )
+			return true
+		
+		return false
+	}
 
 	/*	Open Buy / Sell Window
 	*/

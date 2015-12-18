@@ -40,5 +40,16 @@ class UtilClass{
 		identifier := direction . ", Price " . price . ", Trigger " . trigger
 		return identifier
 	}
+	
+	/* Show Message only if isSilent = false
+	*/
+	conditionalMessage( isSilent, message ){
+		if( !isSilent ) 
+			MsgBox, 262144,, %message%
+	}
+	
+	sendMsgToConsole( msg ){
+		FileAppend  %msg%`n, *	
+	}
 
 }

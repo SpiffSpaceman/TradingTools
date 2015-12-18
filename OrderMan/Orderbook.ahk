@@ -150,9 +150,12 @@ class OrderbookClass{
 		Run read() before calling getOrderDetails() to get latest data
 	*/
 	getOrderDetails( inNowOrderNo ){
-				
+		
+		if( inNowOrderNo == "" )
+			return -1
+		
 		order := this._getOrderDetails( this.OpenOrders,  inNowOrderNo )
-		if( order == -1 ){
+		if( !IsObject(order)  ){
 			order := this._getOrderDetails( this.CompletedOrders,  inNowOrderNo )
 		}
 		return order
@@ -197,7 +200,7 @@ class OrderbookClass{
 			return -1
 			
 		foundOrder := this._getNewOrder( openOrdersOld, this.OpenOrders )		// Find order that doesnt exist in openOrdersOld / completedOrdersOld
-		if( foundOrder ==-1 )
+		if( !IsObject(foundOrder) )
 			foundOrder := this._getNewOrder( completedOrdersOld, this.CompletedOrders )	
 
 		return foundOrder
@@ -240,7 +243,7 @@ class OrderbookClass{
 			Loop, %RowCount%{														// Get order number of selected row and compare
 				ControlGet, RowOrderNo, List, Selected Col%orderNoColIndex%, SysListView321, %TITLE_ORDER_BOOK%
 			
-				if( RowOrderNo = searchMeOrderNo ){									// Found and Selected
+				if( RowOrderNo == searchMeOrderNo ){								// Found and Selected
 					return true
 				}
 				ControlSend, SysListView321, {Down}, %TITLE_ORDER_BOOK%				// Move Down to next row if not found yet
@@ -275,8 +278,12 @@ class OrderbookClass{
 	/*	Reads Column Header text of Open and Completed Orders in orderbook to look for position of required fields 
 	*/
 	_readColumnHeaders(){
-		global	TITLE_ORDER_BOOK		
+		global	TITLE_ORDER_BOOK
 		
+		static columnsRead := false											// Read once per load. ?VirtualAllocEx error from lib once? Had to restart NOW
+		if( columnsRead )
+			return
+	
 	// Open Orders
 		// Read column header texts and extract position for columns that we need
 		allHeaders  := GetExternalHeaderText( TITLE_ORDER_BOOK, "SysHeader321")	
@@ -291,6 +298,8 @@ class OrderbookClass{
 		keys		:= ["orderType",  "buySell",  "tradingSymbol",  "totalQty",  "pendingQty",  "price", "triggerPrice", "averagePrice" , "status", "nowOrderNo", "nowUpdateTime", "rejectionReason"]
 		
 		this._extractColumnIndices( "Order Book > Completed Orders",  allHeaders, headers, this._completedOrdersColumnIndex, keys )	
+		
+		columnsRead := true
 	}
 
 	/*	listIdentifier= Identifier text for the List, used in error message
