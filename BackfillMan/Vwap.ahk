@@ -105,7 +105,7 @@ waitForDataLoad( alias ){													// Wait for all data to load. Verifies tha
 																			// NOTE - If VWAP window is closed before all data is loaded, sometimes remaining data 
 	global VWAPWindowTitle, VWAPColumnIndex									//     gets spilled	to Next Scrip's VWAP data in NOW
 	
-	ExpectedCount := getExpectedDataRowCount()
+	ExpectedCount := getExpectedDataRowCount()	
 	
 	Loop, 10 {																// Initial Simple Wait without checking for contents. Wait Max 5 seconds
 		ControlGet, rowCount, List, Count, SysListView321, %VWAPWindowTitle%
@@ -113,6 +113,8 @@ waitForDataLoad( alias ){													// Wait for all data to load. Verifies tha
 			break		
 		Sleep 500
 	}
+	
+	oldMissingCount := ExpectedCount
 	
 	Loop {																	// Count matched, but there can be duplicates in VWAP stats
 		rowCount := 0														// So confirm after removing duplicates. And Count Only quotes within market hours
@@ -132,17 +134,22 @@ waitForDataLoad( alias ){													// Wait for all data to load. Verifies tha
 			return true
 		}
 
-		if( Mod(A_Index, 20 )==0  ){										// Ask Every 20 seconds if all data has not yet been received
+		if( Mod(A_Index, 30 )==0  ){										// Ask Every 30 seconds if all data has not yet been received and no change in missing count
 			missingCount := ExpectedCount - rowCount
-			MsgBox, 4, %alias% - Waiting, VWAP data for %alias% has %missingCount% minutes missing. Is Data still loading?
-			IfMsgBox No	
-			{
-				MsgBox, 4,  %alias% - Waiting, Do you still want to Backfill %alias% with this data ?
-				IfMsgBox yes
-					return true
-				Else
-					return false
+			
+			if( oldMissingCount == missingCount ){		
+				MsgBox, 4, %alias% - Waiting, VWAP data for %alias% has %missingCount% minutes missing. Is Data still loading?
+				IfMsgBox No	
+				{
+					MsgBox, 4,  %alias% - Waiting, Do you still want to Backfill %alias% with this data ?
+					IfMsgBox yes
+						return true
+					Else
+						return false
+				}
 			}
+			else
+				oldMissingCount := missingCount
 		}
 		Sleep 1000		
 	}

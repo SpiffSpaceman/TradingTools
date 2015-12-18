@@ -1,13 +1,14 @@
 
+Data loading check
+	Move to ABBackfill + Return code - esp for Datatable 
+	verify scrip name
+	
 Better Volume, Price Merge
 	Export data from RTDMan
 	Merge data in ABBackfill
 
-Data loading check
-	Move to ABBackfill + Return code - esp for Datatable 
-	verify scrip name
-	Detect if data is loading instead of asking - wait time + check count diff + show alert once
-		- Bigger timeout for asking
+
+
 	
 
 
