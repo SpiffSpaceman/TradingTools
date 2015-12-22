@@ -66,6 +66,21 @@ class OrderClass{
 		return this._orderDetails
 	}
 	
+	getPrice(){
+		global ORDER_TYPE_GUI_LIMIT, ORDER_TYPE_GUI_MARKET, ORDER_TYPE_GUI_SL_MARKET, ORDER_TYPE_GUI_SL_LIMIT
+		
+		ot := this._input.orderType
+		
+		if( ot == ORDER_TYPE_GUI_LIMIT  ||  ot == ORDER_TYPE_GUI_MARKET ){
+			return this._input.price
+		}
+		else if( ot == ORDER_TYPE_GUI_SL_MARKET || ot == ORDER_TYPE_GUI_SL_LIMIT ){
+			return this._input.trigger
+		}
+		else
+			return 0	// should not happen
+	}
+	
 	isClosed(){																// Indicates whether order is in Order Book > Completed Orders
 		return this._orderDetails.isClosed()
 	}
@@ -123,6 +138,8 @@ class OrderClass{
 			MsgBox, 262144,, Order Already created								// Should not happen
 			return
 		}
+		if( this._input.qty <= 0  )
+			return
 		
 		orderbookObj.read()														// Read current status so that we can identify new order
 		winTitle			:= this._openOrderForm()

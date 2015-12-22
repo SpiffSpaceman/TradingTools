@@ -53,10 +53,10 @@ ORDER_TYPE_GUI_SL_MARKET	  := "SLM"
 ORDER_DIRECTION_BUY           := "BUY"
 ORDER_DIRECTION_SELL          := "SELL"
 
-ORDERBOOK_POLL_TIME			  := 750										// Time between reading of OrderBook status by Tracker in order to trigger pending orders. In ms
-GUI_POLL_TIME_MULTIPLE        := 3                                          // Time between GUI refresh by tracker - as multiple of ORDERBOOK_POLL_TIME
-NEW_ORDER_WAIT_TIME			  := 5											// How many seconds to wait for New Submitted Order to appear in orderbook. 
-OPEN_ORDER_WAIT_TIME		  := 5											// How many seconds to wait for Order to be Open ( ie for validation etc to be over)
+ORDERBOOK_POLL_TIME			  := 500										// Time between reading of OrderBook status by Tracker in order to trigger pending orders. In ms
+GUI_POLL_TIME_MULTIPLE        := 4                                          // Time between GUI refresh by tracker - as multiple of ORDERBOOK_POLL_TIME
+NEW_ORDER_WAIT_TIME			  := 5											// How many maximum seconds to wait for New Submitted Order to appear in orderbook. 
+OPEN_ORDER_WAIT_TIME		  := 5											// How many maximum seconds to wait for Order to be Open ( ie for validation etc to be over)
 																				// Warning message shown after wait period
 
 orderbookObj := new OrderbookClass                                          // Keep Class string in class names to avoid conflict - can get overwritten by object of same name

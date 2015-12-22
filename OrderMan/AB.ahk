@@ -16,7 +16,7 @@
 */
 
 installHotkeys(){
-	global HKEntryPrice, HKStopPrice
+	global HKEntryPrice, HKStopPrice, HKTargetPrice
 	
 	Hotkey, IfWinActive, ahk_class AmiBrokerMainFrameClass					// Context sensitive HK - only active if window is active
 	
@@ -25,6 +25,9 @@ installHotkeys(){
 	
 	if( HKStopPrice != "" && HKStopPrice != "ERROR")
 		Hotkey, %HKStopPrice%, getStopPriceFromAB	
+	
+	if( HKTargetPrice != "" && HKTargetPrice != "ERROR")
+		Hotkey, %HKTargetPrice%, getTargetPriceFromAB	
 }
 
 getEntryPriceFromAB(){
@@ -49,6 +52,15 @@ getStopPriceFromAB(){
 	}
 }
 
+getTargetPriceFromAB(){
+	
+	price := getPriceFromAB()	
+	
+	if( price > 0 ){		
+		setTargetPrice( UtilClass.roundToTickSize(price) )
+	}
+}
+ 
 _guessDirection( entry, stop ){
 	global contextObj
 
@@ -69,14 +81,14 @@ adjustPrices( entry, stop ){
 }
 
 /* Adjust prices to tick size for buy order
-   Entry price shift up and stop price shift down    
+   Entry price shift up and stop price shift down       
    NOTE - EntryPriceActual/StopPriceActual should contain the original values taken from AB
  */
 _longPriceAdjust(){
 	global EntryPriceActual, StopPriceActual
 	
-	setEntryPrice( UtilClass.ceilToTickSize(EntryPriceActual), EntryPriceActual )		
-	setStopPrice( UtilClass.floorToTickSize(StopPriceActual), StopPriceActual )		
+	setEntryPrice(  UtilClass.ceilToTickSize( EntryPriceActual),  EntryPriceActual )		
+	setStopPrice(   UtilClass.floorToTickSize(StopPriceActual),   StopPriceActual )		
 }
 
 /* Adjust prices to tick size for sell order
@@ -85,8 +97,8 @@ _longPriceAdjust(){
 _shortPriceAdjust(){
 	global EntryPriceActual, StopPriceActual
 	
-	setEntryPrice( UtilClass.floorToTickSize(EntryPriceActual), EntryPriceActual )		
-	setStopPrice( UtilClass.ceilToTickSize(StopPriceActual), StopPriceActual )		
+	setEntryPrice(  UtilClass.floorToTickSize(EntryPriceActual),  EntryPriceActual )		
+	setStopPrice(   UtilClass.ceilToTickSize( StopPriceActual),   StopPriceActual )
 }
 
 

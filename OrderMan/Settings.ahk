@@ -24,9 +24,12 @@ loadSettings(){
 	IniRead, Qty, 	  		    OrderMan.ini, OrderMan, Qty
 	IniRead, ProdType, 		    OrderMan.ini, OrderMan, ProdType
     IniRead, DefaultStopSize,	OrderMan.ini, OrderMan, DefaultStopSize
+    IniRead, DefaultTargetSize,	OrderMan.ini, OrderMan, DefaultTargetSize
+    IniRead, MinTargetStopDiff,	OrderMan.ini, OrderMan, MinTargetStopDiff    
     IniRead, MaxStopSize,   	OrderMan.ini, OrderMan, MaxStopSize
     IniRead, HKEntryPrice,   	OrderMan.ini, OrderMan, HKEntryPrice
     IniRead, HKStopPrice,   	OrderMan.ini, OrderMan, HKStopPrice
+    IniRead, HKTargetPrice,   	OrderMan.ini, OrderMan, HKTargetPrice
     IniRead, TickSize,      	OrderMan.ini, OrderMan, TickSize
     IniRead, LastWindowPosition,OrderMan.ini, OrderMan, LastWindowPosition
     IniRead, EntryOrderType,    OrderMan.ini, OrderMan, EntryOrderType

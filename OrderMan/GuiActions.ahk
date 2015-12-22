@@ -18,7 +18,7 @@
 /* Button New 
 */
 onNew(){
-	global contextObj, selectedScrip, EntryOrderType, Direction, Qty, ProdType, EntryPrice, StopPrice
+	global contextObj, selectedScrip, EntryOrderType, Direction, Qty, ProdType, EntryPrice, StopPrice, TargetPrice
 		
 	Gui, 1:Submit, NoHide										// sets variables from GUI
 	
@@ -26,9 +26,15 @@ onNew(){
 		
 	if( !validateInput() )
 		return
+	
+	TargetEntryDiff := Direction == "B" ? TargetPrice-EntryPrice : EntryPrice-TargetPrice
+	if( TargetEntryDiff <= 0  && TargetPrice != "" && TargetPrice != 0 ){
+		MsgBox, 262144,, Target Should be ahead of Entry Price for new order
+		return
+	}	
 
 	trade 	:= contextObj.getCurrentTrade()
-	trade.create( selectedScrip, EntryOrderType, "SLM", Direction, Qty, ProdType, EntryPrice, StopPrice )
+	trade.create( selectedScrip, EntryOrderType, "SLM", Direction, Qty, ProdType, EntryPrice, StopPrice, TargetPrice )
 	
 }
 
@@ -41,8 +47,9 @@ onAdd(){
 /* Button Update
 */
 onUpdate(){
-	global contextObj, selectedScrip, EntryOrderType, Qty, ProdType, EntryPrice, StopPrice
-	trade := contextObj.getCurrentTrade()
+	global contextObj, selectedScrip, EntryOrderType, Qty, ProdType, EntryPrice, StopPrice, TargetPrice
+	
+	trade := contextObj.getCurrentTrade()	
 	
 	Gui, 1:Submit, NoHide
 	
@@ -53,20 +60,26 @@ onUpdate(){
 		
 	trade.reload()
 
-	entry := ""																// Update if order linked and status is open/trigger pending and price/qty has changed
-	stop  := ""
+	entry 		 := ""														// Update if order linked and status is open/trigger pending and price/qty has changed
+	stop  		 := ""
+	target		 := ""
+	positionSize := trade.positionSize
 	
 	if( trade.isEntryOpen() && hasOrderChanged( trade.newEntryOrder, EntryPrice, Qty)  )
 	{	 																	// Entry Order is open and Entry order has changed
 		entry := EntryPrice													// If entry is empty, trade.update() will skip changing Entry Order
+	}																		// Stop Order - check if Entry Order qty has changed, stop qty may be different and is handled later
+	if( hasPriceChanged( trade.stopOrder, StopPrice) || hasQtyChanged( trade.newEntryOrder, Qty) )
+	{
+		stop := StopPrice
 	}
-	if(  hasOrderChanged( trade.stopOrder, StopPrice, Qty) )
-	{																		
-		stop := StopPrice													
+	if( hasOrderChanged( trade.targetOrder, TargetPrice, positionSize ) )	// Target Order size is always = completed Entry orders' size
+	{
+		target := TargetPrice
 	}
-		
-	if( entry != ""  ||  stop != "" ){
-		trade.update( selectedScrip, EntryOrderType, "SLM", Qty, ProdType, entry, stop  )
+	
+	if( entry != ""  ||  stop != "" || target != "" ){
+		trade.update( selectedScrip, EntryOrderType, "SLM", Qty, ProdType, entry, stop, target )
 	}
 	else{
 		MsgBox, 262144,, Nothing to update or Order status is not open
@@ -89,6 +102,14 @@ statusBarClick(){
 stopClick(){	
 	if( A_GuiEvent == "DoubleClick"  ){
 		setDefaultStop()
+	}	
+}
+
+/* Target Text Double Click 
+*/
+TargetClick(){
+	if( A_GuiEvent == "DoubleClick"  ){
+		setDefaultTarget()
 	}	
 }
 
@@ -153,15 +174,23 @@ OnStopUpDown(){
 	setStopPrice( StopPrice, StopPrice )
 }
 
+OnTargetUpDown(){
+	global TargetUpDown, TickSize, TargetPrice
+	
+	TargetPrice := (TargetUpDown == 1) ? TargetPrice + TickSize : TargetPrice - TickSize	
+	setTargetPrice( TargetPrice )
+}
+
 /* Links Context to selected existing orders
 */
 linkOrdersSubmit(){
-	global contextObj, ORDER_TYPE_SL_LIMIT, ORDER_TYPE_SL_MARKET, ORDER_STATUS_OPEN, ORDER_STATUS_TRIGGER_PENDING, ORDER_STATUS_COMPLETE, listViewOrderIDPosition, listViewOrderTypePosition, listViewOrderStatusPosition
+	global contextObj, ORDER_TYPE_LIMIT, ORDER_TYPE_SL_LIMIT, ORDER_TYPE_SL_MARKET, ORDER_STATUS_OPEN, ORDER_STATUS_TRIGGER_PENDING, ORDER_STATUS_COMPLETE, listViewOrderIDPosition, listViewOrderTypePosition, listViewOrderStatusPosition
 		
 	entryId   			:= ""
 	entryType 			:= ""
 	executedEntryIDList	:= ""
 	stopOrderId	    	:= ""
+	targetOrderId		:= ""
 	isPending			:= false
 	rowno				:= 0
 
@@ -188,18 +217,41 @@ linkOrdersSubmit(){
 			executedEntryIDList := orderId . "," . executedEntryIDList
 		}
 	}
-
 	if( entryId == "" && executedEntryIDList == "" ){
 		MsgBox, 262144,, Select Atleast One Entry Order
 		return
 	}
-
-
-	Gui, 2:ListView, SysListView322
-	rowno := LV_GetNext()										// Stop Order ListView Selected row
-	if( rowno > 0 )
-		LV_GetText( stopOrderId, rowno, listViewOrderIDPosition )
 	
+	Gui, 2:ListView, SysListView322
+	rowno := 0 
+	
+	Loop % LV_GetCount("Selected")
+	{		
+		rowno := LV_GetNext( rowno )							// Stop/Target Order ListView Selected rows
+		if( rowno == 0 )
+			break
+		
+		LV_GetText( orderId,   rowno, listViewOrderIDPosition )
+		LV_GetText( ordertype, rowno, listViewOrderTypePosition )
+		
+		if( ordertype == ORDER_TYPE_LIMIT){
+			if( targetOrderId == "" )
+				targetOrderId := orderId
+			else{
+				MsgBox, 262144,, Select only one Target Order
+				return	
+			}					
+		}
+		else if( ordertype == ORDER_TYPE_SL_MARKET){
+			if( stopOrderId == "" )
+				stopOrderId := orderId
+			else{
+				MsgBox, 262144,, Select only One Stop Order
+				return	
+			}					
+		}
+	}
+		
 	
 	if( entryType == ORDER_TYPE_SL_LIMIT || entryType == ORDER_TYPE_SL_MARKET )
 		isPending := true
@@ -213,15 +265,14 @@ linkOrdersSubmit(){
 			return
 		}
 	}
-
 	if( entryId == stopOrderId ){							// No Need to check against executedEntryIDList as only completed orders are allowed in it
 		MsgBox, 262144,, Selected Entry And Stop Order are same
 		return
 	}
 	
-	trade := contextObj.getCurrentTrade()					// Link Orders in Current Context
+	trade := contextObj.getCurrentTrade()					// Link Orders in Current Context	
 	
-	if( !trade.linkOrders( false, entryId, executedEntryIDList, stopOrderId, isPending, 0  ) )
+	if( !trade.linkOrders( false, entryId, executedEntryIDList, stopOrderId, isPending, 0, targetOrderId, 0 ) )
 		return
 	
 	Gui, 2:Destroy
@@ -238,14 +289,15 @@ linkOrdersSubmit(){
 /*	Check if Order Details in GUI is different than input order 
 */
 hasOrderChanged( order, price, qty ){
+	return hasPriceChanged( order, price ) || hasQtyChanged( order, qty )	
+}
+
+hasPriceChanged( order, price  ){
 	global ORDER_TYPE_GUI_LIMIT, ORDER_TYPE_GUI_MARKET
 	
 	orderInput := order.getInput()	
 	if( !IsObject(orderInput) )
 		return false
-	
-	if( qty != orderInput.qty)
-		return true
 	
 	type := orderInput.orderType
 	
@@ -257,10 +309,20 @@ hasOrderChanged( order, price, qty ){
 	return price != oldprice
 }
 
+hasQtyChanged( order, qty ){
+	
+	orderInput := order.getInput()	
+	if( !IsObject(orderInput) )
+		return false
+	
+	if( qty != orderInput.qty)
+		return true
+}
+
 /* Validations before trade orders creation/updation
 */
 validateInput(){
-	global contextObj, EntryPrice, StopPrice, Direction, CurrentResult, MaxStopSize
+	global contextObj, EntryPrice, StopPrice, TargetPrice, Direction, CurrentResult, MaxStopSize, MinTargetStopDiff
 	
 	trade 		:= contextObj.getCurrentTrade()
 	checkEntry  := trade.positionSize==0  ||  trade.isNewEntryLinked()		// Skip Entry Price Validations if Entry is Complete and No Add Orders created yet
@@ -277,7 +339,25 @@ validateInput(){
 	if( !UtilClass.isNumber(StopPrice) ){
 		MsgBox, 262144,, Invalid Stop Trigger Price
 		return false
+	}
+	if( TargetPrice!= ""  && !UtilClass.isNumber(TargetPrice) ){
+		MsgBox, 262144,, Invalid Target Price
+		return false
 	}	
+	
+	if( TargetPrice != ""  && TargetPrice != 0 ){
+		StopDiff := Direction == "B" ? TargetPrice-StopPrice : StopPrice-TargetPrice
+		if( StopDiff < 0  ){
+			MsgBox, 262144,, Target should be ahead of Stop
+			return false
+		}		
+		if( StopDiff < MinTargetStopDiff ){									// Warn if Target-Stop diff is less than threshold. As Both orders may get executed if diff too small
+			MsgBox, % 262144+4,, Target and Stop orders are too close, Do you want to continue?
+			IfMsgBox No
+				return false
+		}
+	}
+		
 	
 	if( checkEntry ){														// If Buying, stop should be below price and vv
 		if( Direction == "B" ){												// checkEntry - Allow to trail past Entry once Entry/Add order is closed

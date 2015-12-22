@@ -205,7 +205,7 @@ waitForDTData( symbol  ){
 		}
 		Sleep 500
 	}	
-
+																			// TODO move to c++ - takes long time
 	Loop {																	// Check all data loaded. Count only valid intraday quotes		
 		rowCount := 0														// Ignore duplicates. And Count Only quotes within market hour Today
 		ControlGet, date_time, List, Col2, SysListView321, %DTWindowTitle%	// Assuming Date Time Column at default position

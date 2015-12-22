@@ -9,12 +9,10 @@ class UtilClass{
 		}
 	}
 	
-	/*
 	roundToTickSize( price ){
 		global TickSize	
 		return Round(  price / TickSize ) * TickSize
 	}
-	*/
 	
 	ceilToTickSize( price ){
 		global TickSize	

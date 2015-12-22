@@ -263,7 +263,7 @@ class OrderbookClass{
 		
 		ControlClick, Button3, %TITLE_ORDER_BOOK%,,,, NA				// Click Cancel
 		
-		WinWait, %window%, %windowText%, 5		
+		WinWait, %window%, %windowText%, 1
 		WinSet, Transparent, 1, %window%, %windowText%
 		
 		ControlClick, Button1, %window%, %windowText%,,, NA				// Click ok

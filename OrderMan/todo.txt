@@ -1,64 +1,62 @@
 
 
-Bugs
-    - Limit Order Add - Keeps Add button visible?
-Test 
-    - Limit Order Add
+Test
+    Test VWAP Backfill after First minute loads
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
------------------------------------------------------------------------------------------
-Keep B/S window on top    
-Linked Order Details 
+Set default qty on unlink
+Linked Order Details
     - Expand Window after search
     - refresh button?
-    - Add pending stop details to linked order 
+    - Add pending stop details to linked order
 Position Status - Current Risk based on Stop price / avg price
+
+
+
+
+
+
+    
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
 -----------------------------------------------------------------------------------------
-Target orders + OCO Stop 
-    - warn if too close as both can trigger
------------------------------------------------------------------------------------------
-Partial Stop orders 
+Partial Stop/Target orders 
     - Show filled size for Entry/Stop
     - Maybe Stop order only entered once filled and stop size modified if Entry Size increases
         - But should always have protective stop for limit orders ( and so also for SL-Limit orders once triggered ) 
@@ -84,6 +82,7 @@ Partial Stop orders
 Option to change order type for open order
     - SL Order After Trigger - changes to Limit Order - should be editable ( unfilled )
     - Square Off - Market Stop order only if entry is complete - else cancel    // show cancel if not entered else squareoff    
+-----------------------------------------------------------------------------------------
 status bar - message updates + list
 check current price and warn if posible bad order based on ordertype 
 Ring Alarm / Notify at 15:17 if open orders
@@ -91,12 +90,10 @@ Ring Alarm / Notify at 15:17 if open orders
     Automatic squareoff at 15:19
 -----------------------------------------------------------------------------------------
 SAR
-OCO Orders
+OCO Entry Orders
     - Cancel open order + its SL when other order Entry gets completed
     - Notify + cancel other if a entry order failed
 -----------------------------------------------------------------------------------------
-Position Conversion option
-    - MIS to NRML/CNC + square off some if no margin    
 Bug - MsgBox on top - gets overlapped by updateStatus() on show by Timer
 Settings GUI - maybe add tabs for settings of other applications + option to change month/year in scripname
 Link Orders
