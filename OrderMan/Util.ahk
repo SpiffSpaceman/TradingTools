@@ -20,9 +20,10 @@ class UtilClass{
 	}
 	
 	floorToTickSize( price ){
-		global TickSize	
-		return Floor(  price / TickSize ) * TickSize
-	}
+		global TickSize
+		
+		return Floor( Round( price/TickSize, 2) ) * TickSize				// Round to 2 decimal places before Floor to avoid inaccurate floor due to FP accuracy loss
+	}																			// Without Rounding, FloorToTick( 209.45 ) with tick 0.05 returns 209.4
 
 	isNumber( str ) {
 		if str is number

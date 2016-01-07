@@ -27,28 +27,30 @@ installHotkeys(){
 		Hotkey, %HKStopPrice%, getStopPriceFromAB	
 	
 	if( HKTargetPrice != "" && HKTargetPrice != "ERROR")
-		Hotkey, %HKTargetPrice%, getTargetPriceFromAB	
+		Hotkey, %HKTargetPrice%, getTargetPriceFromAB
 }
 
 getEntryPriceFromAB(){
-	global EntryPriceActual, StopPrice
+	global EntryPriceActual, StopPrice, isABPick
 	
 	price := getPriceFromAB()
 	if( price > 0 ){		
 		EntryPriceActual := price
 		_guessDirection( price, StopPrice )
 		adjustPrices( price, StopPrice )
+		isABPick := true
 	}
 }
 
 getStopPriceFromAB(){
-	global EntryPrice, StopPriceActual
+	global EntryPrice, StopPriceActual, isABPick
 	
 	price := getPriceFromAB()
 	if( price > 0 ){		
 		StopPriceActual := price
 		_guessDirection( EntryPrice, price )
 		adjustPrices( EntryPrice, price )
+		isABPick := true
 	}
 }
 

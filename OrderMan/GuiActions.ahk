@@ -143,7 +143,12 @@ onDirectionChange(){
 }
 
 onEntryPriceChange(){
-	global EntryPrice, EntryPriceActual
+	global EntryPrice, EntryPriceActual, isABPick
+	
+	if( isABPick ){
+		isABPick := false							// workaround fix, This fn is called by both manual setting of price and by AB picker
+		return											// better way to keep AB picked price?
+	}
 	
 	Gui, 1:Submit, NoHide
 	
@@ -152,7 +157,12 @@ onEntryPriceChange(){
 }
 
 onStopPriceChange(){
-	global StopPrice, StopPriceActual
+	global StopPrice, StopPriceActual, isABPick
+	
+	if( isABPick ){
+		isABPick := false
+		return
+	}
 	
 	Gui, 1:Submit, NoHide
 	

@@ -22,7 +22,11 @@ Better Error Handling
 		- option to run manually for selected scrips, even EOD
 MultiDay Backfill + Filter out outside market time quotes 
 	Allow Input Date Range for DataTable
-
+Google Backfill
+	AHK - UrlDownloadToFile
+	http://www.google.com/finance/historical?q=AAPL&startdate=Nov 1, 2011&enddate=Nov 30, 2011&output=csv
+	http://www.google.com/finance/historical?q=NASDAQ%3AMSFT&startdate=Jan+1%2C+2012&enddate=Sep+1%2C+2013&output=csv
+	http://www.google.com/finance/historical?output=csv&q=[Symbol name]
 	
 
 	

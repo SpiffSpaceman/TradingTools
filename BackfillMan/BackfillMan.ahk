@@ -37,15 +37,17 @@ return
 
 installHotKeys(){
 	global HKFlattenTL, HKBackfill
-	
-	if( HKFlattenTL != "" && HKFlattenTL != "ERROR")
-		Hotkey, %HKFlattenTL%, hkFlatTrendLine	
-
+		
 	if( HKBackfill == "ERROR" ||  HKBackfill == "" ){
 		MsgBox, Set backfill Hotkey
 		return
-	}	
+	}
+	
 	Hotkey, %HKBackfill%,  hkBackfill
+	
+	Hotkey, IfWinActive, ahk_class AmiBrokerMainFrameClass					// Context sensitive HK - only active if window is active	
+	if( HKFlattenTL != "" && HKFlattenTL != "ERROR")
+		Hotkey, %HKFlattenTL%, hkFlatTrendLine	
 }
 
 hkBackfill(){
@@ -113,7 +115,7 @@ getExpectedDataRowCount(){
 	min  		  := (A_Hour>END_HOUR || (A_Hour==END_HOUR && A_Min>END_MIN) ) ? END_MIN : A_Min
 	ExpectedCount := (hour - START_HOUR)*60 + (min - START_MIN)								
 
-	if( !isMarketClosed() )
+	if( !isMarketClosed() && ExpectedCount > 1 )
 		ExpectedCount := ExpectedCount-1									// Allow 1 less minute for border case - 
 																			// Minute changes between data fetch and call to getExpectedDataRowCount() 
 	return ExpectedCount
