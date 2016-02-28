@@ -175,7 +175,7 @@ class OrderbookClass{
 		return this.CompletedOrders.size
 	}
 
-	/*  Get Order ID of newly opened orders, searches both open and completed orders
+	/* Get Order ID of newly opened orders, searches both open and completed orders
 	   Assuming only 1 opened/completed since last read
 	   So readOpenOrders(),readCompletedOrders() should be called before creating new order and
 		  getNewOrder() should be immediately called after creating new order

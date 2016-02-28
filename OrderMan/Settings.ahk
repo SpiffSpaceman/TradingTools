@@ -20,8 +20,7 @@
 loadSettings(){
 	
 	local value												// All variables global by default
-	
-	IniRead, Qty, 	  		    OrderMan.ini, OrderMan, Qty
+		
 	IniRead, ProdType, 		    OrderMan.ini, OrderMan, ProdType
     IniRead, DefaultStopSize,	OrderMan.ini, OrderMan, DefaultStopSize
     IniRead, DefaultTargetSize,	OrderMan.ini, OrderMan, DefaultTargetSize
@@ -35,12 +34,15 @@ loadSettings(){
     IniRead, EntryOrderType,    OrderMan.ini, OrderMan, EntryOrderType
     IniRead, MaxSlippage,       OrderMan.ini, OrderMan, MaxSlippage
     IniRead, SavedOrders,       OrderMan.ini, OrderMan, SavedOrders    
-    
+        
     IniRead, value, OrderMan.ini, OrderMan, AutoSubmit
     AutoSubmit   := value=="true"
         
-    IniRead, value,	OrderMan.ini, OrderMan, Scrip    
+    IniRead, value,	OrderMan.ini, OrderMan, Scrip
 	local fields := StrSplit( value , ",")
+    
+    IniRead, DefaultQty, OrderMan.ini, OrderMan, Qty
+    Qty :=  DefaultQty
     
     selectedScrip := new ScripClass
     selectedScrip.setInput( fields[1], fields[2], fields[3], fields[4], fields[5], fields[6] )  

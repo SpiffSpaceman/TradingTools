@@ -24,7 +24,7 @@ class TradeClass{
 	targetOrder		 := -1
 	
 	isStopPending 	 := false												// Is Stop Waiting for Entry/Add order to trigger?
-	positionSize	 := 0
+	positionSize	 := 0													// Open Position Size
 
 	executedEntryOrderList := []											// List of executed entry/add orders
 																			// entryOrder contains details of current unexecuted order shown in GUI and _entryOrderList has all of executed orders
@@ -89,7 +89,8 @@ class TradeClass{
 		}
 		
 		this._updateStop( inScrip, stopOrderType, qty, prodType, stopPrice )
-		this._handleTargetOrder( targetPrice )
+		if( targetPrice !=-1 )													// -1 indicates no change. Else create/delete target order
+			this._handleTargetOrder( targetPrice )
 
 		this.save()	
 		updateStatus()
@@ -134,11 +135,13 @@ class TradeClass{
 		}	
 
 		if( this.stopOrder.isComplete() && this.targetOrder.isOpen() ){			// OCO Stop, Target Order
-			this.targetOrder.cancel()
+			this.targetOrder.cancel()											// If position closed, then cancel Add order if open			
+			this.newEntryOrder.cancel()
 		}
 		else if( this.targetOrder.isComplete() && this.stopOrder.isOpen() ){
 			this.stopOrder.cancel()
-		}
+			this.newEntryOrder.cancel()
+		}			
 		
 		if( this.stopOrder.isClosed() ){										// Unlink After close
 			MsgBox, 262144,, Trade Closed - Verify
@@ -403,6 +406,8 @@ class TradeClass{
 		this.executedEntryOrderList := []										// List of successfully executed Orders		
 		
 		this.save()
+		
+		setDefaultQty()															// Reset Qty in GUI to Default Size
 	}
 	
 	/* Reload order details from orderbook
@@ -418,7 +423,7 @@ class TradeClass{
 		if( this.isTargetLinked() )
 			this.targetOrder.reloadDetails()
 	}
-	
+		
 	/*	New Entry Order Open ? - Returns true if newEntryOrder is an object and is linked with an order in orderbook
 	*/
 	isNewEntryLinked(){		
@@ -488,7 +493,7 @@ class TradeClass{
 
 		this._mergeStopSize()
 
-		if( this.stopOrder.isCreated ){										// If stop order already exists ( ie Entry Order was add )
+		if( this.stopOrder.isCreated ){										// If stop order already exists ( ie Entry Order was an add order )
 			this.stopOrder.update()											//	  then take added qty from entry order and add to stop order
 		}
 		else{			
@@ -654,8 +659,10 @@ class TradeClass{
 	_handleTargetOrder( targetPrice ){
 		global ORDER_TYPE_GUI_LIMIT	
 		
-		if( (targetPrice == 0  ||  targetPrice = "" || this.positionSize == 0)   &&   this.targetOrder.isOpen() ){
-			this.targetOrder.cancel()											// Can happen for adds, If target cleared, cancel it
+		if( (targetPrice == 0  ||  targetPrice = "" || this.positionSize == 0) ){
+			if( this.targetOrder.isOpen() ){
+				this.targetOrder.cancel()										// Can happen for adds, If target cleared, cancel it
+			}
 			return
 		}
 

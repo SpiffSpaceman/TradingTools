@@ -1,9 +1,46 @@
+Fixed
+    Target order creation with price 0
 
-Fixes    
-    - Order creation - If not found - try to uncheck and check "Display All Orders" // Once didnt show up untill this
+Fixed check
+    SL movement beyond Entry changes Direction on AB pick
+    Bug Target order cancelled on SL update
+        targetPrice not passed by update because target not changed
+        but _handleTargetOrder() thinks target is empty and cancels it
+    Set default qty on unlink
+    
+    Cancel open Add order on Stop/Target hit
+    
  
+    
 
 
+
+
+
+Partial Target
+    Move to Target Order to seperate class? Maybe also for Entry and Stop
+    Current target Order + List of Target executed orders
+    _handleTargetOrder()
+        target size should be less than position size
+    save / load executed target orders
+        linkOrders() - reduce position size for executed target orders
+    OCO - trackerCallback - on target execution
+        - reduce position size
+        - update stop size using new position size, cancel only if size 0
+Bugs
+    - Manual Link - Order type not updated    
+    - Entry Average price not updated   // Maybe remove anyway
+    - Order creation - If not found - try to uncheck and check "Display All Orders" // Once didnt show up untill this
+    - Cancel order - in between - gives error. Detect and check again
+        ---------------------------
+        NOW
+        ---------------------------
+        Please Select Order To Cancel
+
+
+Partial Square Off / Partial Stop
+Multiple Scrips - DropDown / Right Click
+    1 ini per scrip or 1 ini section per scrip
 
 
 
@@ -49,14 +86,16 @@ Fixes
 
 
 
-Settings - change in GUI
-Set default qty on unlink
-Linked Order Details
-    - Expand Window after search
-    - refresh button?
-    - Add pending stop details to linked order
+-----------------------------------------------------------------------------------------
 Position Status - Current Risk based on Stop price / avg price
-Settings - Qty Multiple
+Callback
+    Verify Order Creation/Updation - check size/status in callback
+    Ring bell on Order Trigger
+-----------------------------------------------------------------------------------------
+Export Trade Execution Log
+Log of Major Events - creation/updation/cancel/OrderTracker triggers
+-----------------------------------------------------------------------------------------
+Constant Risk position sizing + Allow Risk %
 -----------------------------------------------------------------------------------------
 Partial Fill - Handle Stop/Target orders 
     - Show filled size for Entry/Stop
@@ -72,24 +111,32 @@ Partial Fill - Handle Stop/Target orders
         Need to differentiate between original stop and Trailing stop ( only when order is unfilled)
             Orignial Stop for unfilled size cannot be moved beyond Entry price
     - Handle cancel orders
-- Square Off - Market Stop order for filled position + cancel rest
-- Partial exits
-    - Partial Target
-    - Partial Square Off    
+-----------------------------------------------------------------------------------------
+Settings - change in GUI
+Linked Order Details
+    - Expand Window after search
+    - refresh button?
+    - Add pending stop details to linked order
+Take current price from RTDMan and show price, status 
+    after adding export prices in RTDMan
+    check current price and warn if posible bad order based on ordertype
 -----------------------------------------------------------------------------------------
 
 
 
 
 
+
+
+
+
 -----------------------------------------------------------------------------------------
+Square Off - Market Stop order for filled position + cancel rest
 Option to change order type for open order
     - SL Order After Trigger - changes to Limit Order - should be editable ( unfilled )
     - Square Off - Market Stop order only if entry is complete - else cancel    // show cancel if not entered else squareoff    
-Multiple Scrips - DropDown
 -----------------------------------------------------------------------------------------
 status bar - message updates + list
-check current price and warn if posible bad order based on ordertype 
 Ring Alarm / Notify at 15:17 if open orders
     Verify Admin position
     Automatic squareoff at 15:19
@@ -105,11 +152,13 @@ Link Orders
 	- how to check Trading symbol against actual scrip - maybe take TradingSymbol as input in ini and use in other places too
 	- Can use as filter in read orders - so will get applied to most functions
 -----------------------------------------------------------------------------------------
+Nest 
+    - Check how many strings are different
+    - Move all strings to include file. Separate include file for Nest and NOW
 Multiple scrips, Multiple Orders 
     - One Order at a time
     - Keep array of orders and current context
     - Switch context on Scrip/Order change
     - refresh orderbook too on context change + Filter all data for specific scrip - So everything else becomes per scrip    
-option to do just 1 order without stop?
 Option for Stop orders - SL-Limit + detect if slipped?
 Pseudo GTC Orders - save orders + option to send all in 1 go + check if already open

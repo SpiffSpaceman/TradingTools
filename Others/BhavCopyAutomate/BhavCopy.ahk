@@ -26,33 +26,23 @@ SetWorkingDir %A_ScriptDir%  												// Ensures a consistent starting direct
 SetTitleMatchMode, 2 														// A window's title can contain the text anywhere
 SetControlDelay, -1 														// Without this ControlClick fails sometimes
 
-TITLE := "Data Downloader"
+																			// If scrip name change, add both old and new names, old will be replaced by new name using sed later
+scrips := "LT|MARUTI|PFC|SUNPHARMA|TATAMOTORS|TATASTEEL"
+bhavCopyPath := "../NSE/*"
 
-fetchData()
+//bhavCopyPath := "Archive/*"
+
 
 FileDelete, Data\*.csv
-FileMove, ..\*.csv, Data, 1
 
-Run, cscript.exe ImportRT.js
+RunWait, rebol.exe -s ABCD.r, ..
+
+command := "grep.exe -h -w -E """ . scrips . """ " . bhavCopyPath . " > data/output.csv"	// Extract quotes
+RunWait %comspec% /c %command%,, hide
+
+//command := "sed.exe -i ""s/PIRHEALTH/PEL/g;"" data/output.csv"				        // Replace old name with new
+//RunWait %comspec% /c %command%,, hide										            // For Multiple add after ';' Example - s/JAM/BUTTER/g;s/BREAD/CRACKER/g
+
+Run, cscript.exe ImportRT.js,, hide
 
 return
-
-/* open Data Downloader and fetch data 
-*/
-fetchData(){
-	
-	global TITLE
-	
-	Run, Data Downloader.exe, ..
-	WinWait, %TITLE%, StatusStrip1
-	WinSet, Transparent, 1, %TITLE%, StatusStrip1
-
-	ControlSend, MenuStrip1, {Alt down}d{Alt up}ig , %TITLE%
-	WinWait, %TITLE%, Heatmaps
-
-	ControlSend, WindowsForms10.BUTTON.app.0.33c0d9d1, {Space}, %TITLE%
-	WinWait, %TITLE%, Done
-
-	WinClose, %TITLE%, StatusStrip1
-}
-

@@ -73,12 +73,10 @@ onUpdate(){
 	{
 		stop := StopPrice
 	}
-	if( hasOrderChanged( trade.targetOrder, TargetPrice, positionSize ) )	// Target Order size is always = completed Entry orders' size
-	{
-		target := TargetPrice
-	}
+																			// Target Order size is always = completed Entry orders' size
+	target := hasOrderChanged( trade.targetOrder, TargetPrice, positionSize ) ? TargetPrice : -1
 	
-	if( entry != ""  ||  stop != "" || target != "" ){
+	if( entry != ""  ||  stop != "" || target != -1 ){		
 		trade.update( selectedScrip, EntryOrderType, "SLM", Qty, ProdType, entry, stop, target )
 	}
 	else{
@@ -342,15 +340,15 @@ validateInput(){
 		return false
 	}
 		
-	if( checkEntry && !UtilClass.isNumber(EntryPrice) ){
+	if( checkEntry && (!UtilClass.isNumber(EntryPrice) || EntryPrice<=0  ) ){
 		MsgBox, 262144,, Invalid Entry Price
 		return false
 	}
-	if( !UtilClass.isNumber(StopPrice) ){
+	if( !UtilClass.isNumber(StopPrice) || StopPrice<=0 ){
 		MsgBox, 262144,, Invalid Stop Trigger Price
 		return false
 	}
-	if( TargetPrice!= ""  && !UtilClass.isNumber(TargetPrice) ){
+	if( TargetPrice!= ""  && (!UtilClass.isNumber(TargetPrice) || TargetPrice<0) ){		// target price can be 0 => No Target
 		MsgBox, 262144,, Invalid Target Price
 		return false
 	}	

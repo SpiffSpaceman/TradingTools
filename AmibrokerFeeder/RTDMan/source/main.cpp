@@ -10,6 +10,8 @@
 	// Util::getLong / getDouble - Use Try Catch when converting from string
 		// Also check references - handle bad data
 	
+	// Preopen Volume?
+	
     // RTD Callback - Use array and construct bars in AB thread
         // More accurate mins - some data gets shifted now
         // Immediate update - use events instead of sleep. Manage minute change

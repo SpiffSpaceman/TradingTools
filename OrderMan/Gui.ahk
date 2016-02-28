@@ -342,6 +342,11 @@ setQty( inQty ){
 	GuiControl, 1:Text, Qty,  %Qty%
 }
 
+setDefaultQty(){
+	global DefaultQty
+	setQty( DefaultQty )
+}
+
 /* EntryPriceActual should contain the original values taken from AB
 */
 setEntryPrice( inEntry, inEntryPriceActual){

@@ -16,6 +16,7 @@
     // Delete second quotes, just leave last 30 mins ( configurable ) 
     // Remove Volume Skip option
     // Open Minute - Still import if no data in AB and volume available    
+	// Volume Merge - Distribute difference to all ticks in proportion of their volume. should not be -ve
 
 // TODO - Allow overriding ini parameters using input args. param=value.
 	// put args key value in map. Use common funtion in settings.ini to check args before ini.
