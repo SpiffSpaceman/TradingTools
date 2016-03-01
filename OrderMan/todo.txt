@@ -14,7 +14,9 @@ Fixed check
     
 
 
-
+Add Order Stop
+    - Option to keep seperate
+    - Merge when Normal stop moves past add stop
 
 
 Partial Target
@@ -38,7 +40,7 @@ Bugs
         Please Select Order To Cancel
 
 
-Partial Square Off / Partial Stop
+Partial Square Off
 Multiple Scrips - DropDown / Right Click
     1 ini per scrip or 1 ini section per scrip
 
