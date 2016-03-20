@@ -20,6 +20,7 @@
     <None Include="DataTable.txt" />
     <None Include="backfillTick.format" />
     <None Include="ABBackFill.ini" />
+    <None Include="todo.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\main.cpp">

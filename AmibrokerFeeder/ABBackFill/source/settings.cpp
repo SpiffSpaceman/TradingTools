@@ -12,20 +12,19 @@ int Settings::getINIInt( const char *key ){
 void Settings::loadSettings(){
 
     csv_file_path          = getINIString("CSVFolderPath");
+	tick_path              = getINIString("TickPath");
     vwap_file_path         = getINIString("VWAPBackFillInputFilePath");
     data_table_file_path   = getINIString("DTBackFillInputFilePath");
 
     open_minute            = getINIString("OpenMinute");
     close_minute           = getINIString("CloseMinute");
 
-    is_skip_open_minute    = getINIString("SkipOpenMinute") == "true";
-    is_backfill_volume     = getINIString("BackfillVolume") == "true";
-    is_intraday_mode       = getINIString("IntradayMode")   == "true";
-    is_eod_tickmode        = getINIString("EODTickMode")    == "true";
-    is_force_tickmode      = getINIString("ForceTickMode")  == "true";
-
+	is_no_tick_mode		   = getINIString("NoTickMode") == "true";
+	is_intraday_mode       = getINIString("IntradayMode")   == "true";
+		
     Util::createDirectory( csv_file_path );                            // If folder does not exist, create it
-    csv_file_path.append("quotes.bfill");
+	csv_file_path.append("backfill.csv");
+    
 }
 
 

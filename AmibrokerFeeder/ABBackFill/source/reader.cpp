@@ -23,9 +23,8 @@
 #include <iostream>
 #include <sstream>
 
-Reader::Reader(  const Settings &in_settings, bool in_is_tickmode  ) :
-  settings(in_settings),
-  is_tickmode(in_is_tickmode)
+Reader::Reader(  const Settings &in_settings  ) :
+  settings(in_settings)
 {    
     today_date = Util::getTime("%Y%m%d");                                   // Todays date - yyyymmdd
 }
@@ -78,8 +77,7 @@ bool Reader::parseVWAPToCsv(){
         
         Util::splitString( line , ' ', split ) ;                                       // Data. Expected format is 
                                                                                        // "09:15:00 AM 6447.00 6465.00 6439.55 6444.40 318900"  
-        if( (settings.is_backfill_volume && split.size() != 7)                         // Time AM/PM O H L C V            
-          ){
+        if( split.size() != 7){														   // Time AM/PM O H L C V
             std::stringstream msg;                                                     
             msg << "Could Not Parse Line. Split Size - " << split.size() << " Line - " << line;
             throw msg.str();            
@@ -163,37 +161,95 @@ void  Reader::postParse( const std::string &ticker, const std::string &date, con
                          const std::string &high,   const std::string &low,  const std::string &close,       std::string &volume ){
                                  
     if( settings.is_intraday_mode && ! isIntraday(time, date)  )                                // Skip outside trading hours for intraday mode
-        return; 
-    if( !is_tickmode && settings.is_skip_open_minute && settings.open_minute == time )          // Skip 09:15:00
-        return;                                                                                 // TickMode - dont skip first min, dont skip volume    
-    if( !is_tickmode && !settings.is_backfill_volume )
-        volume = "0";
+        return;
     
     // $FORMAT Ticker, Date_YMD, Time, Open, High, Low, Close, Volume
     std::string output_line = ticker + ',' + date + ',' + time + ',' + open + ',' + high + ',' + low + ','  + close  + ',' + volume; 
 
-    if( is_tickmode ){                                                            // Send in sorted ascending order for tickmode for each ticker
-        sorted_data[ticker+time]  = output_line;
+    if( settings.is_no_tick_mode ){                                                            // Send in sorted ascending order for tickmode for each ticker
+		fout << output_line  << std::endl ;
     }
-    else {        
-        fout << output_line  << std::endl ; 
-    }    
+    else {
+        sorted_data[ticker+time]  = output_line;
+
+		if( time > scrip_end_time[ticker] )													  // Save latest quote's timestamp for each Scrip. We need to send all ticks after this from RTDMan
+			scrip_end_time[ticker] = time;
+    }
 }
 
-// Write out data in sorted_data. Only used in tickmode
+// Write out data in sorted_data. Only used with $tickmode 1
 void Reader::writeTickModeData(){
     if( sorted_data.empty() )
         return;
     
     // Data is already sorted by time. Just write it out
     
-    std::map<std::string, std::string>::const_iterator  it  =  sorted_data.begin();
-    while( it != sorted_data.end() ){
-
-        fout << it->second << std::endl ; 
-        it++;
+	for( std::map<std::string, std::string>::const_iterator it = sorted_data.begin(); it != sorted_data.end() ; ++it){
+        fout << it->second << std::endl;
     }
     sorted_data.clear();
+
+	writeRTDTicks();
+}
+
+/*
+	For each scrip in backfill_end_time
+		open RTD csv
+		Fetch all lines after end time in sorted order
+		Add lines to output csv
+*/
+void Reader::writeRTDTicks(){
+
+	if( ! isIntraday(Util::getTime()) ){										// RTD Ticks only needed during market hours. After EOD, only use VWAP/DT data
+		scrip_end_time.clear();
+		return;
+	}
+
+	for( std::map<std::string, std::string>::iterator it = scrip_end_time.begin(); it != scrip_end_time.end() ; ++it){		
+		std::string	&time = it->second;											// HH:MM:SS			
+		time			  = Util::addMinute( time );							// Shift time(start min) in scrip_end_time by 1 min forward to match with End Time
+	}
+	
+	std::string				  alias, end_time, line;
+	std::ifstream			  tickCsvFile;
+	std::vector<std::string>  split;	
+
+	std::string	today_date = Util::getTime("%Y%m%d");							// Get todays date - yyyymmdd 
+
+	for( std::map<std::string, std::string>::const_iterator it = scrip_end_time.begin(); it != scrip_end_time.end() ; ++it){
+    
+		alias	  = it->first;
+		end_time  = it->second;
+		
+		if( tickCsvFile.is_open() )
+			tickCsvFile.close();
+
+		tickCsvFile.open( settings.tick_path + alias + ".csv" ) ;
+		if( !tickCsvFile.is_open() ){			
+			continue;
+		}
+
+		while( std::getline( tickCsvFile, line ) ){								// Assuming tick file is already in sorted order with earlier ticks first
+			 
+			if( line.empty() ) continue; 
+			Util::splitString( line , ',', split ) ; 
+			
+			if( split.size() < 3 ){
+				std::stringstream msg;  
+				msg << "Could Not Parse Line. Split Size - " << split.size() << " Line - " << line;
+				throw msg.str();
+			}
+
+			if( today_date != split[1] )										// If date = today and time > end_time - Add line to csv
+				continue;														// Format - "Ticker, Date_YMD, Time, Open, High, Low, Close, Volume, OpenInt"
+			if( end_time > split[2] )											// Also take if time matches 
+				continue;															// RTD Tick at exact timestamp as EndTime of VWAP/DT may or may not be part of VWAP/DT minute
+																					// So we include it to make sure there is no price tick loss. At worst, will have some extra volume from that tick
+			fout << line << std::endl;
+		}
+    }
+
+    scrip_end_time.clear();
 }
 
 void Reader::closeOutput(){

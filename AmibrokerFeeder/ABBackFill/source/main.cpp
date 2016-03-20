@@ -7,20 +7,6 @@
 #include "util.h"
 #include <iostream>
 
-// Volume
-	// Save quotes - RTDman - in ram drive csv, use $TICKMODE 1 backfill, recreate last 30 min data with saved ticks+backfill data
-	// Volume only if no quote in minute else find empty second and update extremes with 0 volume.
-	// For each minute, if no rtd bars - use backfill bar with volume
-	// Or If Extremes of a minute match already + enough quotes in a minute - skip?	
-	// If extremes mismatch, update Highest and lowest ticks with backfill extreme as an approximation
-    // Delete second quotes, just leave last 30 mins ( configurable ) 
-    // Remove Volume Skip option
-    // Open Minute - Still import if no data in AB and volume available    
-	// Volume Merge - Distribute difference to all ticks in proportion of their volume. should not be -ve
-
-// TODO - Allow overriding ini parameters using input args. param=value.
-	// put args key value in map. Use common funtion in settings.ini to check args before ini.
-
 int _tmain(int argc, _TCHAR* argv[]){
 
     try{
@@ -30,14 +16,10 @@ int _tmain(int argc, _TCHAR* argv[]){
         
         // Read settings.ini
         Settings settings;
-        settings.loadSettings();        
-
-        // TickMode - Overwrite todays data with 1 min bars after market hours
-        bool is_tickmode = settings.is_eod_tickmode && Util::getTime() > settings.close_minute;
-        is_tickmode      = is_tickmode || settings.is_force_tickmode;
+        settings.loadSettings();
 
         // Read Input and convert to CSV
-        Reader reader( settings, is_tickmode );     
+        Reader reader( settings );     
         bool vwap = reader.parseVWAPToCsv     () ;
         bool dt   = reader.parseDataTableToCsv() ;
         reader.closeOutput();
@@ -50,7 +32,7 @@ int _tmain(int argc, _TCHAR* argv[]){
         //std::cout << "CSV Creation Time:" << ((finish.QuadPart - start.QuadPart) / (double)freq.QuadPart) << std::endl;
 
         // send CSV to AB
-        std::string format = is_tickmode ? "backfillTick.format" : "backfill.format" ;
+        std::string format = settings.is_no_tick_mode ? "backfill.format" : "backfillTick.format";
                 
         Amibroker AB( settings.ab_db_path, settings.csv_file_path, format );
         AB.import();

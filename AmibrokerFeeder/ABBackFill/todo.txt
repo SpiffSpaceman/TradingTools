@@ -1,0 +1,7 @@
+
+// Datatable Quotes count verification- Move to c++
+
+
+
+// If there is any tick loss near backfill time : pause - resume RTDMan AB thread using IPC	- Seems ok, maybe not needed
+// keep only used tick quotes and overwrite file? To keep it small - Map of alias and stringstream with file text
