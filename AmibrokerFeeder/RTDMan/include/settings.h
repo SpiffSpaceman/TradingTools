@@ -12,11 +12,13 @@ public:
     std::string rtd_server_prog_id;
     int         bar_period;                                               // In milliseconds    
     int         bell_wait_time;                                           // No of bar_periods
+	std::string csv_folder_path;										  // Folder in which we will save csv for AB and archived csv
     std::string csv_path;                                                 // path for csv file to be sent to Amibroker - Use ram drive
+	bool        is_archive;												  // If true, also save quotes in separate csv for each scrip
     std::string ab_db_path;
 
     std::string  open_time;
-    std::string  close_time;    
+    std::string  close_time; 
         
     struct Scrip {
         std::string topic_name;                                           // Scrip Name = Topic 1

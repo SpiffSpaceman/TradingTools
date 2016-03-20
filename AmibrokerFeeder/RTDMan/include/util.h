@@ -19,7 +19,8 @@ public:
 
     static void            splitString( const std::string & string,  char seperator, std::vector<std::string> &output );
 
-    static std::string     getTime( const char *format = "%H:%M:%S"  );    
+    static std::string     getTime(   const char *format = "%H:%M:%S"  );    
+	static std::string	   addMinute( const std::string &time );
 
     static void            trimString          ( std::string & string  );
     static void            replaceTabsWithSpace( std::string & string  );

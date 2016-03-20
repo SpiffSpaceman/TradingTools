@@ -41,11 +41,11 @@ Worker::Worker():
     Event_Stopped    = CreateEvent( NULL, true,  FALSE, NULL );
     AB_timer         = CreateWaitableTimer( NULL, false,NULL );
 
-    today_date       = Util::getTime("%Y%m%d");                        // Get todays date - yyyymmdd
+    today_date       = Util::getTime("%Y%m%d");							  // Get todays date - yyyymmdd
 
     settings.loadSettings();
 
-    rtd_client = new RTDClient( settings.rtd_server_prog_id  );
+    rtd_client = new RTDClient();
     current    = new ScripState[ settings.no_of_scrips ] ;
     previous   = new ScripState[ settings.no_of_scrips ] ;
                                                                                     
@@ -59,8 +59,6 @@ Worker::Worker():
     SetWaitableTimer( AB_timer , &start_now, settings.bar_period, NULL, NULL, false );
     
     InitializeCriticalSection( &lock );
-    _beginthread( threadEntryDummy, 0, this );                             // Start Amibroker Poller Thread
-    
 }
 
 
@@ -114,7 +112,10 @@ bool Worker::ScripState::operator==(const ScripState& right) const{
  */
 void Worker::connect(){
     
+	rtd_client->initializeServer( settings.rtd_server_prog_id  );
     rtd_client->startServer();
+
+	_beginthread( threadEntryDummy, 0, this );                             // RTD Server ready. Start Amibroker Poller Thread
 
     for( int i=0 ; i<settings.no_of_scrips ; i++ ){        
         
@@ -142,7 +143,7 @@ void Worker::poll(){
             std::map<long,CComVariant>*  data = rtd_client->readNewData() ;
             if( data != 0 && !data->empty() ){
                 processRTDData( data );                
-            }            
+            }
             delete data;            
         }
     }
@@ -285,9 +286,11 @@ void Worker::amibrokerPoller(){
         if( new_bars.empty() ){                                           // Notify if RTD inactive  
             notifyInactive();
         }
-        else{                                                             // (C) Write to csv    and Send to Amibroker
-            writeCsv( new_bars );
-            amibroker->import();            
+        else{                                                             // (C) Write to csv and Send to Amibroker
+            writeABCsv( new_bars );
+            amibroker->import();
+			if( settings.is_archive )
+				writeArchiveCsv( new_bars );							  // Archive ticks to be used for backfill
         }
         new_bars.clear();
     }
@@ -330,7 +333,7 @@ bool Worker::isMarketTime ( const std::string &time ){                       // 
     return  time >= settings.open_time && time <= settings.close_time ;      // So string compare works
 }
 
-void Worker::writeCsv( const std::vector<ScripBar> & bars ){
+void Worker::writeABCsv( const std::vector<ScripBar> & bars ){
     
     csv_file_out.open( settings.csv_path  );                               // Setup output stream to csv file
     if( !csv_file_out.is_open() ){                                         // Reopening will also clear old content by default
@@ -355,5 +358,42 @@ void Worker::writeCsv( const std::vector<ScripBar> & bars ){
     }
 
     csv_file_out.close();
+}
+
+void Worker::writeArchiveCsv( const std::vector<ScripBar> & bars  ){
+	    
+    size_t          size = bars.size();
+    const ScripBar *bar;
+	std::string		filename;
+
+    for( size_t i=0 ; i<size ; i++ ){                                      // $FORMAT Ticker, Date_YMD, Time, Open, High, Low, Close, Volume, OpenInt
+
+        bar	= &bars[i];
+
+		if( filename != bar->ticker ){									   // Open new file stream for each ticker
+
+			filename = bar->ticker;										  // Use Scrip Alias as filename
+			if( csv_file_out.is_open() )
+				csv_file_out.close();
+																		  // Open file for - write + append	mode
+			csv_file_out.open( settings.csv_folder_path + filename + + ".csv",  std::fstream::out | std::fstream::app  );
+			if( !csv_file_out.is_open() ){
+				throw( "Error opening file - " + settings.csv_folder_path + filename + + ".csv" );
+			}
+		}
+
+		csv_file_out << bar->ticker     << ',' 
+					 << today_date      << ',' 
+					 << bar->ltt        << ',' 
+					 << bar->bar_open   << ',' 
+					 << bar->bar_high   << ',' 
+					 << bar->bar_low    << ',' 
+					 << bar->bar_close  << ',' 
+					 << bar->volume     << ',' 
+					 << bar->oi         << std::endl ;
+    }
+
+	if( csv_file_out.is_open() )
+		csv_file_out.close();
 }
 

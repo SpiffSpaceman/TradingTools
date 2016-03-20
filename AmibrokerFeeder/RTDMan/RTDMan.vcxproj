@@ -39,7 +39,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LinkIncremental>true</LinkIncremental>
+    <LinkIncremental>false</LinkIncremental>
     <IncludePath>$(ProjectDir)\include;$(IncludePath)</IncludePath>
     <SourcePath>$(ProjectDir)\source;$(SourcePath)</SourcePath>
     <OutDir>$(SolutionDir)$(Configuration)\RTDMan\</OutDir>
@@ -103,6 +103,7 @@ del *.bat</Command>
     <None Include="RTDMan.ini" />
     <None Include="rtd.format" />
     <None Include="RTDManStartHighPriority.bat" />
+    <None Include="todo.txt" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="RTDMan.ini">

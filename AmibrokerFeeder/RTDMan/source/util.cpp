@@ -33,8 +33,14 @@ long long Util::getLong( const VARIANT &var ){
         output = (long long) var.dblVal ; 
     }
     else if( var.vt == VT_BSTR ){              // BSTR
-        output = std::stoll( getString(var) );
-    }    
+		try{
+			output = std::stoll( getString(var) );
+		}
+		catch(std::exception const & )
+		{
+			output = 0;
+		}
+    }
     return  output;
 }
 
@@ -48,7 +54,13 @@ double Util::getDouble( const VARIANT &var ){
         output = var.dblVal ; 
     }
     else if( var.vt == VT_BSTR ){              // BSTR
-        output = std::stod( getString(var)  );
+		try{
+			output = std::stod( getString(var)  );
+		}
+		catch(std::exception const & )
+		{
+			output = 0;
+		}
     }    
     return  output;
 }
@@ -109,7 +121,27 @@ std::string  Util::getTime( const char *format ){
     strftime(buffer,64, format, &local );
 
     return std::string( buffer );
-} 
+}
+
+/* Input HH:MM:SS	
+*/
+std::string Util::addMinute( const std::string &time ){
+	
+	std::vector<std::string>  split;
+	Util::splitString( time, ':', split ) ;
+	
+	long long HH = std::stoi( split[0] );						// long long needed for std::stoi  - VS 2010
+	long long MM = std::stoi( split[1] );
+
+	if( MM == 59 ){
+		HH++;		
+		return std::to_string(HH) + ":00:" + split[2] ;
+	}
+	else{
+		MM++;
+		return std::to_string(HH) + ":" + std::to_string(MM) + ":" + split[2] ;
+	}
+}
 
 
 void Util::trimString( std::string  &string  ){

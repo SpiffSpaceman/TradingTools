@@ -13,7 +13,8 @@ void Settings::loadSettings(){
 
     rtd_server_prog_id    = getINIString("RTDServerProgID");     
     bar_period            = getINIInt   ("BarPeriod");
-    csv_path              = getINIString("CSVFolderPath"); 
+    csv_folder_path       = getINIString("CSVFolderPath"); 	
+	is_archive			  = getINIString("Archive") == "true";
     bell_wait_time        = getINIInt   ("BellWaitTime"); 
     ab_db_path            = getINIString("AbDbPath");
 
@@ -28,9 +29,9 @@ void Settings::loadSettings(){
     if( bar_period < 1000  ){                                                // check $TICKMODE 1
         throw "Minimum Bar Interval is 1000ms";        
     }
-        
-    Util::createDirectory( csv_path );                                   // If folder does not exist, create it.
-    csv_path.append("quotes.rtd");
+    	
+    Util::createDirectory( csv_folder_path );								// If folder does not exist, create it    
+	csv_path = csv_folder_path + "abquotes.csv";
     
     while(1){
         scrip_key    = "Scrip";  scrip_key.append( std::to_string( (long long)no_of_scrips+1 ) );

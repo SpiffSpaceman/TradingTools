@@ -11,9 +11,10 @@
 class RTDClient {
 
 public: 
-    RTDClient( const std::string &server_prog_id );
+    RTDClient();
     ~RTDClient();
 
+	void    initializeServer( const std::string &server_prog_id  );
     void    startServer();
     void    stopServer();
 

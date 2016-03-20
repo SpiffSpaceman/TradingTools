@@ -18,6 +18,7 @@
     <None Include="rtd.format" />
     <None Include="RTDManStartHighPriority.bat" />
     <None Include="RTDMan.ini" />
+    <None Include="todo.txt" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\rtd_callback.h">

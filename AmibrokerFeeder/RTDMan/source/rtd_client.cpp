@@ -26,29 +26,7 @@
 #include <iostream>
 
 
-/**
- * Setup Com objects
- * Use comObjectScripRTD->QueryInterface( IID , LPVOID*  ) to get another interface of same classid    if needed
-**/
-RTDClient::RTDClient( const std::string &server_prog_id ) : is_NOW(false) {
-    
-    is_NOW  =  Util::isStringEqualIC( server_prog_id, "NOW.ScripRTD" ) ;
-
-    USES_CONVERSION;
-    LPOLESTR   progid  =  A2OLE( server_prog_id.c_str() );
-    CLSID      classid;    
-    HRESULT    hr;
-    
-    hr = CoInitializeEx(NULL,COINIT_MULTITHREADED);                         // Initialize the COM library for this thread. This make Windows load the DLLs
-                                                                            // COINIT_MULTITHREADED needed for callback to work.
-    hr = CLSIDFromProgID(progid, &classid);                                 // Else need a message loop for STA - Single Thread Apartment
-    hr = CoCreateInstance(classid, NULL, CLSCTX_LOCAL_SERVER, __uuidof(IScripRTD), (LPVOID*) &comObjectScripRTD );
-                                                                            // Get COM Object for IScripRTD interface
-    if ( FAILED( hr ) ){        
-        throw( server_prog_id + " - IScripRTD object creation error. RTD Server down?"  );
-    }
-    
-    CComObject<CallbackImpl>::CreateInstance(&callback);                    // Create Callback Object
+RTDClient::RTDClient() : is_NOW(false), comObjectScripRTD(NULL), callback(NULL) {
 }
 
 /**
@@ -71,26 +49,70 @@ RTDClient::~RTDClient(){
     if(comObjectScripRTD){
         comObjectScripRTD->Release();                                       // Release interface object
     }
+	if( callback ){
+		callback->Release();
+		callback = NULL;
+	}
     
     CoUninitialize();                                                       // Unload COM library  
 
     std::cout << "RTDClient Stopped" << std::endl ; 
 }
 
+/**
+ * Setup Com objects
+ * Use comObjectScripRTD->QueryInterface( IID , LPVOID*  ) to get another interface of same classid    if needed
+**/
+void RTDClient::initializeServer( const std::string &server_prog_id  ){
 
-void RTDClient::startServer(){
+	is_NOW  =  Util::isStringEqualIC( server_prog_id, "NOW.ScripRTD" ) ;
+
+	USES_CONVERSION;
+    LPOLESTR   progid  =  A2OLE( server_prog_id.c_str() );
+    CLSID      classid;    
+    HRESULT    hr;
     
-    long    server_status = -1;        
-    HRESULT hr            = comObjectScripRTD->ServerStart( callback , &server_status );
-        
-    std::cout << "Server status : " << server_status << std::endl;    
-
-    if( server_status <=0 ){                                                // Returns 0 if callback null, +ve if SUCCESS
-        throw "Server start error.";        
-    }
+    hr = CoInitializeEx(NULL,COINIT_MULTITHREADED);                         // Initialize the COM library for this thread. This make Windows load the DLLs
+                                                                            // COINIT_MULTITHREADED needed for callback to work.
+    hr = CLSIDFromProgID(progid, &classid);                                 // Else need a message loop for STA - Single Thread Apartment
+    hr = CoCreateInstance(classid, NULL, CLSCTX_LOCAL_SERVER, __uuidof(IScripRTD), (LPVOID*) &comObjectScripRTD );
+                                                                            // Get COM Object for IScripRTD interface
+    while( FAILED( hr ) ){
+		
+		std::cout << "Unable to connect to application. Waiting \r";
+		std::flush(std::cout);
+		
+		Sleep(1000);
+		hr = CoCreateInstance(classid, NULL, CLSCTX_LOCAL_SERVER, __uuidof(IScripRTD), (LPVOID*) &comObjectScripRTD );
+	}
+	std::cout << "RTD Application Connected \t\t\t\t\t\t\t" << std::endl;
 }
 
-void RTDClient::stopServer(){        
+void RTDClient::startServer(){
+
+	long    server_status = -1;
+
+	CComObject<CallbackImpl>::CreateInstance(&callback);					// Create Callback Object	
+	callback->AddRef();														// Initializes Ref count to 1. Without this 2nd call to ServerStart throws exception
+
+	HRESULT hr  = comObjectScripRTD->ServerStart( callback , &server_status );
+
+	while(  server_status <= 0  ){											// Returns 0 if callback null, +ve if SUCCESS
+
+		std::cout << "Unable to start RTD Server. Waiting \r";
+		std::flush(std::cout);
+		
+		Sleep(1000);
+		hr  = comObjectScripRTD->ServerStart( callback , &server_status );	// Try to connect to RTD server again
+	}
+	std::cout << "RTD Server Started \t\t\t\t\t\t\t" << std::endl;
+}
+
+void RTDClient::stopServer(){
+
+	if( comObjectScripRTD == NULL )
+		return;
+
     HRESULT hr = comObjectScripRTD->ServerTerminate();   
 
     if( FAILED(hr) ){
@@ -134,13 +156,12 @@ void RTDClient::connectTopic(  long topic_id, const std::string &topic_1, const 
     }
 }
 
-void RTDClient::disconnectTopic( long topic_id) {  
-    // TODO check - dont disconnect to avoid 30 scrip error
-    /**
+void RTDClient::disconnectTopic( long topic_id) {
+    
     HRESULT hr = comObjectScripRTD->DisconnectData(topic_id);   
     if( FAILED(hr) ){
         std::cout << "Topic Disconnection Failed - " << topic_id << " - hr - " << hr << std::endl;
-    }**/
+    }
     connected_topics.erase( topic_id );  
 }
 

@@ -47,10 +47,11 @@ private:
     void        processRTDData  ( const std::map<long,CComVariant>* data );
     static void threadEntryDummy( void* _this);                             // Entry Point for Amibroker Feeder thread
     void        amibrokerPoller ();                                             // Fetches Bar data and feeds to Amibroker
-    void        writeCsv        ( const std::vector<ScripBar> & bars  );        // This thread uses members - current , previous, settings
+    void        writeABCsv      ( const std::vector<ScripBar> & bars  );        // This thread uses members - current , previous, settings
+	void		writeArchiveCsv ( const std::vector<ScripBar> & bars  );    // Archive Ticks in seperate csv. Used in backfill
     void        notifyActive    ();
     void        notifyInactive  ();                                         // Ring Bell if RTD Inactive    
-    bool        isMarketTime  ( const std::string &time);                 // Is input time within OpenTime and CloseTime
+    bool        isMarketTime  ( const std::string &time);                   // Is input time within OpenTime and CloseTime
 
     Worker( const Worker& );                                                // Disable copy
     Worker operator=(const Worker& );
@@ -79,8 +80,8 @@ private:
         bool  operator==(const ScripState& right) const ;
 
         friend std::ostream& operator<<(std::ostream& os, const Worker::ScripState& bar){
-            return std::cout << " LTT:" << bar.ltt      << " Open:"  << bar.bar_open << " High:" << bar.bar_high \
-                             << " Low:" << bar.bar_low  << " Close:" << bar.ltp ;
+            return os << " LTT:" << bar.ltt      << " Open:"  << bar.bar_open << " High:" << bar.bar_high \
+                      << " Low:" << bar.bar_low  << " Close:" << bar.ltp ;
         }
         
     };
