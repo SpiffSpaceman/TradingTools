@@ -16,18 +16,24 @@
 */
 
 installHotkeys(){
-	global HKEntryPrice, HKStopPrice, HKTargetPrice
-	
-	Hotkey, IfWinActive, ahk_class AmiBrokerMainFrameClass					// Context sensitive HK - only active if window is active
-	
-	if( HKEntryPrice != "" && HKEntryPrice != "ERROR")
-		Hotkey, %HKEntryPrice%, getEntryPriceFromAB	
+	global HKEntryPrice, HKStopPrice, HKTargetPrice	
+
+	if( HKEntryPrice != "" && HKEntryPrice != "ERROR")		
+		installHotKey( HKEntryPrice, "getEntryPriceFromAB" )
 	
 	if( HKStopPrice != "" && HKStopPrice != "ERROR")
-		Hotkey, %HKStopPrice%, getStopPriceFromAB	
+		installHotKey( HKStopPrice, "getStopPriceFromAB" )		
 	
 	if( HKTargetPrice != "" && HKTargetPrice != "ERROR")
-		Hotkey, %HKTargetPrice%, getTargetPriceFromAB
+		installHotKey( HKTargetPrice, "getTargetPriceFromAB" )
+}
+
+installHotKey( key, function ){
+	Hotkey, IfWinActive, ahk_class AmiBrokerMainFrameClass					// Context sensitive HK - only active if AB/OM is active
+	Hotkey, %key%, %function%
+			
+	Hotkey, IfWinActive, OrderMan
+	Hotkey, %key%, %function%
 }
 
 getEntryPriceFromAB(){

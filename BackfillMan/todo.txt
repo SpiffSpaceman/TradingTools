@@ -1,52 +1,41 @@
 
 Data loading check
-	Move to ABBackfill + Return code - esp for Datatable 
+	Move to ABBackfill + Return code - esp for Datatable - very slow
 	verify scrip name ** // Data corruption
-	
-Better Volume, Price Merge
-	Export data from RTDMan
-	Merge data in ABBackfill
-	Merge Price, Volume
-	Pre open backfill ? Volume? 
-
-
-
-	
-
-
-Archive Intrday data - EOD backfill
 Datatable
-	- Get Date Time column position instead of assuming 2	
-Better Error Handling			
-	Make list of Failed Scrips and prompt to retry with both VWAP / DT
-	GUI 
-		- option to cancel/skip Scrip
-		- option to run manually for selected scrips, even EOD
-		- button for intraday / 15 day intraday / Bhavcopy 1 day or archive + scrips/scrips groups selection
-		- Integrated GUI with RTDMan - choose active intraday stocks
-		
+	- Get Date Time column position instead of assuming 2
 
-		
 
+
+
+
+BhavCopy Download + filter scrips
+	Also option to use existing data
+	Schedule
 Google Backfill
 	Allow using as primary / backup 
 	AHK - UrlDownloadToFile
 	http://www.google.com/finance/historical?q=AAPL&startdate=Nov 1, 2011&enddate=Nov 30, 2011&output=csv
 	http://www.google.com/finance/historical?q=NASDAQ%3AMSFT&startdate=Jan+1%2C+2012&enddate=Sep+1%2C+2013&output=csv
 	http://www.google.com/finance/historical?output=csv&q=[Symbol name]		
-BhavCopy Download + filter scrips
-	Also option to use existing data
-	Option for some scrips to have say 15 days intraday data - get intraday data from archive / google
-		1st backfill with daily + tick mode 1. Then backfill intraday data with tickmode 1
-Datatable intrdaday MultiDay Backfill + Filter out outside market time quotes 
+Datatable intraday MultiDay Backfill + Filter out outside market time quotes 
 	Allow Input Date Range for DataTable - or just backfill all using tickmode 1
 	Can use to fill missing archive data
+Maintain 15Day intraday Data
+	Option for some scrips to have say 15 days intraday data - get intraday data from archive / google
+	1st backfill with daily + tick mode 1. Then backfill intraday data with tickmode 1
 
 
 
-
-Scrip Manager
-	Manage active/inactive intraday/Daily Scrips across RTDMan/Backfillman and accross NOW/google/Bhavcopy
+Better Error Handling			
+	Make list of Failed Scrips and prompt to retry with both VWAP / DT
+GUI 
+	- option to cancel/skip Scrip
+	- option to run manually for selected scrips, even EOD
+	- button for intraday / 15 day intraday / Bhavcopy 1 day or archive + scrips/scrips groups selection
+	- Integrated GUI with RTDMan - choose active intraday stocks
+	- Scrip Manager
+		Manage active/inactive intraday/Daily Scrips across RTDMan/Backfillman and accross NOW/google/Bhavcopy
 
 
 DT - Shift-D also causes separate d keystroke. So if Marketwatch has a scrip starting with D, it gets selected

@@ -34,7 +34,3 @@ AHK/
 *.exe
 *.ico
 
-# External Header - License unclear
-BackfillMan/Lib/__ExternalHeaderLib.ahk
-OrderMan/Lib/__ExternalHeaderLib.ahk
-

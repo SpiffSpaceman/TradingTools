@@ -1,24 +1,90 @@
-Fixed
-    Target order creation with price 0
-
+    
 Fixed check
-    SL movement beyond Entry changes Direction on AB pick
     Bug Target order cancelled on SL update
         targetPrice not passed by update because target not changed
         but _handleTargetOrder() thinks target is empty and cancels it
-    Set default qty on unlink
-    
-    Cancel open Add order on Stop/Target hit
-    
- 
+    Cancel open Add order on Stop/Target hit    - Didnt cancel on Stop hit - No target order
     
 
 
+
+
+
+Multiple Scrips - DropDown / Right Click
+    1 ini per scrip or 1 ini section per scrip
 Add Order Stop
     - Option to keep seperate
     - Merge when Normal stop moves past add stop
 
 
+
+Reset default ordertype after unlink/cancel
+Max Slippage in GUI
+Nest 
+    - Check how many strings are different
+    - Move all strings to include file. Separate include file for Nest and NOW
+    - Control changes?
+    - Test NOW latest version
+
+Take current price from RTDMan and show price, status
+    after adding export prices in RTDMan
+    check current price and warn if posible bad order based on ordertype
+    Example - Limit Buy above price   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-----------------------------------------------------------------------------------------
 Partial Target
     Move to Target Order to seperate class? Maybe also for Entry and Stop
     Current target Order + List of Target executed orders
@@ -29,6 +95,7 @@ Partial Target
     OCO - trackerCallback - on target execution
         - reduce position size
         - update stop size using new position size, cancel only if size 0
+Partial Square Off
 Bugs
     - Manual Link - Order type not updated    
     - Entry Average price not updated   // Maybe remove anyway
@@ -38,56 +105,6 @@ Bugs
         NOW
         ---------------------------
         Please Select Order To Cancel
-
-
-Partial Square Off
-Multiple Scrips - DropDown / Right Click
-    1 ini per scrip or 1 ini section per scrip
-
-
-
-
-
-
-
-
-    
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 -----------------------------------------------------------------------------------------
 Position Status - Current Risk based on Stop price / avg price
 Callback
@@ -119,9 +136,6 @@ Linked Order Details
     - Expand Window after search
     - refresh button?
     - Add pending stop details to linked order
-Take current price from RTDMan and show price, status 
-    after adding export prices in RTDMan
-    check current price and warn if posible bad order based on ordertype
 -----------------------------------------------------------------------------------------
 
 
@@ -154,9 +168,6 @@ Link Orders
 	- how to check Trading symbol against actual scrip - maybe take TradingSymbol as input in ini and use in other places too
 	- Can use as filter in read orders - so will get applied to most functions
 -----------------------------------------------------------------------------------------
-Nest 
-    - Check how many strings are different
-    - Move all strings to include file. Separate include file for Nest and NOW
 Multiple scrips, Multiple Orders 
     - One Order at a time
     - Keep array of orders and current context

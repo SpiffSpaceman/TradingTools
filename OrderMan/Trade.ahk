@@ -134,14 +134,17 @@ class TradeClass{
 			this.save()
 		}	
 
-		if( this.stopOrder.isComplete() && this.targetOrder.isOpen() ){			// OCO Stop, Target Order
-			this.targetOrder.cancel()											// If position closed, then cancel Add order if open			
+		if( this.stopOrder.isComplete() || this.targetOrder.isComplete()  ){	// If position closed, then cancel Add order if open
 			this.newEntryOrder.cancel()
+		}
+
+		if( this.stopOrder.isComplete() && this.targetOrder.isOpen() ){			// OCO Stop, Target Order
+			this.targetOrder.cancel()
 		}
 		else if( this.targetOrder.isComplete() && this.stopOrder.isOpen() ){
 			this.stopOrder.cancel()
-			this.newEntryOrder.cancel()
-		}			
+		}
+		
 		
 		if( this.stopOrder.isClosed() ){										// Unlink After close
 			MsgBox, 262144,, Trade Closed - Verify
