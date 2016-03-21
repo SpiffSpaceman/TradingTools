@@ -121,6 +121,7 @@ del *.bat</Command>
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\ninja_trader.h" />
     <ClInclude Include="include\util.h" />
     <ClInclude Include="include\rtd_callback.h" />
     <ClInclude Include="include\rtd_client.h" />
@@ -138,6 +139,7 @@ del *.bat</Command>
   <ItemGroup>
     <ClCompile Include="source\amibroker.cpp" />
     <ClCompile Include="source\main.cpp" />
+    <ClCompile Include="source\ninja_trader.cpp" />
     <ClCompile Include="source\util.cpp" />
     <ClCompile Include="source\rtd_callback.cpp" />
     <ClCompile Include="source\rtd_client.cpp" />

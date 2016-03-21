@@ -42,6 +42,9 @@
     <ClInclude Include="include\util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\ninja_trader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="include\NestTrader.IDL">
@@ -71,6 +74,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\amibroker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\ninja_trader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

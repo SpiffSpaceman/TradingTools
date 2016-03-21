@@ -8,6 +8,7 @@ class Settings{
 
 public:
     void loadSettings();
+	bool isTargetNT();													  // Is target Client NinjaTrader
 
     std::string rtd_server_prog_id;
     int         bar_period;                                               // In milliseconds    
@@ -15,11 +16,12 @@ public:
 	std::string csv_folder_path;										  // Folder in which we will save csv for AB and archived csv
     std::string csv_path;                                                 // path for csv file to be sent to Amibroker - Use ram drive
 	bool        is_archive;												  // If true, also save quotes in separate csv for each scrip
+	std::string target_client;											  // Push to AB / NT	
     std::string ab_db_path;
 
     std::string  open_time;
-    std::string  close_time; 
-        
+    std::string  close_time;
+
     struct Scrip {
         std::string topic_name;                                           // Scrip Name = Topic 1
         std::string ticker;                                               // Ticker Alias sent to Amibroker                        

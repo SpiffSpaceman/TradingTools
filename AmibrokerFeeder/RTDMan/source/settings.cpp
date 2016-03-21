@@ -19,7 +19,8 @@ void Settings::loadSettings(){
     ab_db_path            = getINIString("AbDbPath");
 
     open_time             = getINIString("OpenTime");     
-    close_time            = getINIString("CloseTime");         	   
+    close_time            = getINIString("CloseTime");
+	target_client		  = getINIString("Client");
 
     no_of_scrips          = 0 ;    
 
@@ -78,4 +79,6 @@ void Settings::loadSettings(){
     } 
 }
 
-
+bool Settings::isTargetNT(){
+	return target_client == "NT";
+}

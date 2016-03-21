@@ -3,6 +3,7 @@
 
 #include "rtd_client.h"
 #include "amibroker.h"
+#include "ninja_trader.h"
 #include "settings.h"
 
 #include <string>
@@ -27,7 +28,8 @@ private:
 
     RTDClient                           *rtd_client;
     Amibroker                           *amibroker;
-    Settings                             settings;    
+	NinjaTrader							*ninja_trader;
+    Settings                             settings;
 
     std::map< long, std::pair<int,int>>  topic_id_to_scrip_field_map;       // topic_id  :  scripd_id,field_id
     ScripState                          *current, *previous;                // Maintains Current and last state of each Scrip
@@ -49,6 +51,7 @@ private:
     void        amibrokerPoller ();                                             // Fetches Bar data and feeds to Amibroker
     void        writeABCsv      ( const std::vector<ScripBar> & bars  );        // This thread uses members - current , previous, settings
 	void		writeArchiveCsv ( const std::vector<ScripBar> & bars  );    // Archive Ticks in seperate csv. Used in backfill
+	void		pushToNT( const std::vector<ScripBar> & bars  );			// Push ticks to Ninjatrader
     void        notifyActive    ();
     void        notifyInactive  ();                                         // Ring Bell if RTD Inactive    
     bool        isMarketTime  ( const std::string &time);                   // Is input time within OpenTime and CloseTime

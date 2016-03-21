@@ -1,12 +1,3 @@
-    
-Fixed check
-    Bug Target order cancelled on SL update
-        targetPrice not passed by update because target not changed
-        but _handleTargetOrder() thinks target is empty and cancels it
-    Cancel open Add order on Stop/Target hit    - Didnt cancel on Stop hit - No target order
-    
-
-
 
 
 

@@ -18,7 +18,6 @@
 
 #include "worker.h"
 #include "util.h"
-#include "amibroker.h"
 
 #include <windows.h> 
 #include <process.h>
@@ -33,7 +32,9 @@
  */
 Worker::Worker():
     is_rtd_started(false),
-    rtd_inactive_count(0)
+    rtd_inactive_count(0),
+	amibroker(0),
+	ninja_trader(0)
 {
                                                                            // _T()  - character set Neutral
     Event_RTD_Update = CreateEvent( NULL, false, FALSE, _T("RTD_UPDATE") );// Manual Reset = false - Event resets to nonsignaled on 1 wait release
@@ -207,7 +208,13 @@ void Worker::threadEntryDummy(void* _this){
 void Worker::amibrokerPoller(){
 
     std::vector<ScripBar>  new_bars;
-    amibroker = new Amibroker( settings.ab_db_path, settings.csv_path, std::string("rtd.format") );
+
+	if( settings.isTargetNT()){
+		ninja_trader = new NinjaTrader();
+	}
+	else{
+		amibroker = new Amibroker( settings.ab_db_path, settings.csv_path, std::string("rtd.format") );
+	}
                                                                            // amibroker constructor has to be called in new thread 
     while(1){    
         // Use events and timers instead of sleep which would be blocking 
@@ -217,8 +224,12 @@ void Worker::amibrokerPoller(){
         DWORD    return_code = WaitForMultipleObjects( 2, events , false, INFINITE );                
                                                                             
         if( return_code == WAIT_OBJECT_0 ){                                // Quit Event
-            delete amibroker; amibroker = 0;
-            SetEvent(Event_Stopped) ;
+            if(amibroker)
+				delete amibroker; amibroker = 0;
+			if(ninja_trader)
+				delete ninja_trader; ninja_trader = 0;
+
+			SetEvent(Event_Stopped);
             std::cout << "AB Feeder Thread Stopped" << std::endl;
             return;
         }
@@ -287,8 +298,14 @@ void Worker::amibrokerPoller(){
             notifyInactive();
         }
         else{                                                             // (C) Write to csv and Send to Amibroker
-            writeABCsv( new_bars );
-            amibroker->import();
+			if( settings.isTargetNT()){	
+				pushToNT( new_bars );
+			}
+			else{
+				writeABCsv( new_bars );
+				amibroker->import();
+			}
+
 			if( settings.is_archive )
 				writeArchiveCsv( new_bars );							  // Archive ticks to be used for backfill
         }
@@ -358,6 +375,28 @@ void Worker::writeABCsv( const std::vector<ScripBar> & bars ){
     }
 
     csv_file_out.close();
+}
+
+/*
+	Send OHLC to NinjaTrader
+	Workaround - Send OHLC as ticks with 1/4 volume
+*/
+void Worker::pushToNT( const std::vector<ScripBar> & bars  ){
+	
+	int		volume = 0 ;
+	size_t  size   = bars.size();
+    const ScripBar *bar;
+
+    for( size_t i=0 ; i<size ; i++ ){
+        
+		bar    = &bars[i];
+		volume = (int)bar->volume/4;	// int should be atleast 4Bytes
+
+		ninja_trader->Last( bar->ticker, bar->bar_open,  volume );
+		ninja_trader->Last( bar->ticker, bar->bar_high,  volume );
+		ninja_trader->Last( bar->ticker, bar->bar_low,   volume );
+		ninja_trader->Last( bar->ticker, bar->bar_close, volume );
+	}
 }
 
 void Worker::writeArchiveCsv( const std::vector<ScripBar> & bars  ){
