@@ -411,6 +411,7 @@ class TradeClass{
 		this.save()
 		
 		setDefaultQty()															// Reset Qty in GUI to Default Size
+		setDefaultEntryOrderType()												// Reset to default order type
 	}
 	
 	/* Reload order details from orderbook

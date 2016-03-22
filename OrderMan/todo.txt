@@ -1,26 +1,23 @@
 
+test
+    Reset default ordertype after unlink/cancel
 
 
-Multiple Scrips - DropDown / Right Click
-    1 ini per scrip or 1 ini section per scrip
+
+Max Slippage in GUI
 Add Order Stop
     - Option to keep seperate
     - Merge when Normal stop moves past add stop
 
-
-
-Reset default ordertype after unlink/cancel
-Max Slippage in GUI
-Nest 
-    - Check how many strings are different
-    - Move all strings to include file. Separate include file for Nest and NOW
-    - Control changes?
-    - Test NOW latest version
-
 Take current price from RTDMan and show price, status
     after adding export prices in RTDMan
     check current price and warn if posible bad order based on ordertype
-    Example - Limit Buy above price   
+    Example - Limit Buy above price  
+Nest 
+    - Check how many strings are different
+    - inherit class for Nest
+
+
 
 
 
@@ -73,8 +70,53 @@ Take current price from RTDMan and show price, status
 
 
 
-
-
+-----------------------------------------------------------------------------------------
+Position Status - Current Risk based on Stop price / avg price
+Callback
+    Verify Order Creation/Updation - check size/status in callback
+    Ring bell on Order Trigger
+Export Trade Execution Log
+Square Off - Market Stop order for filled position + cancel rest
+Multiple Orders
+    - One Order at a time
+    - Keep array of orders and current context
+    - Switch context on Scrip/Order change
+    - refresh orderbook too on context change + Filter all data for specific scrip - So everything else becomes per scrip
+-----------------------------------------------------------------------------------------
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+-----------------------------------------------------------------------------------------
+Multiple Scrips - DropDown / Right Click
+    1 ini per scrip or 1 ini section per scrip
+Log of Major Events - creation/updation/cancel/OrderTracker triggers
+Bugs
+    - Manual Link - Order type not updated    
+    - Entry Average price not updated   // Maybe remove anyway
+    - Order creation - If not found - try to uncheck and check "Display All Orders" // Once didnt show up untill this
+    - Cancel order - in between - gives error. Detect and check again
+        ---------------------------
+        NOW
+        ---------------------------
+        Please Select Order To Cancel
 -----------------------------------------------------------------------------------------
 Partial Target
     Move to Target Order to seperate class? Maybe also for Entry and Stop
@@ -87,27 +129,7 @@ Partial Target
         - reduce position size
         - update stop size using new position size, cancel only if size 0
 Partial Square Off
-Bugs
-    - Manual Link - Order type not updated    
-    - Entry Average price not updated   // Maybe remove anyway
-    - Order creation - If not found - try to uncheck and check "Display All Orders" // Once didnt show up untill this
-    - Cancel order - in between - gives error. Detect and check again
-        ---------------------------
-        NOW
-        ---------------------------
-        Please Select Order To Cancel
------------------------------------------------------------------------------------------
-Position Status - Current Risk based on Stop price / avg price
-Callback
-    Verify Order Creation/Updation - check size/status in callback
-    Ring bell on Order Trigger
------------------------------------------------------------------------------------------
-Export Trade Execution Log
-Log of Major Events - creation/updation/cancel/OrderTracker triggers
------------------------------------------------------------------------------------------
-Constant Risk position sizing + Allow Risk %
------------------------------------------------------------------------------------------
-Partial Fill - Handle Stop/Target orders 
+Partial Fill - Handle Stop/Target orders       // workaround - use SLM
     - Show filled size for Entry/Stop
     - Maybe Stop order only entered once filled and stop size modified if Entry Size increases
         - But should always have protective stop for limit orders ( and so also for SL-Limit orders once triggered ) 
@@ -128,21 +150,10 @@ Linked Order Details
     - refresh button?
     - Add pending stop details to linked order
 -----------------------------------------------------------------------------------------
-
-
-
-
-
-
-
-
-
------------------------------------------------------------------------------------------
-Square Off - Market Stop order for filled position + cancel rest
+Constant Risk position sizing + Allow Risk %
 Option to change order type for open order
     - SL Order After Trigger - changes to Limit Order - should be editable ( unfilled )
-    - Square Off - Market Stop order only if entry is complete - else cancel    // show cancel if not entered else squareoff    
------------------------------------------------------------------------------------------
+    - Square Off - Market Stop order only if entry is complete - else cancel    // show cancel if not entered else squareoff 
 status bar - message updates + list
 Ring Alarm / Notify at 15:17 if open orders
     Verify Admin position
@@ -159,10 +170,3 @@ Link Orders
 	- how to check Trading symbol against actual scrip - maybe take TradingSymbol as input in ini and use in other places too
 	- Can use as filter in read orders - so will get applied to most functions
 -----------------------------------------------------------------------------------------
-Multiple scrips, Multiple Orders 
-    - One Order at a time
-    - Keep array of orders and current context
-    - Switch context on Scrip/Order change
-    - refresh orderbook too on context change + Filter all data for specific scrip - So everything else becomes per scrip    
-Option for Stop orders - SL-Limit + detect if slipped?
-Pseudo GTC Orders - save orders + option to send all in 1 go + check if already open

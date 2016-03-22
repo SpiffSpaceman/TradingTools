@@ -388,6 +388,10 @@ selectEntryOrderType( inEntryOrderType ){
 	GuiControl, 1:ChooseString, EntryOrderType,  %EntryOrderType%
 }
 
+setDefaultEntryOrderType(){
+	global DefaultEntryOrderType
+	selectEntryOrderType( DefaultEntryOrderType )
+}
 
 // -- GUI Helpers --- 
 

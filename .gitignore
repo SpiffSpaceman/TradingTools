@@ -17,6 +17,8 @@ Debug
 Release
 ipch
 *.sdf
+*.suo
+*.opensdf
 
 #IDL 
 NestTrader_h.h

@@ -1,8 +1,16 @@
 // TODO
     // RTD Callback - Use array and construct bars in AB thread
         // More accurate mins - some data gets shifted now
-        // Immediate update - use events instead of sleep. Manage minute change    
+        // Immediate update - use events instead of sleep. Manage minute change
+		// AB - Send ticks using TICKMODE 1 - No need for OHLC - can send multiple ticks with same Timestamp // Test first
+			// Will need to maintain all ticks of same minute and send them together. And erase array when LTT changes
+        // NT - Pass ticks instead of OHLC
 		// Verify Threads - If AB blocked, ensure RTD thread saves bars in array
+
+	
+	
+		
+    // NT - Bid/Ask
 	// Preopen Volume?
 	// Change month in future / options scrips if cannot connect + detect last thrusday has passed + check current date month + setting to enable
 		// Or just do it in OrderMan GUI

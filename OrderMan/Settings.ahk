@@ -31,7 +31,6 @@ loadSettings(){
     IniRead, HKTargetPrice,   	OrderMan.ini, OrderMan, HKTargetPrice
     IniRead, TickSize,      	OrderMan.ini, OrderMan, TickSize
     IniRead, LastWindowPosition,OrderMan.ini, OrderMan, LastWindowPosition
-    IniRead, EntryOrderType,    OrderMan.ini, OrderMan, EntryOrderType
     IniRead, MaxSlippage,       OrderMan.ini, OrderMan, MaxSlippage
     IniRead, SavedOrders,       OrderMan.ini, OrderMan, SavedOrders    
         
@@ -43,6 +42,9 @@ loadSettings(){
     
     IniRead, DefaultQty, OrderMan.ini, OrderMan, Qty
     Qty :=  DefaultQty
+    
+    IniRead, DefaultEntryOrderType, OrderMan.ini, OrderMan, EntryOrderType
+    EntryOrderType := DefaultEntryOrderType
     
     selectedScrip := new ScripClass
     selectedScrip.setInput( fields[1], fields[2], fields[3], fields[4], fields[5], fields[6] )  
