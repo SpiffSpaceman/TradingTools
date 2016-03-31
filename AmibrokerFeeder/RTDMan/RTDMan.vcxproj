@@ -121,6 +121,7 @@ del *.bat</Command>
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\amibroker.h" />
     <ClInclude Include="include\ninja_trader.h" />
     <ClInclude Include="include\util.h" />
     <ClInclude Include="include\rtd_callback.h" />
@@ -135,6 +136,7 @@ del *.bat</Command>
       <HeaderFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)\include\%(Filename)_h.h</HeaderFileName>
       <InterfaceIdentifierFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)\source\%(Filename)_i.c</InterfaceIdentifierFileName>
     </Midl>
+    <Midl Include="include\Now.IDL" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\amibroker.cpp" />

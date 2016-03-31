@@ -27,9 +27,24 @@ void Settings::loadSettings(){
     std::string scrip_value;
     std::string scrip_key;
 
+/* Removed by Josh1 ----------------------------------------------------------------------------------
     if( bar_period < 1000  ){                                                // check $TICKMODE 1
         throw "Minimum Bar Interval is 1000ms";        
     }
+*/
+	// added by Josh1 ---------------------------------------------------------------------------
+	request_refresh       = getINIInt   ("RequestRefresh");
+	view_raw_data		  = getINIInt  ("ViewRawData");
+	refresh_period		  = getINIInt   ("RefreshPeriod");
+
+    if( !((bar_period == 0  ) || (bar_period == 1000  ) || (bar_period == 60000  )) ) {              // check Barperiod
+        throw "Bar Period should be 0 OR 1000 or 60000 ";        
+    }
+
+	if (refresh_period < 100  )  {														// Added by Josh1
+        throw "Refresh period should not be less than 100 ";        
+    }    
+	// end added by Josh1 ---------------------------------------------------------------------------
     	
     Util::createDirectory( csv_folder_path );								// If folder does not exist, create it    
 	csv_path = csv_folder_path + "abquotes.csv";
@@ -68,10 +83,11 @@ void Settings::loadSettings(){
             scrip_topics.topic_OI        =  split_strings[5];
         } 
         if(split_strings.size() >=7 && !split_strings[6].empty() ){ 
-            scrip_topics.ltp_multiplier  =  std::stoi( split_strings[6] );
+//            scrip_topics.ltp_multiplier  =  std::stoi( split_strings[6] );	//Changed by Josh1 to double
+            scrip_topics.ltp_multiplier  =  std::stod( split_strings[6] );
         }
         else {
-            scrip_topics.ltp_multiplier  =  1;
+            scrip_topics.ltp_multiplier  =  1.00;
         }
 
         scrips_array.push_back(  scrip_topics ) ;

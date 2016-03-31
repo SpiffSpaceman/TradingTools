@@ -57,7 +57,8 @@ Worker::Worker():
     }    
 
     LARGE_INTEGER start_now = {0};                                         // Start Timers immediately    
-    SetWaitableTimer( AB_timer , &start_now, settings.bar_period, NULL, NULL, false );
+//    SetWaitableTimer( AB_timer , &start_now, settings.bar_period, NULL, NULL, false );
+    SetWaitableTimer( AB_timer , &start_now, settings.refresh_period, NULL, NULL, false );	// Bar period changed by Josh1
     
     InitializeCriticalSection( &lock );
 }
@@ -94,11 +95,13 @@ void Worker::stop(){
 }
 
 Worker::ScripState::ScripState() : 
-    ltp(0), vol_today(0), oi(0), bar_high(0), bar_low(std::numeric_limits<double>::infinity()), bar_open(0)    
+    ltp(0), vol_today(0), oi(0), bar_high(0), bar_low(std::numeric_limits<double>::infinity()), bar_open(0),
+		push(0)															// Push flag added by Josh1    
 {}
 
 void Worker::ScripState::reset(){
     ltp = 0; vol_today = 0; oi =0; bar_high = 0; bar_low = std::numeric_limits<double>::infinity(); bar_open = 0; ltt=""; last_bar_ltt="";
+		push = 0;														// Push flag added by Josh1    
 }
 
 bool Worker::ScripState::operator==(const ScripState& right) const{
@@ -107,6 +110,15 @@ bool Worker::ScripState::operator==(const ScripState& right) const{
            (ltt == right.ltt)  && (bar_low   == right.bar_low ); 
 }
 
+//Inserted by Josh1 --------------------------------------------------------------------
+Worker::RTData::RTData() : 
+    ltp(0), vol_today(0), oi(0),volume(0), ltt("")
+{}
+
+void Worker::RTData::reset(){
+    ltp = 0; vol_today = 0; oi =0; volume= 0; ltt.clear() ;
+}
+//end Inserted by Josh1 --------------------------------------------------------------------
 
 /** 
  * Connect Topics
@@ -156,9 +168,14 @@ void Worker::poll(){
  **/
 void Worker::processRTDData( const std::map<long,CComVariant>* data ){
     
-    notifyActive();
+	//inserted by Josh1 ------------------------------------------------------------
+	RTData newdata;												
+	int prev_field    = 999999999;
+	int notified	  = 0;
+	cur_tm			  = Util::getTime("%H"); //
+	//end inserted by Josh1 ------------------------------------------------------------
 
-    for( auto i=data->begin(), end=data->end() ;  i!=end ; ++i  ){
+	for( auto i=data->begin(), end=data->end() ;  i!=end ; ++i  ){
             
         const long   topic_id     = i->first;
         CComVariant  topic_value  = i->second;
@@ -167,6 +184,7 @@ void Worker::processRTDData( const std::map<long,CComVariant>* data ){
         int script_id   =  ids.first;                                      // Resolve Topic id to Scrip id and field
         int field_id    =  ids.second;
 
+/********* Following code replaced by Josh1 with his code for two arrays current and previous ************************************************
         EnterCriticalSection( &lock );                                     // Lock when accessing current[] / previous[]
 
         switch( field_id ){                        
@@ -194,6 +212,136 @@ void Worker::processRTDData( const std::map<long,CComVariant>* data ){
         }
 
         LeaveCriticalSection( &lock ) ;
+/********* End code replaced by Josh1 with his code for two arrays current and previous ************************************************/
+//		Changes made by Josh1  ****************************************************************************
+        ScripState *_current = & current[script_id];
+        ScripState *_previous = & previous[script_id];
+
+		switch( field_id ){                        
+            case VOLUME_TODAY :{  
+                long long vol_today          = Util::getLong  ( topic_value );
+               newdata.vol_today = vol_today;
+			   break ;
+            }
+            case LTT  : {
+				newdata.ltt  = Util::getString( topic_value );  
+/* --------------  Append milliseconds to LTT ------- Inserted by Josh1 ------------------
+				SYSTEMTIME lt;
+			    GetLocalTime(&lt); 
+				std::stringstream stream;
+				stream <<lt.wMilliseconds/10;
+				std::string wM;
+				wM  = stream.str();	
+				newdata.ltt.append(":");
+				newdata.ltt.append(wM);
+/*-------------------------------------------------------------------------------------------*/
+				break ;
+			}
+
+            case OI   :  newdata.oi   = Util::getLong  ( topic_value ); break ;
+
+			case LTP :{													// This is last field received from RTD Server (Enum = 3)
+				std::string  str ;
+				str      = Util::getString( topic_value );
+				if (str.length() < 1) {									//empty LTP sent by server in the morning in some cases
+						newdata.reset();								//crashes RTDMan....  so skip  
+						continue;
+				}
+				else {
+					newdata.ltp  = Util::getDouble( topic_value );
+				}
+
+				if (settings.view_raw_data == 1){
+					std::cout <<"\n"<< script_id << " - ";
+//					std::cout << settings.scrips_array[script_id].topic_name << " ";
+					std::cout << "LTT - " << newdata.ltt << " ";
+					std::cout << "str - " << str << " ";
+					std::cout << "Volume - " << newdata.vol_today << " ";
+					std::cout << "OI - " <<newdata.oi << " ";
+				}
+
+				std::string bar_ltt = newdata.ltt.substr(0,2);			//get time hour from newdata.ltt
+					if(cur_tm == "09" && bar_ltt == "15"){				// Compare with current hour. If yesterdays's tick in the morning,
+						newdata.reset();								//skip
+						continue;
+					}
+
+				newdata.ltp = newdata.ltp * settings.scrips_array[script_id].ltp_multiplier ;
+
+				if(newdata.ltt.length() < 5 ) newdata.ltt =  Util::getTime("%H:%M:%S"); 	//This is for Index which have no LTT field;
+
+	            if( !isMarketTime( newdata.ltt  )){						
+					newdata.reset();								//skip quotes outside market hours
+		            continue;
+			    }
+																			//Convert time from "%H:%M:%S" to "HHmmss" format
+				newdata.ltt.erase(2,1);								// Remove colons in the time string
+																		// If Bar Period is 60000 then "HHmm" format, 
+																		//remove all characters after 4th
+				settings.bar_period == 60000 ? newdata.ltt.erase(4) : newdata.ltt.erase(4,1);	// Remove Colon and Seconds from time string
+
+				if(newdata.vol_today !=0 && newdata.vol_today == _current->vol_today){
+					newdata.reset();								//skip if there is no change in volume means no trade
+					continue;
+				}
+ 				break ;    
+            }
+		}	
+
+/********************************************************************************************************************
+		Data from RTD server comes in pairs of Topic_id and field_id. We have topic _id as row numbers of scrips 
+		from settings.ini. Whereas field_ids are columns. We have enumerated these field_id in worker.h as  
+		LTT=0, VOLUME_TODAY=1, OI=2,LTP=3. Fortunately RTD Server sends data of each topic_id together and also in                                                           
+		order of their ENUM. Hence data pairs come sequentially in the order LTT=0, VOLUME_TODAY=1, OI=2,LTP=3
+		Index does not have any field other than LTP. Equity will not have OI. However every scrip will have LTP.
+		Therefore LTP is kept last at no.3 
+		Once LTP is received, bar for that scrip is completed and it can be written to current bar.
+*********************************************************************************************************************/
+
+		if (field_id == LTP) {
+
+			notifyActive();
+
+			EnterCriticalSection( &lock );                                     // Lock when accessing current[] / previous[]
+
+			if (newdata.ltt != current[script_id].ltt) {			// For startup or subsequent period, ltt != previous ltt
+				if (_current->push == 1) {
+					*_previous = *_current;							
+				}
+				else{
+					previous[script_id].ltt = current[script_id].ltt;
+					previous[script_id].vol_today = _current->vol_today;
+				}
+				_current->vol_today = newdata.vol_today;
+				if( newdata.vol_today !=0  &&  previous[script_id].vol_today == 0  ){
+                    previous[script_id].vol_today = newdata.vol_today;             // On startup prev vol is 0, Set it so that we can get first bar volume
+                }
+                _current->bar_high = _current->bar_low  = _current->bar_open = _current->ltp = newdata.ltp;
+				_current->ltt = newdata.ltt;
+				_current->oi = newdata.oi;
+				_current->volume = newdata.vol_today - previous[script_id].vol_today;
+//				_current->volume = newdata.vol_today;		//Changed by Josh1
+
+				_current->push = 1;
+				newdata.reset();
+			}
+			else {
+                _current->ltp = newdata.ltp;
+				_current->vol_today = newdata.vol_today;     //removed by Josh1 25-3-16
+				_current->oi = newdata.oi;
+				if( _current->bar_high < _current->ltp )    _current->bar_high = _current->ltp;
+                if( _current->bar_low  > _current->ltp )    _current->bar_low  = _current->ltp;
+				_current->volume = _current->vol_today - previous[script_id].vol_today; //removed by Josh1 25-3-16
+//				_current->volume = _current->volume + newdata.vol_today;
+				_current->push = 1;
+				newdata.reset();
+			}
+		LeaveCriticalSection( &lock ) ;
+
+		}
+		prev_field = field_id;										//Set previous field id
+	
+//****** End Changes made by Josh1 **********************************************************************
     }    
 }
 
@@ -238,6 +386,7 @@ void Worker::amibrokerPoller(){
             throw( msg.str() );                
         }        
 
+/********* Following code replaced by Josh1 with his code for two arrays current and previous ************************************************
     // Shared data access start
         EnterCriticalSection( &lock );             
 
@@ -310,6 +459,90 @@ void Worker::amibrokerPoller(){
 				writeArchiveCsv( new_bars );							  // Archive ticks to be used for backfill
         }
         new_bars.clear();
+/********* End code replaced by Josh1 with his code for two arrays current and previous ************************************************/
+//		Changes made by Josh1  ****************************************************************************
+
+		csv_file_out.open( settings.csv_path  );                               // Setup output stream to csv file
+		if( !csv_file_out.is_open() ){                                         // Reopening will also clear old content by default
+			throw( "Error opening file - " + settings.csv_path );        
+		}
+
+		int records =0;
+	
+        for( int i=0 ; i<settings.no_of_scrips ; i++  ){                   // (B) Setup Bar data for each updated scrip using current and previous
+
+			ScripState *_current  =  &current[i];
+            ScripState *_prev     =  &previous[i];
+			std::string Scripname = settings.scrips_array[i].ticker;
+
+		    // Shared data access start
+			EnterCriticalSection( &lock );						    // Shared data access start
+
+			if (_prev->push == 1) {
+					if( settings.isTargetNT()){	
+						int		volume = 0 ;
+						volume = (int)_prev->volume/4;	// int should be atleast 4Bytes
+
+						ninja_trader->Last( Scripname, _prev->bar_open,  volume );
+						ninja_trader->Last( Scripname, _prev->bar_high,  volume );
+						ninja_trader->Last( Scripname, _prev->bar_low,   volume );
+						ninja_trader->Last( Scripname, _prev->ltp, volume );
+					}
+					else{
+						csv_file_out <<  Scripname    << ','		// $FORMAT Ticker, Date_YMD, Time, Open, High, 
+			            << today_date							<< ','		// Low, Close, Volume, OpenInt
+				        << _prev->ltt						<< ',' 
+					    << _prev->bar_open					<< ',' 
+						<< _prev->bar_high					<< ',' 
+						<< _prev->bar_low					<< ',' 
+						<< _prev->ltp						<< ','		// ltp is close
+						<< _prev->volume					<< ',' 
+						<< _prev->oi         
+						<< std::endl ;
+					}
+					_prev->push = 0;
+					records++;
+			}
+
+			if (_current->push == 1) {
+					if( settings.isTargetNT()){	
+						int		volume = 0 ;
+						volume = (int)_current->volume/4;	// int should be atleast 4Bytes
+
+						ninja_trader->Last( Scripname, _current->bar_open,  volume );
+						ninja_trader->Last( Scripname, _current->bar_high,  volume );
+						ninja_trader->Last( Scripname, _current->bar_low,   volume );
+						ninja_trader->Last( Scripname, _current->ltp, volume );
+					}
+					else{
+						csv_file_out << Scripname     << ','		// $FORMAT Ticker, Date_YMD, Time, Open, High, 
+				        << today_date							<< ','		// Low, Close, Volume, OpenInt
+	                    << _current->ltt						<< ',' 
+						<< _current->bar_open					<< ',' 
+						<< _current->bar_high					<< ',' 
+						<< _current->bar_low					<< ',' 
+						<< _current->ltp						<< ','		// ltp is close
+						<< _current->volume					<< ',' 
+						<< _current->oi         
+						<< std::endl ;
+					}
+						_current->push = 0;
+						records++;
+			}
+
+		LeaveCriticalSection( &lock );    // Shared data access end
+
+		}
+
+		csv_file_out.close();
+		if(records == 0){
+            notifyInactive();
+		}
+        amibroker->import();    
+		if(settings.request_refresh == 1){				// AmiBroker version 5.3 and below do not refresh automatically after import
+			amibroker->refreshAll();
+		}
+
     }
 }
  

@@ -25,6 +25,7 @@ public:
 
 private:
     struct ScripBar; struct ScripState;                                     // Forward Declare
+	struct RTData;															// Forward Declare by Josh1 
 
     RTDClient                           *rtd_client;
     Amibroker                           *amibroker;
@@ -35,7 +36,14 @@ private:
     ScripState                          *current, *previous;                // Maintains Current and last state of each Scrip
     std::string                          today_date;                            // (in same order as Settings::Scrip::topic_name)
     std::ofstream                        csv_file_out;    
-            
+
+	// Inserted by Josh1 ------------------------------------------------------------------------------
+	std::string							 cur_tm;							// to store current time
+	int									 prev_field;						// to keep track of previous field id
+	std::string							 bar_ltt;							// Inserted by Josh1 - Purpose ?????
+	int									 records;							// to keep track of records received from RTD feed
+	// End Inserted by Josh1 ------------------------------------------------------------------------------
+
     CRITICAL_SECTION                     lock;                              // Thread Data sync    
     HANDLE                               Event_RTD_Update;                  // Signaled by RTD Callback
     HANDLE                               AB_timer;                          // Timer for AB poller    
@@ -59,12 +67,13 @@ private:
     Worker( const Worker& );                                                // Disable copy
     Worker operator=(const Worker& );
     
-    // Used to create and resolve Topic ids
+    // Used to create and resolve Topic ids ---------  order changed by Josh1 ------------- 
     enum SCRIP_FIELDS{                                                      // -- Topic 2 --        
-        LTP=0,                                                              // "LTP"
         LTT=1,                                                              // "LTT"        
         VOLUME_TODAY=2,                                                     // "Volume Traded Today"
-        OI=3,                                                               // "Open Interest"        
+        OI=0,                                                               // "Open Interest"        
+        LTP=3,                                                              // This topic should be last since
+																			// Index has only "LTP"
         FIELD_COUNT=4                                                       // No of Fields used
     };
     struct ScripState {
@@ -73,7 +82,11 @@ private:
         std::string  last_bar_ltt;                                          // last_bar_ltt will be always set with last sent bar's ltt
         long long    vol_today;
         long long    oi;
-                
+		
+		//Inserted by Josh1 -----------------------------------------------------------------------------------
+		long long    volume;												
+		short		 push;													//Flag for data pushed to AB
+        //End Inserted by Josh1 -------------------------------------------------------------------------------
         double       bar_high;
         double       bar_low;
         double       bar_open;        
@@ -99,8 +112,19 @@ private:
         long long    volume;
         long long    oi;
     };
+
+	//RTData Inserted by Josh1
+    struct RTData {   
+        double       ltp;                                                    
+        std::string  ltt;                                                   // ltt can be empty for index scrips
+        long long    vol_today;												//to use as volume or LTQ now
+        long long    oi;
+		long long    volume;												//Inserted by Josh1
+
+		RTData();
+		void  reset();
+    };
+
 };
-
-
 
 #endif

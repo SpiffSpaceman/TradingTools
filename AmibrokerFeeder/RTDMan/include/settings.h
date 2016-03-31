@@ -11,7 +11,7 @@ public:
 	bool isTargetNT();													  // Is target Client NinjaTrader
 
     std::string rtd_server_prog_id;
-    int         bar_period;                                               // In milliseconds    
+    int         bar_period;                                      // In milliseconds --  Used by Josh1 for candle forming   
     int         bell_wait_time;                                           // No of bar_periods
 	std::string csv_folder_path;										  // Folder in which we will save csv for AB and archived csv
     std::string csv_path;                                                 // path for csv file to be sent to Amibroker - Use ram drive
@@ -22,6 +22,12 @@ public:
     std::string  open_time;
     std::string  close_time;
 
+// Inserted by Josh1 ------------------------------------------------------------------------------------------
+	int         refresh_period;                                              
+	int			request_refresh;											// for AmiBroker version 5.3 and below Inserted by Josh1
+	int			view_raw_data;												// flag to view raw data
+//-----------------------------------------------------------------------------------------------------------------
+
     struct Scrip {
         std::string topic_name;                                           // Scrip Name = Topic 1
         std::string ticker;                                               // Ticker Alias sent to Amibroker                        
@@ -29,7 +35,8 @@ public:
         std::string topic_LTT;                        
         std::string topic_vol_today;
         std::string topic_OI; 
-        int         ltp_multiplier;                                       // Multiple LTP with this- Default 1
+//        int         ltp_multiplier;                                       // Multiple LTP with this- Default 1
+        double         ltp_multiplier;                                    // Changed by Josh1
     };
 
     std::vector<Scrip> scrips_array;                                      // RTD Topics for each scrip
