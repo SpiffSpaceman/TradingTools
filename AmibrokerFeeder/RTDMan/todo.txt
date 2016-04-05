@@ -1,23 +1,26 @@
 // TODO
     // RTD Callback - Use array and construct bars in AB thread
+		// tick completes after Worker::poll() processes all fields
         // More accurate mins - some data gets shifted now
         // Immediate update - use events instead of sleep. Manage minute change
 		// AB - Send ticks using TICKMODE 1 - No need for OHLC - can send multiple ticks with same Timestamp // Test first
-			// Will need to maintain all ticks of same minute and send them together. And erase array when LTT changes
+			// Will need to maintain all ticks of same second and send them together. And erase array when LTT changes
+			// Map of scrip + struct( LTT, Tick array)
+			// tick export - no duplicates - Maybe have flag for each tick in array
         // NT - Pass ticks instead of OHLC
+			// Send ticks if Price/Volume changed or if B/A changed
 		// Verify Threads - If AB blocked, ensure RTD thread saves bars in array
 
-	
-	
 		
-    // NT - Bid/Ask
-	// Preopen Volume?
+	// Bug - Sometimes Open = yesterday close is still sent at 09:15 - becomes part of 1st second bar's open
+	// Bug - Negative Volume ? 
+            // Atleast set volume to 0. Currently check for ==0 but not <0
+            // Maybe Current Volume not set - Not passed by RTD? 
+
 	// Change month in future / options scrips if cannot connect + detect last thrusday has passed + check current date month + setting to enable
 		// Or just do it in OrderMan GUI
     // Bell - Change wav + in project 
-    // Bug - Negative Volume ? 
-            // Atleast set volume to 0. Currently check for ==0 but not <0
-            // Maybe Current Volume not set - Not passed by RTD? 
+    
     // Check direct call using quotations api - No need for csv, ram drive
 
 

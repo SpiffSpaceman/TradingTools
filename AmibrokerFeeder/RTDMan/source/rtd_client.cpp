@@ -26,7 +26,12 @@
 #include <iostream>
 
 
-RTDClient::RTDClient() : is_NOW(false), comObjectScripRTD(NULL), callback(NULL) {
+RTDClient::RTDClient( const std::string &in_server_prog_id ) : 
+	server_prog_id( in_server_prog_id ),
+	comObjectScripRTD(NULL), 
+	callback(NULL)
+{
+	is_NOW  =  Util::isStringEqualIC( server_prog_id, "NOW.ScripRTD" ) ;
 }
 
 /**
@@ -63,9 +68,7 @@ RTDClient::~RTDClient(){
  * Setup Com objects
  * Use comObjectScripRTD->QueryInterface( IID , LPVOID*  ) to get another interface of same classid    if needed
 **/
-void RTDClient::initializeServer( const std::string &server_prog_id  ){
-
-	is_NOW  =  Util::isStringEqualIC( server_prog_id, "NOW.ScripRTD" ) ;
+void RTDClient::initializeServer(){
 
 	USES_CONVERSION;
     LPOLESTR   progid  =  A2OLE( server_prog_id.c_str() );
@@ -85,7 +88,6 @@ void RTDClient::initializeServer( const std::string &server_prog_id  ){
 		Sleep(1000);
 		hr = CoCreateInstance(classid, NULL, CLSCTX_LOCAL_SERVER, __uuidof(IScripRTD), (LPVOID*) &comObjectScripRTD );
 	}
-	std::cout << "RTD Application Connected \t\t\t\t\t\t\t" << std::endl;
 }
 
 void RTDClient::startServer(){
@@ -99,10 +101,11 @@ void RTDClient::startServer(){
 
 	while(  server_status <= 0  ){											// Returns 0 if callback null, +ve if SUCCESS
 
-		std::cout << "Unable to start RTD Server. Waiting \r";
+		std::cout << "Unable to start RTD Server. Waiting \t\t\t\r";
 		std::flush(std::cout);
 		
 		Sleep(1000);
+		initializeServer();													// Connect to Application again - NOW may have been killed before RTD Server startup
 		hr  = comObjectScripRTD->ServerStart( callback , &server_status );	// Try to connect to RTD server again
 	}
 	std::cout << "RTD Server Started \t\t\t\t\t\t\t" << std::endl;

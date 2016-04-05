@@ -11,6 +11,7 @@ Datatable
 
 BhavCopy Download + filter scrips
 	Also option to use existing data
+	+ Nifty PE 
 	Schedule
 Google Backfill
 	Allow using as primary / backup 

@@ -155,8 +155,7 @@ bool Reader::parseDataTableToCsv( ){
     return true;
 }
  
-// Common stuff to be done for each row. 
-// If returns false, contineu
+// Common stuff to be done for each row
 void  Reader::postParse( const std::string &ticker, const std::string &date, const std::string &time,  const std::string &open,
                          const std::string &high,   const std::string &low,  const std::string &close,       std::string &volume ){
                                  

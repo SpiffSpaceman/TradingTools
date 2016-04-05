@@ -134,12 +134,12 @@ std::string Util::addMinute( const std::string &time ){
 	long long MM = std::stoi( split[1] );
 
 	if( MM == 59 ){
-		HH++;		
-		return std::to_string(HH) + ":00:" + split[2] ;
-	}
+		HH++;
+		return (HH<10 ? "0" + std::to_string(HH) : std::to_string(HH))  +  ":00:"   + split[2] ;
+	}														    // Hour should have leading 0 for single digit numbers
 	else{
 		MM++;
-		return std::to_string(HH) + ":" + std::to_string(MM) + ":" + split[2] ;
+		return (HH<10 ? "0" + std::to_string(HH) : std::to_string(HH)) + ":" + std::to_string(MM) + ":" + split[2] ;
 	}
 }
 

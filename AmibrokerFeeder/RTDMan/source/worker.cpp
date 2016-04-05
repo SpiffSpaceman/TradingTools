@@ -46,7 +46,7 @@ Worker::Worker():
 
     settings.loadSettings();
 
-    rtd_client = new RTDClient();
+    rtd_client = new RTDClient( settings.rtd_server_prog_id );
     current    = new ScripState[ settings.no_of_scrips ] ;
     previous   = new ScripState[ settings.no_of_scrips ] ;
                                                                                     
@@ -113,7 +113,7 @@ bool Worker::ScripState::operator==(const ScripState& right) const{
  */
 void Worker::connect(){
     
-	rtd_client->initializeServer( settings.rtd_server_prog_id  );
+	rtd_client->initializeServer();
     rtd_client->startServer();
 
 	_beginthread( threadEntryDummy, 0, this );                             // RTD Server ready. Start Amibroker Poller Thread
@@ -415,7 +415,7 @@ void Worker::writeArchiveCsv( const std::vector<ScripBar> & bars  ){
 			if( csv_file_out.is_open() )
 				csv_file_out.close();
 																		  // Open file for - write + append	mode
-			csv_file_out.open( settings.csv_folder_path + filename + + ".csv",  std::fstream::out | std::fstream::app  );
+			csv_file_out.open( settings.csv_folder_path + filename + ".csv",  std::fstream::out | std::fstream::app  );
 			if( !csv_file_out.is_open() ){
 				throw( "Error opening file - " + settings.csv_folder_path + filename + + ".csv" );
 			}

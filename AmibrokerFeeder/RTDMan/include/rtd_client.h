@@ -11,10 +11,10 @@
 class RTDClient {
 
 public: 
-    RTDClient();
+    RTDClient( const std::string & in_server_prog_id  );
     ~RTDClient();
 
-	void    initializeServer( const std::string &server_prog_id  );
+	void    initializeServer();
     void    startServer();
     void    stopServer();
 
@@ -24,6 +24,7 @@ public:
     std::map<long,CComVariant>*  readNewData();           // Returns Map of Topic id and Topic Value
 
 private: 
+	std::string					  server_prog_id;
     IScripRTD                    *comObjectScripRTD;      // RTD COM object
     CComObject<CallbackImpl>     *callback;               // Callback Object - Implementation of IRTDUpdateEvent
     std::set<long>                connected_topics;
