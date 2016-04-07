@@ -21,6 +21,7 @@ void Settings::loadSettings(){
     open_time             = getINIString("OpenTime");     
     close_time            = getINIString("CloseTime");
 	target_client		  = getINIString("Client");
+	use_ltq				  = getINIInt("Use_LTQ_for_Volume");
 
     no_of_scrips          = 0 ;    
 
@@ -35,14 +36,16 @@ void Settings::loadSettings(){
 	// added by Josh1 ---------------------------------------------------------------------------
 	request_refresh       = getINIInt   ("RequestRefresh");
 	view_raw_data		  = getINIInt  ("ViewRawData");
+	view_bar_data		  = getINIInt  ("ViewBarData");
+	view_tic_data		  = getINIInt  ("ViewTicData");
 	refresh_period		  = getINIInt   ("RefreshPeriod");
 
-    if( !((bar_period == 0  ) || (bar_period == 1000  ) || (bar_period == 60000  )) ) {              // check Barperiod
-        throw "Bar Period should be 0 OR 1000 or 60000 ";        
+    if( !( (bar_period == 1000  ) || (bar_period == 60000  )) ) {              // check Barperiod
+        throw "Bar Period should be 1000 or 60000 ";        
     }
 
-	if (refresh_period < 100  )  {														// Added by Josh1
-        throw "Refresh period should not be less than 100 ";        
+	if (refresh_period < 50  || refresh_period > 1000  )  {														// Added by Josh1
+        throw "Refresh period should be between 50 and 1000";        
     }    
 	// end added by Josh1 ---------------------------------------------------------------------------
     	
@@ -82,13 +85,29 @@ void Settings::loadSettings(){
         if(split_strings.size() >=6 ){
             scrip_topics.topic_OI        =  split_strings[5];
         } 
-        if(split_strings.size() >=7 && !split_strings[6].empty() ){ 
+		if(split_strings.size() >=7 && !split_strings[6].empty() ){ 
 //            scrip_topics.ltp_multiplier  =  std::stoi( split_strings[6] );	//Changed by Josh1 to double
             scrip_topics.ltp_multiplier  =  std::stod( split_strings[6] );
         }
         else {
             scrip_topics.ltp_multiplier  =  1.00;
         }
+
+		//Inserted by Boarders ----------------------
+		if(split_strings.size() >=8 ){
+            scrip_topics.topic_Bid_Rate        =  split_strings[7];
+        } 
+		if(split_strings.size() >=9 ){
+            scrip_topics.topic_Ask_Rate        =  split_strings[8];
+        } 
+		if(split_strings.size() >=10 ){
+            scrip_topics.topic_Bid_Qty        =  split_strings[9];
+        } 
+		if(split_strings.size() >=11 ){
+            scrip_topics.topic_Ask_Qty        =  split_strings[10];
+        } 
+
+
 
         scrips_array.push_back(  scrip_topics ) ;
         no_of_scrips++;

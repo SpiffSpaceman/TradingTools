@@ -11,7 +11,7 @@ public:
 	bool isTargetNT();													  // Is target Client NinjaTrader
 
     std::string rtd_server_prog_id;
-    int         bar_period;                                      // In milliseconds --  Used by Josh1 for candle forming   
+    int         bar_period;											//   Used by Josh1 for candle forming   
     int         bell_wait_time;                                           // No of bar_periods
 	std::string csv_folder_path;										  // Folder in which we will save csv for AB and archived csv
     std::string csv_path;                                                 // path for csv file to be sent to Amibroker - Use ram drive
@@ -24,8 +24,11 @@ public:
 
 // Inserted by Josh1 ------------------------------------------------------------------------------------------
 	int         refresh_period;                                              
-	int			request_refresh;											// for AmiBroker version 5.3 and below Inserted by Josh1
-	int			view_raw_data;												// flag to view raw data
+	short			request_refresh;											// for AmiBroker version 5.3 and below Inserted by Josh1
+	short			view_raw_data;												// flag to view raw data
+	short			view_bar_data;												// flag to view bar data
+	short			view_tic_data;												// flag to view bar data
+	short			use_ltq	;													// Flag to use LTQ instead of Volume Traded Today
 //-----------------------------------------------------------------------------------------------------------------
 
     struct Scrip {
@@ -37,6 +40,12 @@ public:
         std::string topic_OI; 
 //        int         ltp_multiplier;                                       // Multiple LTP with this- Default 1
         double         ltp_multiplier;                                    // Changed by Josh1
+	//Inserted by Josh1
+		std::string topic_Ask_Rate; 
+		std::string topic_Ask_Qty; 
+		std::string topic_Bid_Rate; 
+		std::string topic_Bid_Qty; 
+
     };
 
     std::vector<Scrip> scrips_array;                                      // RTD Topics for each scrip

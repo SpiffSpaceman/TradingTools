@@ -39,7 +39,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LinkIncremental>false</LinkIncremental>
+    <LinkIncremental>true</LinkIncremental>
     <IncludePath>$(ProjectDir)\include;$(IncludePath)</IncludePath>
     <SourcePath>$(ProjectDir)\source;$(SourcePath)</SourcePath>
     <OutDir>$(SolutionDir)$(Configuration)\RTDMan\</OutDir>

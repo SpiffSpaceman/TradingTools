@@ -38,6 +38,11 @@ private:
     std::ofstream                        csv_file_out;    
 
 	// Inserted by Josh1 ------------------------------------------------------------------------------
+	std::string                          timestamp1;                            // (in same order as Settings::Scrip::topic_name)
+	std::string                          timestamp2;
+	std::string                          timestamp3;
+	std::string                          timestamp4;
+
 	std::string							 cur_tm;							// to store current time
 	int									 prev_field;						// to keep track of previous field id
 	std::string							 bar_ltt;							// Inserted by Josh1 - Purpose ?????
@@ -69,12 +74,18 @@ private:
     
     // Used to create and resolve Topic ids ---------  order changed by Josh1 ------------- 
     enum SCRIP_FIELDS{                                                      // -- Topic 2 --        
+        OI=0,                                                               // "Open Interest"       
         LTT=1,                                                              // "LTT"        
         VOLUME_TODAY=2,                                                     // "Volume Traded Today"
-        OI=0,                                                               // "Open Interest"        
-        LTP=3,                                                              // This topic should be last since
+	//Inserted by Josh1
+		BID_RATE=3,                                                         // "Bid Rate" 
+		ASK_RATE=4,                                                         // "Ask Rate" 
+		BID_QTY=5,                                                          // "Bid Qty" 
+		ASK_QTY=6,                                                          // "Ask Qty" 
+
+        LTP=7,                                                              // This topic should be last since
 																			// Index has only "LTP"
-        FIELD_COUNT=4                                                       // No of Fields used
+        FIELD_COUNT=8                                                       // No of Fields used
     };
     struct ScripState {
         double       ltp;                                                    
@@ -82,14 +93,18 @@ private:
         std::string  last_bar_ltt;                                          // last_bar_ltt will be always set with last sent bar's ltt
         long long    vol_today;
         long long    oi;
-		
-		//Inserted by Josh1 -----------------------------------------------------------------------------------
-		long long    volume;												
-		short		 push;													//Flag for data pushed to AB
-        //End Inserted by Josh1 -------------------------------------------------------------------------------
         double       bar_high;
         double       bar_low;
         double       bar_open;        
+		
+		//Inserted by Josh1 -----------------------------------------------------------------------------------
+		long	    volume;												
+        double	     ask_rate;    
+		long	     ask_qty;    
+		double	     bid_rate;    
+		long	     bid_qty;    
+		short		 push;													//Flag for data pushed to AB
+        //End Inserted by Josh1 -------------------------------------------------------------------------------
 
         ScripState();
         void  reset();
@@ -109,17 +124,26 @@ private:
         double       bar_high;
         double       bar_low;
         double       bar_close;
-        long long    volume;
+        long		 volume;
         long long    oi;
+	// Inserted by Josh1
+		double	     ask_rate;    
+		long	     ask_qty;    
+		double	     bid_rate;    
+		long	     bid_qty;    
     };
 
-	//RTData Inserted by Josh1
+	//Structure RTData Inserted by Josh1
     struct RTData {   
         double       ltp;                                                    
         std::string  ltt;                                                   // ltt can be empty for index scrips
         long long    vol_today;												//to use as volume or LTQ now
         long long    oi;
-		long long    volume;												//Inserted by Josh1
+		long	     volume;												
+		double	     ask_rate;    
+		long	     ask_qty;    
+		double	     bid_rate;    
+		long	     bid_qty;    
 
 		RTData();
 		void  reset();
