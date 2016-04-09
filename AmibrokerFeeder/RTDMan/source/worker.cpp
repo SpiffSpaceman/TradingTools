@@ -389,12 +389,12 @@ void Worker::processRTDData( const std::map<long,CComVariant>* data ){
 				if(settings.use_ltq != 1) {
 					_current->volume	= _current->vol_today - previous[script_id].vol_today; //removed by Josh1 25-3-16
 				}
-				else {_current->volume	= _current->volume + newdata.vol_today;
-				}
+//				else {_current->volume	= _current->volume + newdata.vol_today;
+//				}
 				_current->bid_rate	= newdata.bid_rate ;
 				_current->ask_rate	= newdata.ask_rate;
-				_current->bid_qty	+= newdata.bid_qty ;
-				_current->ask_qty	+= newdata.ask_qty ;
+				_current->bid_qty	= newdata.bid_qty ;
+				_current->ask_qty	= newdata.ask_qty ;
 				_current->push = 1;
 				newdata.reset();
 			}
@@ -566,9 +566,20 @@ void Worker::amibrokerPoller(){
 								}
 								else { _prev->ask_qty = _prev->volume;
 								}
+							}
 							ninja_trader->AskPlayback( Scripname, _prev->ask_rate, _prev->ask_qty, timestamp4);  //bar->ask_qty, timestamp4 );
 							ninja_trader->BidPlayback( Scripname, _prev->bid_rate, _prev->bid_qty, timestamp4 ); //bar->bid_qty, timestamp4);
-							}
+/***********************************************************************************************************************
+							std::cout << Scripname     << ','		// $FORMAT Ticker, Date_YMD, Time, Open, High, 
+						        << timestamp4							<< ','		// Low, Close, Volume, OpenInt
+								<< _prev->ltp						<< ','		// ltp is close
+								<< _prev->volume					<< ',' 
+								<< _prev->bid_rate					<< ',' // Say Aux1
+								<< _prev->ask_rate					
+								<< _prev->bid_qty		<< ','		//bid_qty goes to Volume
+								<< _prev->ask_qty		<< ','		//ask_qty goes to Oi
+								<< std::endl ;
+/**********************************************************************************************************************/
 						}
 					}
 			
@@ -590,15 +601,15 @@ void Worker::amibrokerPoller(){
 
 							if(!(_prev->bid_qty == 0 && _prev->ask_qty == 0)){
 								csv_file_out	<<  Scripname+"e"    << ','		// $FORMAT Ticker, Date_YMD, Time, Open, High, 
-								<< today_date							<< ','		// Low, Close, Volume, OpenInt
-								<< _prev->ltt						<< ',' 
-								<< ','								//open					<< 
-								<< ','								//high					<< 
-								<< ','								//Low					<< 
-								<< _prev->ltp			<< ','		//Close						<<
-								<< _prev->bid_qty		<< ','		//bid_qty goes to Volume
-								<< _prev->ask_qty		<< ','		//ask_qty goes to Oi
-								<< ','<< std::endl ;				//<< Aux1 and Aux2 empty
+												<< today_date			<< ','		// Low, Close, Volume, OpenInt
+												<< _prev->ltt			<< ',' 
+												<< ','								//open					<< 
+												<< _prev->ask_rate		<< ','		//high					<< 
+												<< _prev->bid_rate		<< ','		//Low					<< 
+												<< _prev->ltp			<< ','		//Close						<<
+												<< _prev->bid_qty		<< ','		//bid_qty goes to Volume
+												<< _prev->ask_qty		<< ','		//ask_qty goes to Oi
+												<< std::endl			;				//<< Aux1 and Aux2 empty
 							}
 						}
 						else{csv_file_out << std::endl ;}
@@ -618,21 +629,32 @@ void Worker::amibrokerPoller(){
 								}
 								else { _current->ask_qty = _current->volume;
 								}
+							}
 							ninja_trader->AskPlayback( Scripname, _current->ask_rate, _current->ask_qty, timestamp4);  //bar->ask_qty, timestamp4 );
 							ninja_trader->BidPlayback( Scripname, _current->bid_rate, _current->bid_qty, timestamp4 ); //bar->bid_qty, timestamp4);
-							}
+/***********************************************************************************************************************
+							std::cout << Scripname     << ','		// $FORMAT Ticker, Date_YMD, Time, Open, High, 
+						        << timestamp4							<< ','		// Low, Close, Volume, OpenInt
+								<< _current->ltp						<< ','		// ltp is close
+								<< _current->volume						<< ',' 
+								<< _current->bid_rate					<< ','		// bid_rate goes to Say Aux1
+								<< _current->ask_rate					<< ','		// ask_rate goes to say Aux2
+								<< _current->bid_qty					<< ','		// bid_qty goes to Volume
+								<< _current->ask_qty					<< ','		// ask_qty goes to OI
+								<< std::endl ;
+/**********************************************************************************************************************/
 						}
 					}
 					else{
-						csv_file_out << Scripname     << ','		// $FORMAT Ticker, Date_YMD, Time, Open, High, 
-				        << today_date							<< ','		// Low, Close, Volume, OpenInt
-	                    << _current->ltt						<< ',' 
-						<< _current->bar_open					<< ','		// O
-						<< _current->bar_high					<< ','		// H
-						<< _current->bar_low					<< ','		// L
-						<< _current->ltp						<< ','		// ltp is close
-						<< _current->volume						<< ',' 
-						<< _current->oi ;        
+						csv_file_out	<< Scripname     << ','		// $FORMAT Ticker, Date_YMD, Time, Open, High, 
+										<< today_date							<< ','		// Low, Close, Volume, OpenInt
+										<< _current->ltt						<< ',' 
+										<< _current->bar_open					<< ','		// O
+										<< _current->bar_high					<< ','		// H
+										<< _current->bar_low					<< ','		// L
+										<< _current->ltp						<< ','		// ltp is close
+										<< _current->volume						<< ',' 
+										<< _current->oi ;        
 						if (!(_current->bid_rate == 0 && _current->ask_rate == 0)){
 							csv_file_out << ','
 								<< _current->bid_rate	<< ','		// bid_rate goes to Say Aux1
@@ -640,16 +662,16 @@ void Worker::amibrokerPoller(){
 								<< std::endl ;
 
 							if(!(_current->bid_qty == 0 && _current->ask_qty == 0)){
-								csv_file_out << Scripname+"e"   << ','		// $FORMAT Ticker, Date_YMD, Time, Open, High, 
-								<< today_date					<< ','		// Low, Close, Volume, OpenInt
-								<< _current->ltt				<< ',' 
-								<< ','										// O
-								<< _current->ask_rate			<< ','		// H 
-								<< _current->bid_rate			<< ','		// L
-								<< _current->ltp				<< ','		// C 
-								<< _current->bid_qty			<< ','		// bid_qty goes to Volume
-								<< _current->ask_qty			<< ','		// ask_qty goes to OI
-								<< ','<< std::endl ;						//<< Aux1 and Aux2 empty
+								csv_file_out	<< Scripname+"e"   << ','		// $FORMAT Ticker, Date_YMD, Time, Open, High, 
+												<< today_date					<< ','		// Low, Close, Volume, OpenInt
+												<< _current->ltt				<< ',' 
+												<< ','										// O
+												<< _current->ask_rate			<< ','		// H 
+												<< _current->bid_rate			<< ','		// L
+												<< _current->ltp				<< ','		// C 
+												<< _current->bid_qty			<< ','		// bid_qty goes to Volume
+												<< _current->ask_qty			<< ','		// ask_qty goes to OI
+												<< std::endl					;			//<< Aux1 and Aux2 empty
 							}
 						}
 						else{csv_file_out << std::endl ;}
@@ -666,9 +688,11 @@ void Worker::amibrokerPoller(){
 		if(records == 0){
             notifyInactive();
 		}
-        amibroker->import();    
-		if(settings.request_refresh == 1){				// AmiBroker version 5.3 and below do not refresh automatically after import
+		if( !settings.isTargetNT()){	
+			amibroker->import();    
+			if(settings.request_refresh == 1){				// AmiBroker version 5.3 and below do not refresh automatically after import
 			amibroker->refreshAll();
+			}
 		}
 
     }

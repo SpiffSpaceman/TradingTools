@@ -11,7 +11,7 @@ NinjaTrader::NinjaTrader(void) :
 	if( !ninja_trader )
 		throw( "Unable to load NTDirect.dll" );
 	
-	Last_ptr = (Last_type)GetProcAddress(ninja_trader, "Last");
+	Last_ptr = (Last_type)GetProcAddress(ninja_trader, "LastPlayback");
 
 	//Inserted by Josh1
 	Ask_ptr = (Ask_type)GetProcAddress(ninja_trader, "AskPlayback");
