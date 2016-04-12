@@ -271,23 +271,25 @@ void Worker::processRTDData( const std::map<long,CComVariant>* data ){
 		            continue;
 			    }
 /********************************************************************************************************/
-				//Convert time from "%H:%M:%S" to "HHmmss" format
-				newdata.ltt.erase(2,1);								// Remove colons in the time string
-																		// If Bar Period is 60000 then "HHmm" format, 
-																		//remove all characters after 4th else
-				settings.bar_period == 60000 ? newdata.ltt.erase(4) : newdata.ltt.erase(4,1);	// Remove Colon and Seconds from time string
-/************************* Append milliseconds to LTT ------- Inserted by Josh1 **************************
+/************************* Append milliseconds to LTT ------- Inserted by Josh1 **************************/
 				if(settings.bar_period==0) {
 					SYSTEMTIME lt;
 					GetLocalTime(&lt); 
 					std::stringstream stream;
 					stream <<lt.wMilliseconds/10;
-					std::string wM;%
+					std::string wM;
 					wM  = stream.str();	
-					//newdata.ltt.append(":");
+					newdata.ltt.append(".");
 					newdata.ltt.append(wM);
 				}
 /**********************************************************************************************************/
+				//Convert time from "%H:%M:%S" to "HHmmss" format
+				if(!settings.bar_period==0) {
+					newdata.ltt.erase(2,1);								// Remove colons in the time string
+																		// If Bar Period is 60000 then "HHmm" format, 
+																		//remove all characters after 4th else
+					settings.bar_period == 60000 ? newdata.ltt.erase(4) : newdata.ltt.erase(4,1);	// Remove Colon and Seconds from time string
+				}
 				if (settings.view_raw_data == 1){
 					std::cout <<"\n"<< script_id << "- ";
 					std::cout << settings.scrips_array[script_id].topic_name << ",";
@@ -303,8 +305,8 @@ void Worker::processRTDData( const std::map<long,CComVariant>* data ){
 
 				}
 /**********************************************************************************************************/
-			if(settings.scrips_array[script_id].topic_vol_today != "Volume Traded Today" ){
-				settings.use_ltq=1;
+			if(settings.scrips_array[script_id].topic_vol_today == "Volume Traded Today" ){
+				settings.use_ltq = 0;
 			}
 				if (settings.use_ltq != 1){ 
 					if(newdata.vol_today !=0 && newdata.vol_today == _current->vol_today){
@@ -356,22 +358,29 @@ void Worker::processRTDData( const std::map<long,CComVariant>* data ){
 					previous[script_id].vol_today = _current->vol_today;
 				}
 				if (settings.use_ltq != 1){ 
-					_current->vol_today = newdata.vol_today;
 					if( newdata.vol_today !=0  &&  previous[script_id].vol_today == 0){
 						if(newdata.ltt.substr(0,3) != "0915" || (newdata.ltt.substr(0,3) != "1000" 
 							&& settings.scrips_array[script_id].topic_name.substr(0,3)=="mcx")){	//// Except for start of day
-						previous[script_id].vol_today = newdata.vol_today;             // On startup prev vol is 0,
+							previous[script_id].vol_today = newdata.vol_today;             // On startup prev vol is 0,
+							_current->vol_today = newdata.vol_today;
 						}																//Set it so that we can get first bar volume
 					}																	
 				}
                 _current->bar_high	= _current->bar_low  = _current->bar_open = _current->ltp = newdata.ltp;
 				_current->ltt		= newdata.ltt;
 				_current->oi		= newdata.oi;
-				if(settings.use_ltq != 1) {
-					_current->volume	= newdata.vol_today - previous[script_id].vol_today;
+				if(settings.use_ltq == 1) {
+					_current->volume	= newdata.vol_today ;
 				}
-				else { _current->volume	= newdata.vol_today;		//Changed by Josh1
+				else { 
+					if(settings.bar_period == 0){
+						_current->volume	= newdata.vol_today - _current->vol_today; 
+					}
+					else{
+						_current->volume	= newdata.vol_today- previous[script_id].vol_today;		//Changed by Josh1
+					}
 				}
+				_current->vol_today = newdata.vol_today;
 				_current->bid_rate	= newdata.bid_rate ;
 				_current->ask_rate	= newdata.ask_rate;
 				_current->bid_qty	= newdata.bid_qty ;
@@ -382,15 +391,21 @@ void Worker::processRTDData( const std::map<long,CComVariant>* data ){
 			}
 			else {
                 _current->ltp = newdata.ltp;
-				_current->vol_today = newdata.vol_today;     //removed by Josh1 25-3-16
 				_current->oi = newdata.oi;
 				if( _current->bar_high < _current->ltp )    _current->bar_high = _current->ltp;
                 if( _current->bar_low  > _current->ltp )    _current->bar_low  = _current->ltp;
-				if(settings.use_ltq != 1) {
-					_current->volume	= _current->vol_today - previous[script_id].vol_today; //removed by Josh1 25-3-16
+				if(settings.use_ltq == 1) {
+					_current->volume	= _current->volume + newdata.vol_today;
 				}
-//				else {_current->volume	= _current->volume + newdata.vol_today;
-//				}
+				else  {
+					if(settings.bar_period =0){												//Inserted 11-4-16
+						_current->volume	= newdata.vol_today - _current->vol_today; 
+					}
+					else{
+						_current->volume	= newdata.vol_today - previous[script_id].vol_today; 
+					}
+				}
+				_current->vol_today = newdata.vol_today;     
 				_current->bid_rate	= newdata.bid_rate ;
 				_current->ask_rate	= newdata.ask_rate;
 				_current->bid_qty	= newdata.bid_qty ;
@@ -557,7 +572,9 @@ void Worker::amibrokerPoller(){
 
 			if (_prev->push == 1) {
 					if( settings.isTargetNT()){	
-						timestamp4=today_date+_prev->ltt;
+						if(settings.bar_period==0) {
+							timestamp4=today_date+_prev->ltt.substr(0,2)+_prev->ltt.substr(3,2)+_prev->ltt.substr(6,2);
+						} else {timestamp4=today_date+_prev->ltt.substr(6);}
 						ninja_trader->LastPlayback( Scripname, _prev->ltp, _prev->volume, timestamp4 );
 						if (!(_prev->bid_rate == 0 && _prev->ask_rate == 0)){
 							if (_prev->bid_qty == 0 && _prev->ask_qty == 0){
@@ -620,7 +637,11 @@ void Worker::amibrokerPoller(){
 
 			if (_current->push == 1) {
 					if( settings.isTargetNT()){	
-						timestamp4 = today_date+_current->ltt;
+						if(settings.bar_period==0) {
+							timestamp4=today_date+_current->ltt.substr(0,2)+_current->ltt.substr(3,2)+_current->ltt.substr(6,2);
+						} else {
+							timestamp4=today_date+_current->ltt.substr(6);}
+
 						ninja_trader->LastPlayback( Scripname, _current->ltp, _current->volume, timestamp4 );
 						if (!(_current->bid_rate == 0 && _current->ask_rate == 0)){
 							if (_current->bid_qty == 0 && _current->ask_qty == 0){

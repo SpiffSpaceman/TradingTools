@@ -21,7 +21,6 @@ void Settings::loadSettings(){
     open_time             = getINIString("OpenTime");     
     close_time            = getINIString("CloseTime");
 	target_client		  = getINIString("Client");
-	use_ltq				  = getINIInt("Use_LTQ_for_Volume");
 
     no_of_scrips          = 0 ;    
 
@@ -40,8 +39,8 @@ void Settings::loadSettings(){
 	view_tic_data		  = getINIInt  ("ViewTicData");
 	refresh_period		  = getINIInt   ("RefreshPeriod");
 
-    if( !( (bar_period == 1000  ) || (bar_period == 60000  )) ) {              // check Barperiod
-        throw "Bar Period should be 1000 or 60000 ";        
+    if( !( (bar_period == 0  ) || (bar_period == 1000  ) || (bar_period == 60000  )) ) {              // check Barperiod
+        throw "Bar Period should be 0 or 1000 or 60000 ";        
     }
 
 	if (refresh_period < 50  || refresh_period > 1000  )  {														// Added by Josh1
