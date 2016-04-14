@@ -36,21 +36,28 @@ class OrderbookClass{
 	}
 
 	open(){
-		global
-		
-		IfWinExist,  %TITLE_ORDER_BOOK%
+		global controlObj, TITLE_NOW
+
+		IfWinExist,  % controlObj.ORDER_BOOK_TITLE
 			return
 		
-		WinMenuSelectItem, %TITLE_NOW%,, Orders and Trades, Order Book		// open orderbook
+		menus := StrSplit( controlObj.ORDER_BOOK_MENU , ",")
+		
+		WinMenuSelectItem, %TITLE_NOW%,, % menus[1], % menus[2]					// open orderbook
 
-		WinWait, %TITLE_ORDER_BOOK%
-		WinMinimize, %TITLE_ORDER_BOOK%	
+		WinWait, % controlObj.ORDER_BOOK_TITLE,,5
+		if ErrorLevel
+		{
+			MsgBox, Unable to open OrderBook. Override Menu to fix it.
+			ExitApp
+		}
+		WinMinimize, % controlObj.ORDER_BOOK_TITLE
 	}
 
 	/*	Parse Through Order book > open orders
 	*/
 	readOpenOrders(){
-		global TITLE_ORDER_BOOK
+		global controlObj
 		
 		this.open()													// Open order book if not already opened
 		
@@ -58,7 +65,7 @@ class OrderbookClass{
 		this.OpenOrders.size := 0
 		index				 := this._openOrdersColumnIndex
 		
-		ControlGet, openOrdersRaw, List, , SysListView321, %TITLE_ORDER_BOOK%
+		ControlGet, openOrdersRaw, List, , % controlObj.ORDER_BOOK_OPEN_LIST, % controlObj.ORDER_BOOK_TITLE
 		
 		Loop, Parse, openOrdersRaw, `n  							// Extract our columns from table
 		{															// Rows are delimited by linefeeds (`n)
@@ -88,7 +95,7 @@ class OrderbookClass{
 				else if( A_Index ==  index.nowUpdateTime ) 
 					order.nowUpdateTime := A_LoopField
 			}
-			order.status2		:= "O"								// Is Order Open or Completed
+			order.status2	:= "O"									// Is Order Open or Completed
 			
 			this.OpenOrders[A_Index] := order
 			this.OpenOrders.size++	
@@ -98,7 +105,7 @@ class OrderbookClass{
 	/*	Parse Through Order book > completed orders
 	*/
 	readCompletedOrders(){
-		global TITLE_ORDER_BOOK
+		global controlObj
 		
 		this.open()
 			
@@ -106,7 +113,7 @@ class OrderbookClass{
 		this.CompletedOrders.size := 0
 		index				 	  := this._completedOrdersColumnIndex
 		
-		ControlGet, completedOrdersRaw, List, , SysListView322, %TITLE_ORDER_BOOK%
+		ControlGet, completedOrdersRaw, List, , % controlObj.ORDER_BOOK_COMPLETE_LIST, % controlObj.ORDER_BOOK_TITLE
 			
 		Loop, Parse, completedOrdersRaw, `n
 		{
@@ -121,8 +128,6 @@ class OrderbookClass{
 					order.tradingSymbol  := A_LoopField
 				else if( A_Index ==  index.totalQty ) 
 					order.totalQty 	     := A_LoopField
-				else if( A_Index ==  index.pendingQty ) 
-					order.pendingQty 	 := A_LoopField
 				else if( A_Index ==  index.price ) 
 					order.price 		 := A_LoopField
 				else if( A_Index ==  index.triggerPrice ) 
@@ -138,8 +143,8 @@ class OrderbookClass{
 				else if( A_Index ==  index.rejectionReason ) 
 					order.rejectionReason := A_LoopField			
 			}
-			order.status2			 := "C"	
-			
+			order.status2 := "C"
+
 			this.CompletedOrders[A_Index] := order
 			this.CompletedOrders.size++
 		}	
@@ -209,11 +214,11 @@ class OrderbookClass{
 	/*	Open Buy / Sell Window for existing order from Orderbook
 	*/
 	openModifyOrderForm( nowOrderNo, winTitle ){
-		global TITLE_ORDER_BOOK
+		global controlObj
 			
 		if( this.selectOpenOrder( nowOrderNo ) ){
 			Loop, 5{
-				ControlClick, Button1, %TITLE_ORDER_BOOK%,,,, NA				
+				ControlClick, % controlObj.ORDER_BOOK_MODIFY, % controlObj.ORDER_BOOK_TITLE,,,, NA				// Click on Modify Button
 				WinWait, %winTitle%,,2
 				if !ErrorLevel
 					return true
@@ -231,22 +236,24 @@ class OrderbookClass{
 		Returns true if found and selected else returns false
 	*/
 	selectOpenOrder( searchMeOrderNo ){
-		global TITLE_ORDER_BOOK
+		global controlObj
 		
 		this.open()
-		orderNoColIndex := this._openOrdersColumnIndex.nowOrderNo					// column number containing NOW Order no in Order Book > open orders
+		orderNoColIndex := this._openOrdersColumnIndex.nowOrderNo									// column number containing NOW Order no in Order Book > open orders
+		listID			:= controlObj.ORDER_BOOK_OPEN_LIST
+		title			:= controlObj.ORDER_BOOK_TITLE
 		
-		Loop, 3{																	// Select order in Order Book. Search 3 times as a precaution
-			ControlGet, RowCount, List, Count, SysListView321, %TITLE_ORDER_BOOK%	// No of rows in open orders
-			ControlSend, SysListView321, {Home 2}, %TITLE_ORDER_BOOK%				// Start from top and search for order
+		Loop, 3{																					// Select order in Order Book. Search 3 times as a precaution
+			ControlGet, RowCount, List, Count, % listID, % title									// No of rows in open orders
+			ControlSend, % listID, {Home 2}, % title												// Start from top and search for order
 
-			Loop, %RowCount%{														// Get order number of selected row and compare
-				ControlGet, RowOrderNo, List, Selected Col%orderNoColIndex%, SysListView321, %TITLE_ORDER_BOOK%
+			Loop, %RowCount%{																		// Get order number of selected row and compare
+				ControlGet, RowOrderNo, List, Selected Col%orderNoColIndex%, % listID, % title
 			
-				if( RowOrderNo == searchMeOrderNo ){								// Found and Selected
+				if( RowOrderNo == searchMeOrderNo ){												// Found and Selected
 					return true
 				}
-				ControlSend, SysListView321, {Down}, %TITLE_ORDER_BOOK%				// Move Down to next row if not found yet
+				ControlSend, % listID, {Down}, % title												// Move Down to next row if not found yet
 			}				
 		}		
 
@@ -256,17 +263,17 @@ class OrderbookClass{
 	/*	Clicks on cancel button in orderbook, assuming order is already selected
 	*/
 	cancelSelectedOpenOrder(){
-		global TITLE_ORDER_BOOK
+		global controlObj
 		
-		window 		:= "NOW"
-		windowText	:= "Cancel These Order"
+		window 		:= controlObj.ORDER_BOOK_CANCEL_CONFIRMATION_TITLE
+		windowText	:= controlObj.ORDER_BOOK_CANCEL_CONFIRMATION_TEXT
 		
-		ControlClick, Button3, %TITLE_ORDER_BOOK%,,,, NA				// Click Cancel
+		ControlClick, % controlObj.ORDER_BOOK_CANCEL, % controlObj.ORDER_BOOK_TITLE,,,, NA		// Click Cancel
 		
 		WinWait, %window%, %windowText%, 1
 		WinSet, Transparent, 1, %window%, %windowText%
 		
-		ControlClick, Button1, %window%, %windowText%,,, NA				// Click ok
+		ControlClick,  % controlObj.ORDER_BOOK_CANCEL_OK, %window%, %windowText%,,, NA			// Click ok
 	}
 
 
@@ -278,24 +285,24 @@ class OrderbookClass{
 	/*	Reads Column Header text of Open and Completed Orders in orderbook to look for position of required fields 
 	*/
 	_readColumnHeaders(){
-		global	TITLE_ORDER_BOOK
+		global	controlObj
 		
 		static columnsRead := false											// Read once per load. ?VirtualAllocEx error from lib once? Had to restart NOW
 		if( columnsRead )
 			return
 	
 	// Open Orders
-		// Read column header texts and extract position for columns that we need
-		allHeaders  := GetExternalHeaderText( TITLE_ORDER_BOOK, "SysHeader321")	
-		headers		:= ["Order Type", "Buy/Sell", "Trading Symbol", "Total Qty", "Pending Qty", "Price", "TriggerPrice", "Average Price", "Status", "NOWOrderNo", "NOW UpdateTime"]
+																			// Read column header texts and extract position for columns that we need
+		allHeaders  := GetExternalHeaderText( controlObj.ORDER_BOOK_TITLE, controlObj.ORDER_BOOK_OPEN_LIST_HEADER)	
+		headers		:= % controlObj.ORDER_BOOK_OPEN_HEADERS_TEXT
 		keys		:= ["orderType",  "buySell",  "tradingSymbol",  "totalQty",  "pendingQty",  "price", "triggerPrice", "averagePrice" , "status", "nowOrderNo", "nowUpdateTime"]			
 		
 		this._extractColumnIndices( "Order Book > Open Orders",  allHeaders, headers, this._openOrdersColumnIndex, keys )
 		
 	// Completed Orders
-		allHeaders  := GetExternalHeaderText( TITLE_ORDER_BOOK, "SysHeader322")
-		headers		:= ["Order Type", "Buy/Sell", "Trading Symbol", "Total Qty", "Pending Qty", "Price", "TriggerPrice", "Average Price", "Status", "NOWOrderNo", "NOW UpdateTime", "Rejection Reason"]
-		keys		:= ["orderType",  "buySell",  "tradingSymbol",  "totalQty",  "pendingQty",  "price", "triggerPrice", "averagePrice" , "status", "nowOrderNo", "nowUpdateTime", "rejectionReason"]
+		allHeaders  := GetExternalHeaderText( controlObj.ORDER_BOOK_TITLE, controlObj.ORDER_BOOK_COMPLETE_LIST_HEADER)
+		headers		:= % controlObj.ORDER_BOOK_COMPLETED_HEADERS_TEXT
+		keys		:= ["orderType",  "buySell",  "tradingSymbol",  "totalQty",  "price", "triggerPrice", "averagePrice" , "status", "nowOrderNo", "nowUpdateTime", "rejectionReason"]
 		
 		this._extractColumnIndices( "Order Book > Completed Orders",  allHeaders, headers, this._completedOrdersColumnIndex, keys )	
 		
@@ -332,11 +339,11 @@ class OrderbookClass{
 	/*	If Column that we want is not found in header, show message and exit
 	*/
 	_checkEmpty( value, field, listName ){
-		global TITLE_ORDER_BOOK
+		global controlObj
 		
 		if( value == "" ){
 			MsgBox, 262144,, Column %field% not found in %listName%
-			WinClose, %TITLE_ORDER_BOOK%	
+			WinClose, % controlObj.ORDER_BOOK_TITLE
 			Exit
 		}
 	}

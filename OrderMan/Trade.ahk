@@ -32,9 +32,7 @@ class TradeClass{
 	
 	/*	open new Trade by creating Entry/Stop/Target orders	
 	*/
-	create( inScrip, entryOrderType, stopOrderType, direction, qty, prodType, entryPrice, stopPrice, targetPrice ){		
-		
-		global TITLE_NOW
+	create( inScrip, entryOrderType, stopOrderType, direction, qty, prodType, entryPrice, stopPrice, targetPrice ){
 	
 		if ( this.positionSize == 0 && !this._checkOpenOrderEmpty() )
 			return
@@ -366,7 +364,7 @@ class TradeClass{
 			this.targetOrder.isCreated := true
 			this._loadOrderInputFromOrderbook( this.targetOrder )
 		}
-	
+
 		this.executedEntryOrderList  := entryOrderListObj
 		this.positionSize			 := positionSize
 		
@@ -386,12 +384,12 @@ class TradeClass{
 			this._setupStopOrderInput( "SLM",  entryInput.qty, entryInput.prodType, pendingPrice,  UtilClass.reverseDirection(entryInput.direction), entryInput.scrip )
 		}
 
+		this.scrip 		 := this.newEntryOrder.getInput().scrip
+		this.direction 	 := this.newEntryOrder.getInput().direction
+
 		if( ! targetOrderExists  && targetPrice > 0 ){
 			this._handleTargetOrder( targetPrice )
 		}
-		
-		this.scrip 					 := this.newEntryOrder.getInput().scrip
-		this.direction  			 := this.newEntryOrder.getInput().direction		
 
 		return true
 	}
@@ -606,6 +604,8 @@ class TradeClass{
 			order.setOrderInput( order.getGUIOrderType(), order.getGUIDirection(), od.totalQty, od.price, od.triggerPrice, ProdType, selectedScrip )		
 	}
 	
+	/* Returns latest order with highest order no from list of Executed Entry Orders
+	*/
 	_getLastExecutedInputOrder(){
 		
 		highestOrderNo := ""
@@ -664,11 +664,10 @@ class TradeClass{
 		global ORDER_TYPE_GUI_LIMIT	
 		
 		if( (targetPrice == 0  ||  targetPrice = "" || this.positionSize == 0) ){
-			if( this.targetOrder.isOpen() ){
-				this.targetOrder.cancel()										// Can happen for adds, If target cleared, cancel it
-			}
-			return
+			this.targetOrder.cancel()											// Cancel if open. Can happen for adds, If target cleared, cancel it
 		}
+		if( targetPrice == 0  ||  targetPrice = "" )
+				return
 
 		_entryDirection := this.direction
 		_stopDirection  := UtilClass.reverseDirection(_entryDirection)
@@ -679,11 +678,13 @@ class TradeClass{
 			this.targetOrder := new OrderClass
 		}
 																				// Create/Update Target Limit Order - Target always covers only current Executed position 			
-		if( !this._validateTargetPrice(_entryDirection, _stopPrice, targetPrice) )
+		if( !this._validateTargetPrice(_entryDirection, _stopPrice, targetPrice) ){
+			UtilClass.conditionalMessage( false, "Bug - _handleTargetOrder() validation failure" )
 			return
+		}
 	
 		this.targetOrder.setOrderInput( ORDER_TYPE_GUI_LIMIT, _stopDirection, this.positionSize, targetPrice, 0, _prodType, this.scrip )
-		
+																				// Setup input params. Also used to update GUI
 		if( this.positionSize == 0 ) 											// Keep Target order pending until we have Entered a position
 			return
 		

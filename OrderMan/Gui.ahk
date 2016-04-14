@@ -15,12 +15,22 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
+initGUI(){
+	global
+	
+	isABPick 				  := false												// Initialze GUI global vars
+	ORDER_TYPE_GUI_LIMIT	  := "LIM"
+	ORDER_TYPE_GUI_MARKET	  := "M"
+	ORDER_TYPE_GUI_SL_LIMIT	  := "SL"
+	ORDER_TYPE_GUI_SL_MARKET  := "SLM"
+}
+
 createGUI(){
-	global Qty, EntryPrice, StopPrice, TargetPrice, Direction, CurrentResult, TargetResult, BtnOrder, BtnUpdate, BtnLink, BtnUnlink, BtnCancel, EntryStatus, StopStatus, TargetStatus, LastWindowPosition, EntryOrderType, EntryUpDown, StopUpDown, TargetUpDown, EntryText, AddText, BtnAdd, isABPick
+	global Qty, EntryPrice, StopPrice, TargetPrice, Direction, CurrentResult, TargetResult, BtnOrder, BtnUpdate, BtnLink, BtnUnlink, BtnCancel, EntryStatus, StopStatus, TargetStatus, LastWindowPosition, EntryOrderType, EntryUpDown, StopUpDown, TargetUpDown, EntryText, AddText, BtnAdd
 	
 	SetFormat, FloatFast, 0.2
 	
-	isABPick := false																// Initialze GUI global vars
+	initGUI()
 		
 	Gui, 1:New, +AlwaysOnTop +Resize, OrderMan
 
@@ -100,12 +110,12 @@ openLinkOrdersGUI(){
 /* Fills up Entry/Stop ListViews in Link Orders GUI based on input Direction
 */
 onLinkOrdersDirectionSelect(){
-	global  ORDER_TYPE_LIMIT, ORDER_TYPE_SL_MARKET, ORDER_STATUS_COMPLETE, ORDER_DIRECTION_BUY, ORDER_DIRECTION_SELL, orderbookObj, LinkOrdersSelectedDirection		
+	global  controlObj, orderbookObj, LinkOrdersSelectedDirection		
 	
 	Gui, 2:Submit, NoHide
 	
-	entryDirection := LinkOrdersSelectedDirection == 1 ? ORDER_DIRECTION_BUY  : ORDER_DIRECTION_SELL		// Long Selected then Entry is Buy Order
-	stopDirection  := LinkOrdersSelectedDirection == 1 ? ORDER_DIRECTION_SELL : ORDER_DIRECTION_BUY			// Long Selected then Stop  is Sell Order
+	entryDirection := LinkOrdersSelectedDirection == 1 ? controlObj.ORDER_DIRECTION_BUY  : controlObj.ORDER_DIRECTION_SELL		// Long Selected then Entry is Buy Order
+	stopDirection  := LinkOrdersSelectedDirection == 1 ? controlObj.ORDER_DIRECTION_SELL : controlObj.ORDER_DIRECTION_BUY		// Long Selected then Stop  is Sell Order
 	
 	orderbookObj.read()
 	
@@ -118,7 +128,7 @@ onLinkOrdersDirectionSelect(){
 	}
 	Loop, % orderbookObj.CompletedOrders.size {
 		o := orderbookObj.CompletedOrders[A_Index]
-		if( o.status == ORDER_STATUS_COMPLETE && o.buySell == entryDirection )
+		if( o.status == controlObj.ORDER_STATUS_COMPLETE && o.buySell == entryDirection )
 			addOrderRow(o, "Executed")
 	}
 	if(  LV_GetCount() > 0  )
@@ -130,9 +140,9 @@ onLinkOrdersDirectionSelect(){
 	LV_Delete()											// Delete All Rows
 	Loop, % orderbookObj.OpenOrders.size {				// filter: Open + SLM + stop direction
 		o :=  orderbookObj.OpenOrders[A_Index]
-		if( o.orderType == ORDER_TYPE_SL_MARKET && o.buySell == stopDirection)
+		if( o.orderType == controlObj.ORDER_TYPE_SL_MARKET && o.buySell == stopDirection)
 			addOrderRow( o, "Stop" )
-		if( o.orderType == ORDER_TYPE_LIMIT && o.buySell == stopDirection)
+		if( o.orderType == controlObj.ORDER_TYPE_LIMIT && o.buySell == stopDirection)
 			addOrderRow( o, "Target" )
 	}
 	if(  LV_GetCount() > 0  )
@@ -217,7 +227,7 @@ setDefaultTarget(){
 /*	Update status bar, GUI controls state and Timer state based on order status
 */
 updateStatus(){
-	global contextObj, orderbookObj, ORDER_STATUS_OPEN, EntryPrice, StopPrice
+	global contextObj, orderbookObj, EntryPrice, StopPrice
 	
 	trade 			  := contextObj.getCurrentTrade()
 	trade.reload()
@@ -312,7 +322,7 @@ setOrderStatus(  statusGuiId, status  ){
 	Used when linking to existing orders
 */
 loadTradeInputToGui(){
-	global contextObj, ORDER_TYPE_GUI_LIMIT, ORDER_TYPE_GUI_MARKET
+	global contextObj
 	
 	trade  		:= contextObj.getCurrentTrade()
 	entry  		:= trade.newEntryOrder
@@ -400,15 +410,15 @@ setDefaultEntryOrderType(){
 getOrderShortStatus( status ){
 	global
 	
-	if( status == ORDER_STATUS_OPEN )
+	if( status == controlObj.ORDER_STATUS_OPEN )
 		return "O"
-	else if( status == ORDER_STATUS_TRIGGER_PENDING )
+	else if( status == controlObj.ORDER_STATUS_TRIGGER_PENDING )
 		return "O-TP"
-	else if( status == ORDER_STATUS_COMPLETE )
+	else if( status == controlObj.ORDER_STATUS_COMPLETE )
 		return "C"
-	else if( status == ORDER_STATUS_REJECTED )
+	else if( status == controlObj.ORDER_STATUS_REJECTED )
 		return "R"
-	else if( status == ORDER_STATUS_CANCELLED )
+	else if( status == controlObj.ORDER_STATUS_CANCELLED )
 		return "CAN"
 	else
 		return status

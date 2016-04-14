@@ -44,6 +44,6 @@ class OrderDetailsClass{
 	
 	isComplete(){															// Indicates whether order status is "Complete"
 		global
-		return this.status == ORDER_STATUS_COMPLETE
+		return this.status == controlObj.ORDER_STATUS_COMPLETE
 	}
 }

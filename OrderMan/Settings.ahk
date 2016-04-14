@@ -33,7 +33,8 @@ loadSettings(){
     IniRead, LastWindowPosition,OrderMan.ini, OrderMan, LastWindowPosition
     IniRead, MaxSlippage,       OrderMan.ini, OrderMan, MaxSlippage
     IniRead, SavedOrders,       OrderMan.ini, OrderMan, SavedOrders    
-        
+    IniRead, TITLE_NOW,         OrderMan.ini, OrderMan, WindowTitle
+
     IniRead, value, OrderMan.ini, OrderMan, AutoSubmit
     AutoSubmit   := value=="true"
         
@@ -48,6 +49,15 @@ loadSettings(){
     
     selectedScrip := new ScripClass
     selectedScrip.setInput( fields[1], fields[2], fields[3], fields[4], fields[5], fields[6] )  
+    
+    IniRead, Server, OrderMan.ini, OrderMan, Server
+    isServerNOW := (Server == "Now")
+    
+    ORDERBOOK_POLL_TIME			  := 500										// Time between reading of OrderBook status by Tracker in order to trigger pending orders. In ms
+    GUI_POLL_TIME_MULTIPLE        := 4                                          // Time between GUI refresh by tracker - as multiple of ORDERBOOK_POLL_TIME
+    NEW_ORDER_WAIT_TIME			  := 5											// How many maximum seconds to wait for New Submitted Order to appear in orderbook. 
+    OPEN_ORDER_WAIT_TIME		  := 5											// How many maximum seconds to wait for Order to be Open ( ie for validation etc to be over)
+																				// Warning message shown after wait period
 }
 
 /*

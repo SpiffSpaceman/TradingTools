@@ -94,8 +94,8 @@ class OrderClass{
 	}
 
 	getGUIDirection(){
-		global ORDER_DIRECTION_BUY
-		return this._orderDetails.buySell == ORDER_DIRECTION_BUY ? "B" : "S"	
+		global controlObj
+		return this._orderDetails.buySell == controlObj.ORDER_DIRECTION_BUY ? "B" : "S"	
 	}
 	
 	getGUIOrderType(){
@@ -103,13 +103,13 @@ class OrderClass{
 		
 		local nowtype := this._orderDetails.orderType
 		
-		if( nowtype == ORDER_TYPE_LIMIT)
+		if( nowtype == controlObj.ORDER_TYPE_LIMIT)
 			return ORDER_TYPE_GUI_LIMIT
-		else if( nowtype == ORDER_TYPE_MARKET )
+		else if( nowtype == controlObj.ORDER_TYPE_MARKET )
 			return ORDER_TYPE_GUI_MARKET
-		else if( nowtype == ORDER_TYPE_SL_LIMIT )
+		else if( nowtype == controlObj.ORDER_TYPE_SL_LIMIT )
 			return ORDER_TYPE_GUI_SL_LIMIT
-		else if( nowtype == ORDER_TYPE_SL_MARKET )
+		else if( nowtype == controlObj.ORDER_TYPE_SL_MARKET )
 			return ORDER_TYPE_GUI_SL_MARKET
 	}
 	
@@ -119,20 +119,20 @@ class OrderClass{
 		local guitype := this._input.orderType
 		
 		if( guitype == ORDER_TYPE_GUI_LIMIT )
-			return ORDER_TYPE_LIMIT
+			return controlObj.ORDER_TYPE_LIMIT
 		else if( guitype == ORDER_TYPE_GUI_MARKET )
-			return ORDER_TYPE_MARKET
+			return controlObj.ORDER_TYPE_MARKET
 		else if( guitype == ORDER_TYPE_GUI_SL_LIMIT )
-			return ORDER_TYPE_SL_LIMIT
+			return controlObj.ORDER_TYPE_SL_LIMIT
 		else if( guitype == ORDER_TYPE_GUI_SL_MARKET )
-			return ORDER_TYPE_SL_MARKET
+			return controlObj.ORDER_TYPE_SL_MARKET
 	}		
 
 	/*	Creates a New Order. Input Details should be set before calling this
 	*/
 	create(){
 		
-		global orderbookObj, ORDER_STATUS_COMPLETE, ORDER_STATUS_OPEN, ORDER_STATUS_TRIGGER_PENDING
+		global orderbookObj, controlObj
 		
 		if( this.isCreated ){
 			MsgBox, 262144,, Order Already created								// Should not happen
@@ -142,7 +142,7 @@ class OrderClass{
 			return
 		
 		orderbookObj.read()														// Read current status so that we can identify new order
-		winTitle			:= this._openOrderForm()
+		winTitle := this._openOrderForm()
 		
 		toggleStatusTracker("off")												// Turn off Tracker thread during order creation
 																				// Otherwise it can also read orderbook in between and we will not be able to 
@@ -163,7 +163,7 @@ class OrderClass{
 		this._waitforOrderValidation()		
 		status := this._orderDetails.status		
 																				// if Entry order may have failed, ask
-		if( status != ORDER_STATUS_OPEN && status != ORDER_STATUS_TRIGGER_PENDING && status != ORDER_STATUS_COMPLETE  ){
+		if( status != controlObj.ORDER_STATUS_OPEN && status != controlObj.ORDER_STATUS_TRIGGER_PENDING && status != controlObj.ORDER_STATUS_COMPLETE  ){
 			od := this._orderDetails
 			identifier := UtilClass.orderIdentifier( od.buySell, od.price, od.triggerPrice)
 			MsgBox, % 262144+4,,  Order( %identifier%  ) has status - %status%. Do you want to continue?
@@ -178,12 +178,12 @@ class OrderClass{
 	*/
 	update(){		
 		
-		global orderbookObj, TITLE_BUY, TITLE_SELL
+		global orderbookObj, controlObj
 		
 		if( ! this._hasOrderChanged() )
 			return
 		
-		winTitle := this._input.direction == "B" ? TITLE_BUY : TITLE_SELL	
+		winTitle := this._input.direction == "B" ? controlObj.ORDER_ENTRY_TITLE_BUY : controlObj.ORDER_ENTRY_TITLE_SELL	
 		
 		opened := orderbookObj.openModifyOrderForm( this._orderDetails.nowOrderNo, winTitle )	
 		if( !opened )																// Open Order by clicking on Modify in Order Book
@@ -262,17 +262,24 @@ class OrderClass{
 	/*	Open Buy / Sell Window
 	*/
 	_openOrderForm(){
-		global TITLE_NOW, TITLE_BUY, TITLE_SELL
+		global TITLE_NOW, controlObj
 		
 		Loop, 5{															// Try upto 5 times
-			if( this._input.direction == "B" ){
-				winTitle := TITLE_BUY
-				WinMenuSelectItem, %TITLE_NOW%,, Orders and Trades, Buy Order Entry	// F1 F2 F3 sometimes (rarely) does not work. Menu Does
+			if( this._input.direction == "B" ){								// F1 F2 F3 sometimes (rarely) does not work. Menu Does
+				
+				winTitle := % controlObj.ORDER_ENTRY_TITLE_BUY
+				menus 	 := StrSplit( controlObj.ORDER_ENTRY_MENU_BUY , ",")
 			}
 			else if( this._input.direction == "S" ){
-				winTitle := TITLE_SELL
-				WinMenuSelectItem, %TITLE_NOW%,, Orders and Trades, Sell Order Entry
-			}		
+				winTitle := % controlObj.ORDER_ENTRY_TITLE_SELL
+				menus 	 := StrSplit( controlObj.ORDER_ENTRY_MENU_SELL , ",")
+			}
+			
+			if( menus.MaxIndex() == 3 )
+				WinMenuSelectItem, %TITLE_NOW%,, % menus[1], % menus[2], % menus[3]
+			else
+				WinMenuSelectItem, %TITLE_NOW%,, % menus[1], % menus[2]
+				
 			WinWait, %winTitle%,,2
 			if !ErrorLevel
 				break
@@ -286,39 +293,44 @@ class OrderClass{
 	/*	Fill up Buy/Sell Window and Submit
 	*/
 	_submitOrder( winTitle ){												// Fill up opened Buy/Sell window and verify
+		
+		global controlObj
 
 		scrip     := this._input.scrip
 		ordertype := this.getNowOrderType()
 		
-		Control, ChooseString , % scrip.segment,     ComboBox1,  %winTitle%			// Exchange Segment - NFO/NSE etc
-		Control, ChooseString , % scrip.instrument,  ComboBox5,  %winTitle%			// Inst Name - FUTIDX / EQ  etc
-		Control, ChooseString , % scrip.symbol, 	 ComboBox6,  %winTitle%			// Scrip Symbol
-		Control, ChooseString , % scrip.type,  	 	 ComboBox7,  %winTitle%			// Type - XX/PE/CE
-		Control, ChooseString , % scrip.strikePrice, ComboBox8,  %winTitle%			// Strike Price for options
-		Control, Choose		  , % scrip.expiryIndex, ComboBox9,  %winTitle%			// Expiry Date - Set by Position Index (1/2 etc)
-
-		Control, ChooseString , % ordertype, 		  	 ComboBox3,  %winTitle%		// Order Type - LIMIT/MARKET/SL/SL-M
-		Control, ChooseString , % this._input.prodType,  ComboBox10, %winTitle%		// Prod Type - MIS/NRML/CNC
-		Control, ChooseString , DAY, 	   			 	 ComboBox11, %winTitle%		// Validity - Day/IOC
+		Control, ChooseString , % scrip.segment,     	% controlObj.ORDER_ENTRY_EXCHANGE_SEGMENT,  %winTitle%			// Exchange Segment - NFO/NSE etc
+		Control, ChooseString , % scrip.instrument,  	% controlObj.ORDER_ENTRY_INST_NAME,  		%winTitle%			// Inst Name - FUTIDX / EQ  etc
 		
+		if( scrip.type != "" )
+			Control, ChooseString , % scrip.type,  	 	% controlObj.ORDER_ENTRY_TYPE,  			%winTitle%			// Type - XX/PE/CE - Set before Symbol
+		
+		Control, ChooseString , % scrip.symbol, 	 	% controlObj.ORDER_ENTRY_SYMBOL,  		 	%winTitle%			// Scrip Symbol
+		Control, ChooseString , % scrip.strikePrice, 	% controlObj.ORDER_ENTRY_STRIKE_PRICE,  	%winTitle%			// Strike Price for options
+		Control, Choose		  , % scrip.expiryIndex, 	% controlObj.ORDER_ENTRY_EXPIRY_DATE,  	 	%winTitle%			// Expiry Date - Set by Position Index (1/2 etc)
+		
+		Control, ChooseString , % ordertype, 		 	% controlObj.ORDER_ENTRY_ORDER_TYPE,  		%winTitle%			// Order Type - LIMIT/MARKET/SL/SL-M		
+		Control, ChooseString , % this._input.prodType, % controlObj.ORDER_ENTRY_PROD_TYPE,    		%winTitle%			// Prod Type - MIS/NRML/CNC
+		Control, ChooseString , DAY, 	   			 	% controlObj.ORDER_ENTRY_VALIDITY, 			%winTitle%			// Validity - Day/IOC
+
 		this._submitOrderCommon( winTitle )
 	}
 
 	/*	Fills up stuff that is relevant to both create and update orders
 	*/
 	_submitOrderCommon( winTitle ){
-		global	TITLE_TRANSACTION_PASSWORD, AutoSubmit
+		global	controlObj, AutoSubmit
 		
-		ControlSetText, Edit3, 	   % this._input.qty,     %winTitle%				// Qty
+		ControlSetText, % controlObj.ORDER_ENTRY_QTY, 				% this._input.qty, 		%winTitle%		// Qty
 		if( this._input.price != 0 )
-			ControlSetText, Edit4, % this._input.price,   %winTitle%				// Price
+			ControlSetText, % controlObj.ORDER_ENTRY_PRICE, 		% this._input.price, 	%winTitle%		// Price
 		if( this._input.trigger != 0 )
-			ControlSetText, Edit7, % this._input.trigger, %winTitle%				// Trigger
+			ControlSetText, % controlObj.ORDER_ENTRY_TRIGGER_PRICE, % this._input.trigger, 	%winTitle%		// Trigger
 		
 		if( AutoSubmit ){		
-			ControlClick, Button4, %winTitle%,,,, NA								// Submit Order
-			WinWaitClose, %winTitle%, 2												// Wait for order window to close. If password needed, notify
-			IfWinExist, %TITLE_TRANSACTION_PASSWORD%
+			ControlClick, % controlObj.ORDER_ENTRY_SUBMIT, %winTitle%,,,, NA								// Submit Order
+			WinWaitClose, %winTitle%, 2																		// Wait for order window to close. If password needed, notify
+			IfWinExist, % controlObj.ORDER_ENTRY_TITLE_TRANSACTION_PASSWORD
 				MsgBox, 262144,, Enter Transaction password in NOW and then click ok
 		}
 		
@@ -328,13 +340,13 @@ class OrderClass{
 	/*	Wait for order to be validated - wait if status is validation pending or put order req recieved
 	*/
 	_waitforOrderValidation(){
-		global orderbookObj, OPEN_ORDER_WAIT_TIME, ORDER_STATUS_PUT, ORDER_STATUS_VP
+		global orderbookObj, OPEN_ORDER_WAIT_TIME, controlObj
 		
 		Loop, % OPEN_ORDER_WAIT_TIME*4 {
 			
 			status := this._orderDetails.status
 
-			if( status == ORDER_STATUS_PUT || status == ORDER_STATUS_VP ){
+			if( status == controlObj.ORDER_STATUS_PUT || status == controlObj.ORDER_STATUS_VP ){
 				Sleep, 250
 				orderbookObj.read()
 				this.reloadDetails()
@@ -342,6 +354,5 @@ class OrderClass{
 			else
 				break
 		}
-	}	
-
+	}
 }

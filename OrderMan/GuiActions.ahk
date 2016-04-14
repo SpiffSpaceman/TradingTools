@@ -192,7 +192,7 @@ OnTargetUpDown(){
 /* Links Context to selected existing orders
 */
 linkOrdersSubmit(){
-	global contextObj, ORDER_TYPE_LIMIT, ORDER_TYPE_SL_LIMIT, ORDER_TYPE_SL_MARKET, ORDER_STATUS_OPEN, ORDER_STATUS_TRIGGER_PENDING, ORDER_STATUS_COMPLETE, listViewOrderIDPosition, listViewOrderTypePosition, listViewOrderStatusPosition
+	global contextObj, controlObj, listViewOrderIDPosition, listViewOrderTypePosition, listViewOrderStatusPosition
 		
 	entryId   			:= ""
 	entryType 			:= ""
@@ -213,7 +213,7 @@ linkOrdersSubmit(){
 		LV_GetText( ordertype, rowno, listViewOrderTypePosition )
 		LV_GetText( status,    rowno, listViewOrderStatusPosition )
 																// Is this Open Order?
-		if( status == ORDER_STATUS_OPEN || status == ORDER_STATUS_TRIGGER_PENDING ){
+		if( status == controlObj.ORDER_STATUS_OPEN || status == controlObj.ORDER_STATUS_TRIGGER_PENDING ){
 			if( entryId != ""  ){
 				MsgBox, 262144,, Select Only One Open Entry Order
 				return
@@ -242,7 +242,7 @@ linkOrdersSubmit(){
 		LV_GetText( orderId,   rowno, listViewOrderIDPosition )
 		LV_GetText( ordertype, rowno, listViewOrderTypePosition )
 		
-		if( ordertype == ORDER_TYPE_LIMIT){
+		if( ordertype == controlObj.ORDER_TYPE_LIMIT){
 			if( targetOrderId == "" )
 				targetOrderId := orderId
 			else{
@@ -250,7 +250,7 @@ linkOrdersSubmit(){
 				return	
 			}					
 		}
-		else if( ordertype == ORDER_TYPE_SL_MARKET){
+		else if( ordertype == controlObj.ORDER_TYPE_SL_MARKET){
 			if( stopOrderId == "" )
 				stopOrderId := orderId
 			else{
@@ -261,11 +261,11 @@ linkOrdersSubmit(){
 	}
 		
 	
-	if( entryType == ORDER_TYPE_SL_LIMIT || entryType == ORDER_TYPE_SL_MARKET )
+	if( entryType == controlObj.ORDER_TYPE_SL_LIMIT || entryType == controlObj.ORDER_TYPE_SL_MARKET )
 		isPending := true
 	
 	if( stopOrderId == "" ){
-		if( entryType == ORDER_TYPE_SL_LIMIT || entryType == ORDER_TYPE_SL_MARKET ){
+		if( entryType == controlObj.ORDER_TYPE_SL_LIMIT || entryType == controlObj.ORDER_TYPE_SL_MARKET ){
 			MsgBox, 262144,, Stop order is not linked, Enter Stop Price and click Update immediately to ready Stop order
 		}
 		else{

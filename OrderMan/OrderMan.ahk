@@ -26,53 +26,22 @@ SetWorkingDir %A_ScriptDir%  												// Ensures a consistent starting direct
 SetTitleMatchMode, 2 														// A window's title can contain the text anywhere
 SetControlDelay, -1 														// Without this ControlClick fails sometimes
 
-TITLE_NOW		 			  := "NOW 1.13"									// window titles
-TITLE_ORDER_BOOK			  := "Order Book -"
-TITLE_BUY					  := "Buy Order Entry"
-TITLE_SELL					  := "Sell Order Entry"
-TITLE_TRANSACTION_PASSWORD 	  := "Transaction Password"
+loadSettings()
 
-ORDER_STATUS_PUT			  := "put order req received"
-ORDER_STATUS_VP				  := "validation pending"
-ORDER_STATUS_OPEN	  		  := "open"
-ORDER_STATUS_TRIGGER_PENDING  := "trigger pending"
-ORDER_STATUS_COMPLETE 		  := "complete"
-ORDER_STATUS_REJECTED		  := "rejected"
-ORDER_STATUS_CANCELLED		  := "cancelled"
-
-ORDER_TYPE_LIMIT			  := "LIMIT"
-ORDER_TYPE_MARKET			  := "MARKET"
-ORDER_TYPE_SL_LIMIT			  := "SL"
-ORDER_TYPE_SL_MARKET		  := "SL-M"
-
-ORDER_TYPE_GUI_LIMIT		  := "LIM"
-ORDER_TYPE_GUI_MARKET		  := "M"
-ORDER_TYPE_GUI_SL_LIMIT		  := "SL"
-ORDER_TYPE_GUI_SL_MARKET	  := "SLM"
-
-ORDER_DIRECTION_BUY           := "BUY"
-ORDER_DIRECTION_SELL          := "SELL"
-
-ORDERBOOK_POLL_TIME			  := 500										// Time between reading of OrderBook status by Tracker in order to trigger pending orders. In ms
-GUI_POLL_TIME_MULTIPLE        := 4                                          // Time between GUI refresh by tracker - as multiple of ORDERBOOK_POLL_TIME
-NEW_ORDER_WAIT_TIME			  := 5											// How many maximum seconds to wait for New Submitted Order to appear in orderbook. 
-OPEN_ORDER_WAIT_TIME		  := 5											// How many maximum seconds to wait for Order to be Open ( ie for validation etc to be over)
-																				// Warning message shown after wait period
-
-orderbookObj := new OrderbookClass                                          // Keep Class string in class names to avoid conflict - can get overwritten by object of same name
-contextObj   := new ContextClass                                            // without new, class members are not initialized
+contextObj   := new ContextClass                                            // Keep Class string in class names to avoid conflict - can get overwritten by object of same name
+                                                                            // without new, class members are not initialized
+//chartObj   := new AmibrokerClass
+orderbookObj := new OrderbookClass
+controlObj   := isServerNOW  ? new NowControlsClass : new NestControlsClass // Contains All control ids, window titles for Now/Nest
 
 UtilClass.checkNOWOpen()
-loadSettings()
 initializeStatusTracker()
-
 orderbookObj.read()
 createGUI()
 checkForOpenOrders()
-
 installHotkeys()
 
-return  
+return
 
 checkForOpenOrders(){
 	global orderbookObj, contextObj
@@ -103,8 +72,10 @@ checkForOpenOrders(){
 #include OrderTracker.ahk
 #include Gui.ahk
 #include GuiActions.ahk
-#include AB.ahk
 #include Util.ahk
+#include Chart/AB.ahk
+#include GUIControls/Now.ahk
+#include GUIControls/Nest.ahk
 
 
 #CommentFlag ;
