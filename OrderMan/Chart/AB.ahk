@@ -121,7 +121,9 @@ getPriceFromAB(){
 	IfWinActive, ahk_class AmiBrokerMainFrameClass
 	{	
 		BlockInput, MouseMove
-		price := getPriceFromLine()
+		price := getPriceAtCursor()
+		if( price <= 0 )
+			price := getPriceFromLine()
 		if( price <= 0 )
 			price := getPriceAtCursorTooltip()
 		BlockInput, MouseMoveOff
@@ -130,6 +132,23 @@ getPriceFromAB(){
 	}
 	else
 		return -1
+}
+
+/*
+	If Price/Y Axis Tooltip is enabled - pick price from it
+	This is fastest way to pick price
+*/
+getPriceAtCursor(){
+	
+	WinGet, id, LIST, ahk_class tooltips_class32						// Goes through all tooltips
+	Loop, %id%	{
+		tt_id := id%A_Index%											// id is pseudo array.  id = NO of tooltips. id1,id2 = Windows ids of tooltips
+		ControlGetText, tt_text,, ahk_id %tt_id%
+		
+		if( UtilClass.isNumber( tt_text ) )								// If tooltip is number - Assume its our price
+			return tt_text
+	}
+	return ""
 }
 
 /*
@@ -161,11 +180,13 @@ getPriceFromLine(){
 }
 
 /*
+	If View > X-Y Labels set to Off - Pick price from tooltip at cursor
 	Tries to trigger tooltip in Amibroker and copies price using Value property
-	Tooltip text row format is assumed to be either "Value = 7747.650" or "Begin:     09-09-2015 09:44:59, Value: 7785.28"
+	Tooltip is Triggered by moving right slowly. This takes little extra time.
+	Tooltip text row format is assumed to be either "Value = 7747.650"(cursor over empty space) or "Begin:     09-09-2015 09:44:59, Value: 7785.28" ( cursor over line)
 */
 getPriceAtCursorTooltip(){
-	
+
 	SendMode Event														// Input mode moves cursor immediately - Tooltip open is unreliable
 	Loop, 5 {
 		
