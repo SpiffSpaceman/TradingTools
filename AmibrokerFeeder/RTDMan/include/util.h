@@ -21,6 +21,7 @@ public:
 
     static std::string     getTime(   const char *format = "%H:%M:%S"  );    
 	static std::string	   addMinute( const std::string &time );
+	static std::string	   addLeadingZero( long long no );
 
     static void            trimString          ( std::string & string  );
     static void            replaceTabsWithSpace( std::string & string  );
@@ -31,7 +32,6 @@ public:
     static void            printExceptionSilent( const std::string &msg );
 
     static bool            isStringEqualIC( std::string str1 , std::string str2 ) ; 
-     
 };
 
  

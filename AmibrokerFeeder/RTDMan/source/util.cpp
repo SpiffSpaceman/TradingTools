@@ -135,12 +135,19 @@ std::string Util::addMinute( const std::string &time ){
 
 	if( MM == 59 ){
 		HH++;
-		return (HH<10 ? "0" + std::to_string(HH) : std::to_string(HH))  +  ":00:"   + split[2] ;
-	}														    // Hour should have leading 0 for single digit numbers
+		MM = 0;
+	}
 	else{
 		MM++;
-		return (HH<10 ? "0" + std::to_string(HH) : std::to_string(HH)) + ":" + std::to_string(MM) + ":" + split[2] ;
 	}
+
+	return addLeadingZero(HH) + ":" + addLeadingZero(MM) + ":" + split[2] ;
+}
+
+/*	Add leading 0 for single digit numbers
+*/
+std::string	Util::addLeadingZero( long long no ){
+	return no<10	?	"0" + std::to_string(no)	:	std::to_string(no)  ;
 }
 
 
