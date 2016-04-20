@@ -123,7 +123,6 @@ class TradeClass{
 					}
 					else														// Position empty, cancel stop order
 						this.stopOrder.cancel()
-					
 					MsgBox, 262144,, Entry/Add Order Failed. Stop order has been reverted / cancelled
 				}
 			}
@@ -199,7 +198,8 @@ class TradeClass{
 	*/
 	save(){		
 		
-		openEntryString := this.newEntryOrder.getOrderDetails().nowOrderNo		
+		scripAlias		:= this.newEntryOrder.getInput().scrip.alias
+		openEntryString := this.newEntryOrder.getOrderDetails().nowOrderNo
 		stopString 		:= this.stopOrder.getOrderDetails().nowOrderNo . ( "," . this.isStopPending . "," . this.stopOrder.getInput().trigger ) 		
 		
 		executedEntryString := ""
@@ -209,7 +209,7 @@ class TradeClass{
 		
 		targetString := this.targetOrder.getOrderDetails().nowOrderNo	. "," .  this.targetOrder.getPrice()
 		
-		savestring  := openEntryString . ":" . stopstring . ":" executedEntryString . ":" . targetString
+		savestring  := scripAlias . ":" . openEntryString . ":" . stopstring . ":" executedEntryString . ":" . targetString
 			 
 		saveOrders( savestring )			
 	}
@@ -220,10 +220,11 @@ class TradeClass{
 		orderbookObj.read()
 		
 		fields 					 := StrSplit( SavedOrders , ":") 
-		entryOrderID			 := fields[1]
-		stopstring   			 := fields[2]
-		executedEntryOrderIDList := fields[3]
-		targetString 			 := fields[4]
+		scripAlias				 := fields[1]
+		entryOrderID			 := fields[2]
+		stopstring   			 := fields[3]
+		executedEntryOrderIDList := fields[4]
+		targetString 			 := fields[5]
 		
 		fields 	     := StrSplit( stopstring , ",")
 		stopOrderID  := fields[1]
@@ -234,14 +235,14 @@ class TradeClass{
 		targetOrderID := fields[1]
 		_targetPrice  := fields[2]
 				
-		return this.linkOrders( true, entryOrderID, executedEntryOrderIDList, stopOrderID, isPending, pendingPrice, targetOrderID, _targetPrice  )		
+		return this.linkOrders( true, scripAlias, entryOrderID, executedEntryOrderIDList, stopOrderID, isPending, pendingPrice, targetOrderID, _targetPrice  )		
 	}
 	
 	/*	Link with Input Order
 		Linking Stop Order is optional
 		Does not call this.save() - should be called by caller. loadOrders()->linkOrders() does not need to save
 	*/
-	linkOrders( isSilent, entryOrderID, executedEntryOrderIDList, stopOrderID, isPending, pendingPrice, targetOrderID, targetPrice ){
+	linkOrders( isSilent, scripAlias, entryOrderID, executedEntryOrderIDList, stopOrderID, isPending, pendingPrice, targetOrderID, targetPrice ){
 		global orderbookObj
 		
 		orderbookObj.read()
@@ -344,6 +345,8 @@ class TradeClass{
 		}		
 
 	// Validations over - Load Data
+		
+		loadScrip( scripAlias )
 		
 		this.newEntryOrder  := new OrderClass
 		this.stopOrder 		:= new OrderClass
@@ -663,11 +666,11 @@ class TradeClass{
 	_handleTargetOrder( targetPrice ){
 		global ORDER_TYPE_GUI_LIMIT	
 		
-		if( (targetPrice == 0  ||  targetPrice = "" || this.positionSize == 0) ){
+		if( (targetPrice == 0  ||  targetPrice = "" ) ){
 			this.targetOrder.cancel()											// Cancel if open. Can happen for adds, If target cleared, cancel it
+			this.targetOrder := -1
+			return
 		}
-		if( targetPrice == 0  ||  targetPrice = "" )
-				return
 
 		_entryDirection := this.direction
 		_stopDirection  := UtilClass.reverseDirection(_entryDirection)

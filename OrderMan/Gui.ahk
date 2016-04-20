@@ -23,16 +23,19 @@ initGUI(){
 	ORDER_TYPE_GUI_MARKET	  := "M"
 	ORDER_TYPE_GUI_SL_LIMIT	  := "SL"
 	ORDER_TYPE_GUI_SL_MARKET  := "SLM"
+	SelectedScripText 		  := ""													// To avoid uninitialized error
 }
 
 createGUI(){
-	global Qty, EntryPrice, StopPrice, TargetPrice, Direction, CurrentResult, TargetResult, BtnOrder, BtnUpdate, BtnLink, BtnUnlink, BtnCancel, EntryStatus, StopStatus, TargetStatus, LastWindowPosition, EntryOrderType, EntryUpDown, StopUpDown, TargetUpDown, EntryText, AddText, BtnAdd
+	global Qty, EntryPrice, StopPrice, TargetPrice, Direction, CurrentResult, TargetResult, BtnOrder, BtnUpdate, BtnLink, BtnUnlink, BtnCancel, EntryStatus, StopStatus, TargetStatus, LastWindowPosition, EntryOrderType, EntryUpDown, StopUpDown, TargetUpDown, EntryText, AddText, BtnAdd, SelectedScripText, ScripList
 	
 	SetFormat, FloatFast, 0.2
-	
+
 	initGUI()
 		
 	Gui, 1:New, +AlwaysOnTop +Resize, OrderMan
+	
+	Gui, 1:Add, DropDownList, vSelectedScripText gonScripChange w50 Choose1, %ScripList%
 
 	Gui, 1:Add, ListBox, vDirection gonDirectionChange h30 w20 Choose1, B|S	
 	Gui, 1:Add, Edit, vQty w30														// Column 1
@@ -57,7 +60,7 @@ createGUI(){
 	Gui, 1:Add, UpDown, vTargetUpDown gOnTargetUpDown  Range0-1 -16 hp
 																					// Column 5
 	Gui, 1:Add, DropDownList, vEntryOrderType w45 Choose1 ym, LIM|SL|SLM|M 			// Entry Type
-	//Gui, 1:Add, DropDownList, w45 Choose1, SLM|SL
+	
 	Gui, 1:Add, Text, vCurrentResult  w45	
 	Gui, 1:Add, Text, vTargetResult   w45	
 	Gui, 1:Add, Button, gonCancel vBtnCancel y+14, Cancel		 					// Add or Cancel button	
@@ -70,34 +73,38 @@ createGUI(){
 	Gui, 1:Add, StatusBar, gstatusBarClick, 										// Status Bar - Shows link order Numbers. Double click to link manually
 	
 	Gui, 1:Show, AutoSize NoActivate %LastWindowPosition% 
-		
-	setGUIValues(Qty, 0, 0, 0, "B", EntryOrderType)
-	
+
+	onScripChange()																	// Loads default scrip ini and initializes GUI values to defaults 
+	setDefaultEntryOrderType()
 	initalizeListViewVars()
-	
-	return	
+	setDefaultFocus()
+
+	return
 }
 
 /* Link Button GUI
 */
 openLinkOrdersGUI(){	
 	
-	global listViewFields, LinkOrdersSelectedDirection
+	global listViewFields, LinkOrdersSelectedDirection, LinkedScripText, ScripList
 	
-	Gui, 2:New, +AlwaysOnTop, Link Orders		
+	LinkedScripText := ""
 	
+	Gui, 2:New, +AlwaysOnTop, Link Orders
+
 	Gui, 2:font, bold
 	Gui, 2:Add, Text,, Select Entry Order
 	Gui, 2:font
-		
 	Gui, 2:Add, ListView, w600, % listViewFields
 	
 	Gui, 2:Add, Radio, vLinkOrdersSelectedDirection gonLinkOrdersDirectionSelect Checked, Long
 	Gui, 2:Add, Radio, gonLinkOrdersDirectionSelect xp+60 yp, Short
-	
-	
+	Gui, 2:Add, DropDownList, vLinkedScripText x+15 w50, %ScripList%
+
+	// Column 2
+
 	Gui, 2:font, bold
-	Gui, 2:Add, Text, ym, Select Stop, Target Order									// Column 2
+	Gui, 2:Add, Text, ym , Select Stop, Target Order
 	Gui, 2:font	
 	Gui, 2:Add, ListView, w600 SortDesc,  % listViewFields
 	
@@ -110,10 +117,10 @@ openLinkOrdersGUI(){
 /* Fills up Entry/Stop ListViews in Link Orders GUI based on input Direction
 */
 onLinkOrdersDirectionSelect(){
-	global  controlObj, orderbookObj, LinkOrdersSelectedDirection		
+	global  controlObj, orderbookObj, LinkOrdersSelectedDirection
 	
 	Gui, 2:Submit, NoHide
-	
+
 	entryDirection := LinkOrdersSelectedDirection == 1 ? controlObj.ORDER_DIRECTION_BUY  : controlObj.ORDER_DIRECTION_SELL		// Long Selected then Entry is Buy Order
 	stopDirection  := LinkOrdersSelectedDirection == 1 ? controlObj.ORDER_DIRECTION_SELL : controlObj.ORDER_DIRECTION_BUY		// Long Selected then Stop  is Sell Order
 	
@@ -252,6 +259,7 @@ updateStatus(){
 	GuiControl, % isEntered ? "1:Hide" : "1:Show", EntryText						// Show Add Label once Initial Entry order is successful
 	GuiControl, % isEntered ? "1:Show" : "1:Hide", AddText
 	
+	GuiControl, % anyLinked ? "1:Disable" : "1:Enable", SelectedScripText			// Disable Scrip combobox if orders Linked
 	GuiControl, % anyLinked ? "1:Disable" : "1:Enable", Direction					// Disable Direction if orders Linked
 	GuiControl, % anyLinked ? "1:Show"    : "1:Hide",   BtnUnlink					// Show Order if unlinked. If orders links show Unlink button instead
 	GuiControl, % anyLinked	? "1:Hide"    : "1:Show",   BtnLink						// Show Link if not linked
@@ -329,7 +337,9 @@ loadTradeInputToGui(){
 	entryInput  := entry.getInput()
 	stop  		:= trade.stopOrder
 	target	    := trade.targetOrder
-
+	scripAlias	:= entryInput.scrip.alias
+	
+	setSelectedScrip( scripAlias )
 	setGUIValues( entryInput.qty, entry.getPrice(), stop.getPrice(), target.getPrice(), entryInput.direction, entryInput.orderType  )
 	updateCurrentResult()
 }
@@ -344,6 +354,12 @@ setGUIValues( inQty, inEntry, inStop, inTargetPrice, inDirection, inEntryOrderTy
 	setTargetPrice( inTargetPrice )
 	
 	updateStatus()	
+}
+
+setSelectedScrip( alias ){
+	global SelectedScripText	
+	SelectedScripText := alias
+	GuiControl, 1:ChooseString, SelectedScripText,  %SelectedScripText%
 }
 
 setQty( inQty ){
@@ -401,6 +417,10 @@ selectEntryOrderType( inEntryOrderType ){
 setDefaultEntryOrderType(){
 	global DefaultEntryOrderType
 	selectEntryOrderType( DefaultEntryOrderType )
+}
+
+setDefaultFocus(){
+	ControlFocus, Edit2, OrderMan, Entry											// Set Focus on Entry Price
 }
 
 // -- GUI Helpers --- 

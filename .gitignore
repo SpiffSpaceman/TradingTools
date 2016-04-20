@@ -36,3 +36,7 @@ AHK/
 *.exe
 *.ico
 
+# OrderMan - ignore config except 1 as template
+OrderMan/scrips/*
+!OrderMan/scrips/SBIN.ini
+

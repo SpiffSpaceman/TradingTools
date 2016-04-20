@@ -131,6 +131,22 @@ onCancel(){
 	trade.cancel()
 }
 
+/* Scrip combobox change
+*/
+onScripChange(){
+	global SelectedScripText, DefaultQty, EntryOrderType
+	
+	oldScrip := SelectedScripText	
+	
+	Gui, 1:Submit, NoHide
+	
+	if( oldScrip != SelectedScripText){ 
+		setDefaultFocus()															// Change Focus to Entry price to prevent change by mouse scroll
+		loadScrip( SelectedScripText )
+		setGUIValues( DefaultQty, 0, 0, 0, "B", EntryOrderType )					// Reset to default state
+	}
+}
+
 /* Direction Switch
 */
 onDirectionChange(){
@@ -192,8 +208,14 @@ OnTargetUpDown(){
 /* Links Context to selected existing orders
 */
 linkOrdersSubmit(){
-	global contextObj, controlObj, listViewOrderIDPosition, listViewOrderTypePosition, listViewOrderStatusPosition
-		
+	global contextObj, controlObj, listViewOrderIDPosition, listViewOrderTypePosition, listViewOrderStatusPosition, LinkedScripText
+
+	Gui, 2:Submit, NoHide										// sets variables from GUI
+	if( LinkedScripText == "" ){
+		MsgBox, 262144,, Select Scrip Alias
+		return
+	}
+
 	entryId   			:= ""
 	entryType 			:= ""
 	executedEntryIDList	:= ""
@@ -267,6 +289,7 @@ linkOrdersSubmit(){
 	if( stopOrderId == "" ){
 		if( entryType == controlObj.ORDER_TYPE_SL_LIMIT || entryType == controlObj.ORDER_TYPE_SL_MARKET ){
 			MsgBox, 262144,, Stop order is not linked, Enter Stop Price and click Update immediately to ready Stop order
+			return
 		}
 		else{
 			MsgBox, 262144,, Select Stop Order					// Skipping Stop order allowed only for SL/SLM Orders
@@ -279,8 +302,8 @@ linkOrdersSubmit(){
 	}
 	
 	trade := contextObj.getCurrentTrade()					// Link Orders in Current Context	
-	
-	if( !trade.linkOrders( false, entryId, executedEntryIDList, stopOrderId, isPending, 0, targetOrderId, 0 ) )
+
+	if( !trade.linkOrders( false, LinkedScripText, entryId, executedEntryIDList, stopOrderId, isPending, 0, targetOrderId, 0 ) )
 		return
 	
 	Gui, 2:Destroy

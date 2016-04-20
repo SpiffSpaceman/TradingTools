@@ -3,19 +3,80 @@ test
     Reset default ordertype after unlink/cancel
 
 
-Entry Average price not updated   // Maybe remove anyway
-NT - pick from line in NT
-    - Middle button brings tooltip
-    - Extend AB class   // keyword "extends"
-Multiple Scrips 
-    DropDown / Right Click
-    1 ini per scrip (Some parts will be duplicate?) or 1 ini section per scrip
+
+
+
+
+Take current price from RTDMan and show price, status
+    check current price and warn if posible bad order based on ordertype
+    Example - Limit Buy above price, % diff between Entry price and current price
+Bugs
+    - Order creation - If not found - try to uncheck and check "Display All Orders" 
+        // Once didnt show up until this
+        // Another time - If OB is closed, reopen didnt show orders initially
+    - Check and uncheck checkbox 
+        - on every call to readOpenOrders()?
+        - or maybe before looking for new order and if already open order is not found in open/completed lists
+    - NOW
+        Under "Order Book -"
+            ClassNN:	Button6
+            Text:	Display all Orders
+Square Off - Market Stop order for filled position + cancel rest
+Export Trade Execution Log
+    In trackerCallback() before unlink
 
 
 
 
 
+
+
+
+
+
+
+
+
+
+    
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-----------------------------------------------------------------------------------------
 Multiple Orders
+    - Change context using Right click menu
     - Example 2 orders long/short - OCO
     - One Order at a time
         - Keep array of trades + current context 
@@ -26,117 +87,30 @@ Multiple Orders
         - refresh orderbook too on context change + Filter all data for specific scrip - So everything else becomes per scrip
     - call trackerCallback() for each trade
         - Trade.reload() - Move orderbookObj.read(). Should be called only once here
+    - Notify on Execution - ring bell
+Market Order - option for fixed stop based on entry price?
 Ring Alarm / Notify at 15:17 if open trade
     Automatic squareoff at 15:19
-Take current price from RTDMan and show price, status
-    check current price and warn if posible bad order based on ordertype
-    Example - Limit Buy above price  
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 -----------------------------------------------------------------------------------------
-Export Trade Execution Log
+Bugs
+    - Cancel order - in between - gives error. Detect and check again
+        ---------------------------
+        NOW
+        ---------------------------
+        Please Select Order To Cancel
+NT - pick from line in NT
+    - Middle button brings tooltip  - Does not have value at cursor
+    - Extend AB class   // keyword "extends"
 Add Order Stop
     - Option to keep seperate
     - Merge when Normal stop moves past add stop
 Callback
     Ring bell on Order Trigger
     Verify Order Creation/Updation - check size/status in callback
-Square Off - Market Stop order for filled position + cancel rest
 Max Slippage in GUI
 Position Status - Current Risk based on Stop price / avg price
+Log of Major Events - creation/updation/cancel/OrderTracker triggers - show in GUI ?
 -----------------------------------------------------------------------------------------
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
------------------------------------------------------------------------------------------
-Log of Major Events - creation/updation/cancel/OrderTracker triggers
-Bugs
-    - Manual Link - Order type not updated 
-    - Order creation - If not found - try to uncheck and check "Display All Orders" // Once didnt show up untill this
-    - Cancel order - in between - gives error. Detect and check again
-        ---------------------------
-        NOW
-        ---------------------------
-        Please Select Order To Cancel
------------------------------------------------------------------------------------------
-Partial Target
-    Move to Target Order to seperate class? Maybe also for Entry and Stop
-    Current target Order + List of Target executed orders
-    _handleTargetOrder()
-        target size should be less than position size
-    save / load executed target orders
-        linkOrders() - reduce position size for executed target orders
-    OCO - trackerCallback - on target execution
-        - reduce position size
-        - update stop size using new position size, cancel only if size 0
-Partial Square Off
 Partial Fill - Handle Stop/Target orders       // workaround - use SLM
     - Show filled size for Entry/Stop
     - Maybe Stop order only entered once filled and stop size modified if Entry Size increases
@@ -151,6 +125,17 @@ Partial Fill - Handle Stop/Target orders       // workaround - use SLM
         Need to differentiate between original stop and Trailing stop ( only when order is unfilled)
             Orignial Stop for unfilled size cannot be moved beyond Entry price
     - Handle cancel orders
+Partial Target
+    Move Target Order to seperate class? Maybe also for Entry and Stop
+    Current target Order + List of Target executed orders
+    _handleTargetOrder()
+        target size should be less than position size
+    save / load executed target orders
+        linkOrders() - reduce position size for executed target orders
+    OCO - trackerCallback - on target execution
+        - reduce position size
+        - update stop size using new position size, cancel only if size 0
+Partial Square Off
 -----------------------------------------------------------------------------------------
 Settings - change in GUI
 Linked Order Details

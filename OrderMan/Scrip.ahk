@@ -23,12 +23,16 @@ class ScripClass{														// Scrip details used in create/modify order
 	strikePrice	:= ""
 	expiryIndex := ""
 	
-	setInput( inSegment, inInstrument, inSymbol, inType, inStrikePrice, inExpiryIndex ){		
+	alias		:= ""													// Scrip Alias display in GUI having ini config of same name
+	
+	setInput( inSegment, inInstrument, inSymbol, inType, inStrikePrice, inExpiryIndex, inAlias ){
 		this.segment		:= inSegment
 		this.instrument		:= inInstrument
 		this.symbol			:= inSymbol
 		this.type			:= inType
 		this.strikePrice	:= inStrikePrice
-		this.expiryIndex 	:= inExpiryIndex	
+		this.expiryIndex 	:= inExpiryIndex
+		this.alias			:= inAlias
+		
 	}
 }
