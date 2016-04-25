@@ -23,7 +23,6 @@
 #include <process.h>
 #include <mmsystem.h>
 
-#include <sstream>
 #include <limits>
  
 
@@ -177,8 +176,8 @@ void Worker::processRTDData( const std::map<long,CComVariant>* data ){
                 _current->ltp = ltp;
                 if( _current->bar_high < ltp )    _current->bar_high = ltp;
                 if( _current->bar_low  > ltp )    _current->bar_low  = ltp;
-                if( _current->bar_open == 0  )    _current->bar_open = ltp;                
-                break ;    
+                if( _current->bar_open == 0  )    _current->bar_open = ltp;
+                break ;
             }
             case VOLUME_TODAY :{  
                 long long vol_today          = Util::getLong  ( topic_value );
@@ -208,6 +207,7 @@ void Worker::threadEntryDummy(void* _this){
 void Worker::amibrokerPoller(){
 
     std::vector<ScripBar>  new_bars;
+	std::stringstream	   current_prices;	
 
 	if( settings.isTargetNT()){
 		ninja_trader = new NinjaTrader();
@@ -235,7 +235,7 @@ void Worker::amibrokerPoller(){
         }
         else if( return_code != WAIT_OBJECT_0 + 1 ){                       // If not Timer Event, then we have some error
             std::stringstream msg;  msg << "WaitForSingleObject Failed - " << return_code;
-            throw( msg.str() );                
+            throw( msg.str() );           
         }        
 
     // Shared data access start
@@ -246,8 +246,9 @@ void Worker::amibrokerPoller(){
             ScripState *_current  =  &current[i];
             ScripState *_prev     =  &previous[i];
             long long bar_volume  =  _current->vol_today - _prev->vol_today ;
-            
-            // if( i==0) std::cout << i <<": " << *_current << std::endl ; 
+																		  // Archive Close price for each Scrip
+			double ltp = _current->ltp == 0 ? _prev->ltp : _current->ltp;
+            current_prices << settings.scrips_array[i].ticker << ":" << ltp << std::endl;
                                                                            // If data not changed, skip
             if( (_current->bar_open == 0)                   ||             // 1. No New data from readNewData()
                 (bar_volume==0 && _current->vol_today!=0)   ||             // 2. Also skip if bar volume 0 but allow 0 volume scrips like forex
@@ -307,7 +308,8 @@ void Worker::amibrokerPoller(){
 			}
 
 			if( settings.is_archive )
-				writeArchiveCsv( new_bars );							  // Archive ticks to be used for backfill
+				writeArchiveCsv( new_bars );							 // Archive ticks to be used for backfill
+				writeCurrentPrices(current_prices);						 // Output latest prices for each scrip
         }
         new_bars.clear();
     }
@@ -417,7 +419,7 @@ void Worker::writeArchiveCsv( const std::vector<ScripBar> & bars  ){
 																		  // Open file for - write + append	mode
 			csv_file_out.open( settings.csv_folder_path + filename + ".csv",  std::fstream::out | std::fstream::app  );
 			if( !csv_file_out.is_open() ){
-				throw( "Error opening file - " + settings.csv_folder_path + filename + + ".csv" );
+				throw( "Error opening file - " + settings.csv_folder_path + filename + ".csv" );
 			}
 		}
 
@@ -436,3 +438,18 @@ void Worker::writeArchiveCsv( const std::vector<ScripBar> & bars  ){
 		csv_file_out.close();
 }
 
+void Worker::writeCurrentPrices( const std::stringstream  & current_prices){
+
+	if( csv_file_out.is_open() )
+		csv_file_out.close();
+
+	csv_file_out.open( settings.csv_folder_path + "last_prices.csv",  std::fstream::out );
+	if( !csv_file_out.is_open() ){
+		throw( "Error opening file - last_prices.csv" );
+	}
+
+	csv_file_out << current_prices.rdbuf() << std::flush;
+	
+	if( csv_file_out.is_open() )
+		csv_file_out.close();
+}

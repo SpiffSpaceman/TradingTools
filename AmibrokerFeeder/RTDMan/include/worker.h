@@ -12,6 +12,7 @@
 #include <utility>
 #include <iostream>
 #include <fstream> 
+#include <sstream>
 
 class Worker{
 
@@ -34,7 +35,7 @@ private:
     std::map< long, std::pair<int,int>>  topic_id_to_scrip_field_map;       // topic_id  :  scripd_id,field_id
     ScripState                          *current, *previous;                // Maintains Current and last state of each Scrip
     std::string                          today_date;                            // (in same order as Settings::Scrip::topic_name)
-    std::ofstream                        csv_file_out;    
+    std::ofstream                        csv_file_out; 
             
     CRITICAL_SECTION                     lock;                              // Thread Data sync    
     HANDLE                               Event_RTD_Update;                  // Signaled by RTD Callback
@@ -48,9 +49,10 @@ private:
     void        loadSettings    ();    
     void        processRTDData  ( const std::map<long,CComVariant>* data );
     static void threadEntryDummy( void* _this);                             // Entry Point for Amibroker Feeder thread
-    void        amibrokerPoller ();                                             // Fetches Bar data and feeds to Amibroker
-    void        writeABCsv      ( const std::vector<ScripBar> & bars  );        // This thread uses members - current , previous, settings
-	void		writeArchiveCsv ( const std::vector<ScripBar> & bars  );    // Archive Ticks in seperate csv. Used in backfill
+    void        amibrokerPoller ();                                             // Fetches Bar data and feeds to Amibroker    
+	void        writeABCsv      ( const std::vector<ScripBar> & bars  );        // This thread uses members - current , previous, settings
+	void		writeArchiveCsv ( const std::vector<ScripBar> & bars);      // Archive Ticks in seperate csv. Used in backfill
+	void		writeCurrentPrices( const std::stringstream	  & current_prices);	// Write Current prices of all scrips
 	void		pushToNT( const std::vector<ScripBar> & bars  );			// Push ticks to Ninjatrader
     void        notifyActive    ();
     void        notifyInactive  ();                                         // Ring Bell if RTD Inactive    
