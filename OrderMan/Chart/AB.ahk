@@ -36,10 +36,18 @@ installHotKey( key, function ){
 	Hotkey, %key%, %function%
 }
 
+setScrip(){
+	scrip := getScripFromAB()
+	if( scrip != "" )
+		setSelectedScrip( scrip )
+}
+
 getEntryPriceFromAB(){
 	global EntryPriceActual, StopPrice, isABPick
 	
+	setScrip()
 	price := getPriceFromAB()
+
 	if( price > 0 ){		
 		EntryPriceActual := price
 		_guessDirection( price, StopPrice )
@@ -51,7 +59,9 @@ getEntryPriceFromAB(){
 getStopPriceFromAB(){
 	global EntryPrice, StopPriceActual, isABPick
 	
+	setScrip()
 	price := getPriceFromAB()
+
 	if( price > 0 ){		
 		StopPriceActual := price
 		_guessDirection( EntryPrice, price )
@@ -61,8 +71,9 @@ getStopPriceFromAB(){
 }
 
 getTargetPriceFromAB(){
-	
-	price := getPriceFromAB()	
+
+	setScrip()
+	price := getPriceFromAB()
 	
 	if( price > 0 ){		
 		setTargetPrice( UtilClass.roundToTickSize(price) )
@@ -109,9 +120,21 @@ _shortPriceAdjust(){
 	setStopPrice(   UtilClass.ceilToTickSize( StopPriceActual),   StopPriceActual )
 }
 
+/* Get scrip name from Ticker ToolBar
+*/
+getScripFromAB(){
+	IfWinActive, OrderMan
+		WinActivate, ahk_class AmiBrokerMainFrameClass
+			
+	IfWinActive, ahk_class AmiBrokerMainFrameClass
+	{	
+		ControlGetText, scrip, RichEdit20A1, ahk_class AmiBrokerMainFrameClass
+		return scrip
+	}
+	return ""
+}
 
 /*
-	Called by HK
 	Get price from line under cursor if found, else get from tooltip text
 */
 getPriceFromAB(){

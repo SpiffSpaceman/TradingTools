@@ -19,23 +19,28 @@
 
 loadSettings(){
 	
-	local value												// All variables global by default
+	local value                 												// All variables global by default
 
-    IniRead, ScripList,         OrderMan.ini, OrderMan, ScripList
-    IniRead, HKEntryPrice,   	OrderMan.ini, OrderMan, HKEntryPrice
-    IniRead, HKStopPrice,   	OrderMan.ini, OrderMan, HKStopPrice
-    IniRead, HKTargetPrice,   	OrderMan.ini, OrderMan, HKTargetPrice
-    IniRead, LastWindowPosition,OrderMan.ini, OrderMan, LastWindowPosition
-    IniRead, SavedOrders,       OrderMan.ini, OrderMan, SavedOrders
-    IniRead, TITLE_NOW,         OrderMan.ini, OrderMan, WindowTitle
+    config := "config/OrderMan.ini"
 
-    IniRead, value, OrderMan.ini, OrderMan, AutoSubmit
-    AutoSubmit   := value=="true"
+    IniRead, ScripList,         %config%, OrderMan, ScripList
+    IniRead, HKEntryPrice,   	%config%, OrderMan, HKEntryPrice
+    IniRead, HKStopPrice,   	%config%, OrderMan, HKStopPrice
+    IniRead, HKTargetPrice,   	%config%, OrderMan, HKTargetPrice
+    IniRead, LastWindowPosition,%config%, OrderMan, LastWindowPosition
+    IniRead, SavedOrders,       %config%, OrderMan, SavedOrders
+    IniRead, TITLE_NOW,         %config%, OrderMan, WindowTitle
     
-    IniRead, DefaultEntryOrderType, OrderMan.ini, OrderMan, EntryOrderType
+    IniRead, value,     %config%, OrderMan, AlertsEnabled
+    AlertsEnabled := value=="true"
+  
+    IniRead, value, %config%, OrderMan, AutoSubmit
+    AutoSubmit := value=="true"
+    
+    IniRead, DefaultEntryOrderType, %config%, OrderMan, EntryOrderType
     EntryOrderType := DefaultEntryOrderType
 
-    IniRead, Server, OrderMan.ini, OrderMan, Server
+    IniRead, Server, %config%, OrderMan, Server
     isServerNOW := (Server == "Now")
 
     ORDERBOOK_POLL_TIME			  := 500										// Time between reading of OrderBook status by Tracker in order to trigger pending orders. In ms
@@ -53,7 +58,7 @@ loadScrip( alias ){
     
     local value
     
-    ini := "scrips/" . alias . ".ini"
+    ini := "config/scrips/" . alias . ".ini"
     
     IniRead, value,	%ini%, OrderMan, Scrip, NotFound
     
@@ -82,15 +87,18 @@ loadScrip( alias ){
   Save Current Position to Settings. Used to restore position on next start
 */
 saveLastPosition(){
+    global config
+    
 	WinGetPos, X, Y,,, OrderMan ahk_class AutoHotkeyGUI
     value = X%X% Y%Y%
-	IniWrite, %value%, OrderMan.ini, OrderMan, LastWindowPosition
+	IniWrite, %value%, %config%, OrderMan, LastWindowPosition
 }
 
 /*
   Save orders. Used to load open trade on startup
 */
-saveOrders( savestring ){    
-    IniWrite, %savestring%, OrderMan.ini, OrderMan, SavedOrders
+saveOrders( savestring ){
+    global config
+    IniWrite, %savestring%, %config%, OrderMan, SavedOrders
 }
 

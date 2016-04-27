@@ -100,7 +100,7 @@ statusBarClick(){
 stopClick(){	
 	if( A_GuiEvent == "DoubleClick"  ){
 		setDefaultStop()
-	}	
+	}
 }
 
 /* Target Text Double Click 
@@ -132,19 +132,26 @@ onCancel(){
 }
 
 /* Scrip combobox change
+	Seems to be Only called on manually selecting option and not by changing value through GuiControl
 */
 onScripChange(){
-	global SelectedScripText, DefaultQty, EntryOrderType
+	global SelectedScripText
 	
 	oldScrip := SelectedScripText	
 	
 	Gui, 1:Submit, NoHide
 	
 	if( oldScrip != SelectedScripText){ 
-		setDefaultFocus()															// Change Focus to Entry price to prevent change by mouse scroll
-		loadScrip( SelectedScripText )
-		setGUIValues( DefaultQty, 0, 0, 0, "B", EntryOrderType )					// Reset to default state
+		loadScripSettings()
 	}
+}
+
+loadScripSettings(){
+	global SelectedScripText, DefaultQty, EntryOrderType
+	
+	setDefaultFocus()															// Change Focus to Entry price to prevent change by mouse scroll
+	loadScrip( SelectedScripText )
+	setGUIValues( DefaultQty, 0, 0, 0, "B", EntryOrderType )					// Reset to default state
 }
 
 /* Direction Switch

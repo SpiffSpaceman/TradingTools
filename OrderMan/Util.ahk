@@ -67,5 +67,16 @@ class UtilClass{
 	sendMsgToConsole( msg ){
 		FileAppend  %msg%`n, *	
 	}
+	
+	timer( mode ){
+		static start := 0
 
+		if( mode == "start" ) {
+			start := A_TickCount
+		}
+		if( mode == "end" ) {
+			return (A_TickCount - start )
+		}
+	}
+	
 }

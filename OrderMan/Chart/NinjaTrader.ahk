@@ -21,5 +21,6 @@ class NinjaTraderClass extends AmibrokerClass{
 //getPriceFromAB
 //getPriceFromLine
 //getPriceAtCursorTooltip
+//getScripFromAB
 
 }

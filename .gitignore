@@ -36,7 +36,10 @@ AHK/
 *.exe
 *.ico
 
-# OrderMan - ignore config except 1 as template
-OrderMan/scrips/*
-!OrderMan/scrips/SBIN.ini
+# OrderMan 
+# ignore config except 1 as template
+OrderMan/config/scrips/*
+!OrderMan/config/scrips/SBIN.ini
+# Will be generated through GUI later
+OrderMan/config/alerts.ini
 

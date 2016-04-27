@@ -34,18 +34,20 @@ createGUI(){
 	initGUI()
 		
 	Gui, 1:New, +AlwaysOnTop +Resize, OrderMan
-	
-	Gui, 1:Add, DropDownList, vSelectedScripText gonScripChange w50 Choose1, %ScripList%
 
+// Column 1
+	Gui, 1:Add, DropDownList, vSelectedScripText gonScripChange w100 Choose1, %ScripList%
 	Gui, 1:Add, ListBox, vDirection gonDirectionChange h30 w20 Choose1, B|S	
-	Gui, 1:Add, Edit, vQty w30														// Column 1
+	Gui, 1:Add, Edit, vQty w30
 		
-	Gui, 1:Add, Text, vEntryText ym, Entry											// Column 2	
+// Column 2	- But below Scrip change Dropdown
+	Gui, 1:Add, Text, vEntryText ym+25 x+m, Entry
 	Gui, 1:Add, Text, vAddText xp+0 yp+0, Add
 	Gui, 1:Add, Text, gstopClick, Stop
 	Gui, 1:Add, Text, gTargetClick, Target
-			
-	Gui, 1:Add, Edit, vEntryPrice  w55 ym gonEntryPriceChange 						// Column 3
+
+// Column 3	
+	Gui, 1:Add, Edit, vEntryPrice  w55    gonEntryPriceChange ym+25 x+m
 	Gui, 1:Add, Edit, vStopPrice   w55    gonStopPriceChange
 	Gui, 1:Add, Edit, vTargetPrice w55    gupdateCurrentResult
 		
@@ -55,23 +57,25 @@ createGUI(){
 	Gui, 1:Add, Button, gopenLinkOrdersGUI vBtnLink x+5, Link						// Link or Unlink
 	Gui, 1:Add, Button, gonUnlink vBtnUnlink xp+0 yp+0, Unlink		
 	
-	Gui, 1:Add, UpDown, vEntryUpDown  gOnEntryUpDown   Range0-1 -16 hp-2 x+0 ym		// Column 4 
+// Column 4 
+	Gui, 1:Add, UpDown, vEntryUpDown  gOnEntryUpDown   Range0-1 -16 hp-2 x+0 ym+25
 	Gui, 1:Add, UpDown, vStopUpDown   gOnStopUpDown    Range0-1 -16 hp
 	Gui, 1:Add, UpDown, vTargetUpDown gOnTargetUpDown  Range0-1 -16 hp
-																					// Column 5
-	Gui, 1:Add, DropDownList, vEntryOrderType w45 Choose1 ym, LIM|SL|SLM|M 			// Entry Type
+
+// Column 5
+	Gui, 1:Add, DropDownList, vEntryOrderType w45 Choose1 ym+25, LIM|SL|SLM|M 		// Entry Type
 	
 	Gui, 1:Add, Text, vCurrentResult  w45	
 	Gui, 1:Add, Text, vTargetResult   w45	
 	Gui, 1:Add, Button, gonCancel vBtnCancel y+14, Cancel		 					// Add or Cancel button	
 	Gui, 1:Add, Button, gonAdd vBtnAdd xp+0 yp+0, Add
-	
-	Gui, 1:Add, Text, ym vEntryStatus												// Column 6
+
+// Column 6
+	Gui, 1:Add, Text, ym+25 vEntryStatus
 	Gui, 1:Add, Text, vStopStatus	
 	Gui, 1:Add, Text, vTargetStatus
-	
+		
 	Gui, 1:Add, StatusBar, gstatusBarClick, 										// Status Bar - Shows link order Numbers. Double click to link manually
-	
 	Gui, 1:Show, AutoSize NoActivate %LastWindowPosition% 
 
 	onScripChange()																	// Loads default scrip ini and initializes GUI values to defaults 
@@ -358,8 +362,16 @@ setGUIValues( inQty, inEntry, inStop, inTargetPrice, inDirection, inEntryOrderTy
 
 setSelectedScrip( alias ){
 	global SelectedScripText	
+	
+	oldScrip		  := SelectedScripText
 	SelectedScripText := alias
 	GuiControl, 1:ChooseString, SelectedScripText,  %SelectedScripText%
+	
+	Gui, 1:Submit, NoHide
+	
+	if( alias !=""  &&  oldScrip!=SelectedScripText  ){
+		loadScripSettings()																// onScripChange() is not called by above even though dropdown is changed. So load manually
+	}
 }
 
 setQty( inQty ){
@@ -408,10 +420,13 @@ setDirection( inDirection ){
 	onDirectionChange()
 }
 
-selectEntryOrderType( inEntryOrderType ){
+selectEntryOrderType( inEntryOrderType ){	
 	global EntryOrderType	
-	EntryOrderType := inEntryOrderType
-	GuiControl, 1:ChooseString, EntryOrderType,  %EntryOrderType%
+	
+	if( inEntryOrderType != "" ){
+		EntryOrderType := inEntryOrderType
+		GuiControl, 1:ChooseString, EntryOrderType,  %EntryOrderType%
+	}
 }
 
 setDefaultEntryOrderType(){

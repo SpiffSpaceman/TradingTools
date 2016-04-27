@@ -33,6 +33,7 @@ contextObj   := new ContextClass                                            // K
 //chartObj   := new AmibrokerClass
 orderbookObj := new OrderbookClass
 controlObj   := isServerNOW  ? new NowControlsClass : new NestControlsClass // Contains All control ids, window titles for Now/Nest
+alertsObj    := new AlertsClass
 
 UtilClass.checkNOWOpen()
 initializeStatusTracker()
@@ -40,8 +41,10 @@ orderbookObj.read()
 createGUI()
 checkForOpenOrders()
 installHotkeys()
+alertsObj.init()
 
 return
+
 
 checkForOpenOrders(){
 	global orderbookObj, contextObj
@@ -63,6 +66,7 @@ checkForOpenOrders(){
 
 
 #include Settings.ahk
+#include Alerts.ahk
 #include Scrip.ahk
 #include OrderDetails.ahk
 #include Order.ahk

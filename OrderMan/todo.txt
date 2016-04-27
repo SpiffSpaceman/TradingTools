@@ -3,14 +3,7 @@ test
     Reset default ordertype after unlink/cancel
 
 
-
-
-
-
-Take current price from RTDMan and show price, status
-    check current price and warn if posible bad order based on ordertype
-    Example - Limit Buy above price, % diff between Entry price and current price
-Bugs
+Bugs - Order creation box
     - Order creation - If not found - try to uncheck and check "Display All Orders" 
         // Once didnt show up until this
         // Another time - If OB is closed, reopen didnt show orders initially
@@ -21,12 +14,39 @@ Bugs
         Under "Order Book -"
             ClassNN:	Button6
             Text:	Display all Orders
-Square Off - Market Stop order for filled position + cancel rest
-Export Trade Execution Log
-    In trackerCallback() before unlink
+    - Nest
+        ClassNN: Button5
+        Text: Display all Orders
+
+Show current price, status, + add validations
+    - One field right of scrip
+        - Shows current price
+        - Post entry shows current result
+    - check current price and warn if posible bad order based on ordertype
+    - Example - Limit Buy above price, % diff between Entry price and current price
+
+Price Alerts
+    Audio Alert
+    how to manage multiple triggers - clear on click - Or show price
+    save/load window position
+    Detect if multiple prices trigged - on trigger check for next price and remove all together
+    Reload price triggers
+    GUI - Add / Remove / View alerts
+        Pick Price from AB
 
 
+        
+        
+        
+        
+        
 
+Market Order
+    - After entry, set average price in Entry box
+Allow Empty Stop price
+    - After Entry use default stop size from average size if Stop is not set
+Square Off 
+    - Market Stop order for filled position + cancel rest
 
 
 
@@ -73,21 +93,22 @@ Export Trade Execution Log
 
 
 
-
------------------------------------------------------------------------------------------
 Multiple Orders
-    - Change context using Right click menu
-    - Example 2 orders long/short - OCO
-    - One Order at a time
+    - Buttons for each trade to switch quickly 
+        - white if no trade, yellow for open trade, green if positionsize>0
+    - Context change        
         - Keep array of trades + current context 
-    - Context change
-        - Option to create new separate trade
-        - TradeChange - GUI
-        - Switch context on Trade change
-        - refresh orderbook too on context change + Filter all data for specific scrip - So everything else becomes per scrip
+        - 1) Load trade from context 2) Settings::loadScrip 3) Refresh gui - loadTradeInputToGui()    
+        - open scrips warning message - 
     - call trackerCallback() for each trade
         - Trade.reload() - Move orderbookObj.read(). Should be called only once here
-    - Notify on Execution - ring bell
+    - Notify on Execution - through button color
+-----------------------------------------------------------------------------------------
+Export Trade Execution Log
+    In trackerCallback() before unlink
+Scrip/Ini Manager
+    - to sync up OM,BM,RTDMan, ABBackfill
+    - Remove unneeded configs ( ex RTD csv Path only need in RTDMan)
 Market Order - option for fixed stop based on entry price?
 Ring Alarm / Notify at 15:17 if open trade
     Automatic squareoff at 15:19
