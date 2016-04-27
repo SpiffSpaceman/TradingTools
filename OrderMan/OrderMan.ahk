@@ -26,22 +26,29 @@ SetWorkingDir %A_ScriptDir%  												// Ensures a consistent starting direct
 SetTitleMatchMode, 2 														// A window's title can contain the text anywhere
 SetControlDelay, -1 														// Without this ControlClick fails sometimes
 
-loadSettings()
+try{
 
-contextObj   := new ContextClass                                            // Keep Class string in class names to avoid conflict - can get overwritten by object of same name
+  loadSettings()
+
+  contextObj   := new ContextClass                                          // Keep Class string in class names to avoid conflict - can get overwritten by object of same name
                                                                             // without new, class members are not initialized
-//chartObj   := new AmibrokerClass
-orderbookObj := new OrderbookClass
-controlObj   := isServerNOW  ? new NowControlsClass : new NestControlsClass // Contains All control ids, window titles for Now/Nest
-alertsObj    := new AlertsClass
+  //chartObj   := new AmibrokerClass
+  orderbookObj := new OrderbookClass
+  controlObj   := isServerNOW  ? new NowControlsClass : new NestControlsClass // Contains All control ids, window titles for Now/Nest
+  alertsObj    := new AlertsClass
 
-UtilClass.checkNOWOpen()
-initializeStatusTracker()
-orderbookObj.read()
-createGUI()
-checkForOpenOrders()
-installHotkeys()
-alertsObj.init()
+
+  UtilClass.checkNOWOpen()
+  initializeStatusTracker()
+  orderbookObj.read()
+  createGUI()
+  checkForOpenOrders()
+  installHotkeys()
+  alertsObj.init()
+
+} catch e {
+    UtilClass.handleException( e )
+}
 
 return
 

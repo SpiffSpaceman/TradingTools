@@ -37,6 +37,7 @@ class NestControlsClass extends NowControlsClass{
 	static ORDER_ENTRY_SUBMIT						:= "Button1"
 
 	static ORDER_BOOK_CANCEL			  			:= "Button2"
+	static ORDER_BOOK_DISPLAY			  			:= "Button5"										// "Display all Orders" Checkbox in Orderbook
 	
 	// NestOrderNo and Nest UpdateTime
 	static ORDER_BOOK_OPEN_HEADERS_TEXT				:= ["Order Type", "Buy/Sell", "Trading Symbol", "Total Qty", "Pending Qty", "Price", "TriggerPrice", "Average Price", "Status", "NestOrderNo", "Nest UpdateTime"]

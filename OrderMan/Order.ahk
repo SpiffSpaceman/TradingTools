@@ -148,17 +148,20 @@ class OrderClass{
 																				// Otherwise it can also read orderbook in between and we will not be able to 
 		this._submitOrder( winTitle )											// detect newly created order.
 		this._orderDetails  := orderbookObj.getNewOrder()						// Tracker thread can be on when this create() is for adds
-		
-		toggleStatusTracker("on")
 
 		if( !IsObject(this._orderDetails) ){									// New order found in Orderbook ?
 			
 			identifier := UtilClass.orderIdentifier( this._input.direction, this._input.price, this._input.trigger) 
 			MsgBox, % 262144+4,,  Order( %identifier%  ) Not Found yet in Order Book. Was the Order Created?
 			IfMsgBox No
+			{
+				toggleStatusTracker("on")
 				return -1
+			}
 			this._orderDetails := orderbookObj.getNewOrder()
 		}
+		
+		toggleStatusTracker("on")												// Turn back on after new order has been read
 
 		this._waitforOrderValidation()		
 		status := this._orderDetails.status		

@@ -27,12 +27,18 @@ SetWorkingDir %A_ScriptDir%  												// Ensures a consistent starting direct
 SetTitleMatchMode, 2 														// A window's title can contain the text anywhere
 SetControlDelay, -1 														// Without this ControlClick fails sometimes. Example - Index Right click fails if mouse is over NOW
 
-VWAPColumnIndex := ""														// Initialize some variables to avoid harmless warn errors
+try{
 
-loadSettings()																// Load settings for Timer before hotkey install
-SetTimer, PingNOW, %PingerPeriod% 											// Install Keep Alive Timer
-installEOD()																// Install Timer for EOD backfill once
-installHotkeys()															// Setup Hotkey for Backfill
+	VWAPColumnIndex := ""													// Initialize some variables to avoid harmless warn errors
+
+	loadSettings()															// Load settings for Timer before hotkey install
+	SetTimer, PingNOW, %PingerPeriod% 										// Install Keep Alive Timer
+	installEOD()															// Install Timer for EOD backfill once
+	installHotkeys()														// Setup Hotkey for Backfill
+
+} catch ex {
+	handleException(ex)
+}
 return
 
 installHotKeys(){
@@ -51,29 +57,41 @@ installHotKeys(){
 }
 
 hkBackfill(){
-	loadSettings()															// Reload settings
-	installEOD()															// Update EOD Timer
-	DoBackfill()	
+	try{
+		loadSettings()														// Reload settings
+		installEOD()														// Update EOD Timer
+		DoBackfill()	
+	} catch e {
+		handleException(e)
+	}
 }
 
 hkFlatTrendLine(){															// Sets End price = Start price for trend line at current mouse position
-	IfWinActive, ahk_class AmiBrokerMainFrameClass							// Only works in select mode
-	{
-		Click 2																// Double click at mouse position ( assumed to be trendline) to modify trendline
-		Loop, 8{															// Try to hide window as soon as possible. WinWait seems to take too long
-			Sleep 25
+	try{
+		IfWinActive, ahk_class AmiBrokerMainFrameClass							// Only works in select mode
+		{
+			Click 2																// Double click at mouse position ( assumed to be trendline) to modify trendline
+			Loop, 8{															// Try to hide window as soon as possible. WinWait seems to take too long
+				Sleep 25
+				try{															// Ignore Error and keep trying until it opens
+					WinSet,Transparent, 1, Properties, Start Y:
+				}
+				catch e{
+				}
+				IfWinExist, Properties, Start Y:
+					break
+			}	
+			
+			WinWait, Properties, Start Y:, 1
 			WinSet,Transparent, 1, Properties, Start Y:
-			IfWinExist, Properties, Start Y:
-				break
+			
+			ControlGet, price, Line, 1, Edit1, Properties, Start Y:				// Copy Start Price into End Price and press enter
+			ControlSetText, Edit2, %price%, Properties, Start Y:
+			ControlSend, Edit2, {Enter}, Properties, Start Y:
 		}	
-		
-		WinWait, Properties, Start Y:, 1
-		WinSet,Transparent, 1, Properties, Start Y:
-		
-		ControlGet, price, Line, 1, Edit1, Properties, Start Y:				// Copy Start Price into End Price and press enter
-		ControlSetText, Edit2, %price%, Properties, Start Y:
-		ControlSend, Edit2, {Enter}, Properties, Start Y:
-	}	
+	} catch e {
+		handleException(e)
+	}
 }
 
 
@@ -274,6 +292,11 @@ timer( mode ){
 		return (A_TickCount - start )
 	}
 }
+
+handleException(e){
+	MsgBox % "Error in " . e.What . ", Location " . e.File . ":" . e.Line . " Message:" . e.Message . " Extra:" . e.Extra
+}
+
 
 #Include Settings.ahk
 #Include DataTable.ahk

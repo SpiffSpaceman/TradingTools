@@ -94,8 +94,10 @@ openVwap( inParam1,inParam2,inParam3,inParam4,inParam5,inParam6 ){
 	Control, ChooseString , %inParam2%, ComboBox2, %VWAPWindowTitle%		// Series
 	Control, ChooseString , %inParam3%, ComboBox3, %VWAPWindowTitle%		// Symbol
 	Control, Choose		  , %inParam4%, ComboBox4, %VWAPWindowTitle%		// Expiry Date - Set by Position
-	Control, ChooseString , %inParam5%, ComboBox5, %VWAPWindowTitle%		// Opt Type
-	Control, ChooseString , %inParam6%, ComboBox6, %VWAPWindowTitle%		// Strike Price	
+	if( inParam5 != "" )
+		Control, ChooseString , %inParam5%, ComboBox5, %VWAPWindowTitle%	// Opt Type
+	if( inParam6 != "" )
+		Control, ChooseString , %inParam6%, ComboBox6, %VWAPWindowTitle%	// Strike Price
 	
 	ControlSetText, Edit1, 1,       %VWAPWindowTitle%						// Set Interval as 1		
 	ControlSend,    Edit1, {Enter}, %VWAPWindowTitle%						// Request Data		

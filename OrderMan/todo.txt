@@ -1,22 +1,9 @@
 
 test
     Reset default ordertype after unlink/cancel
+    Order creation - uncheck and check "Display All Orders"
+    
 
-
-Bugs - Order creation box
-    - Order creation - If not found - try to uncheck and check "Display All Orders" 
-        // Once didnt show up until this
-        // Another time - If OB is closed, reopen didnt show orders initially
-    - Check and uncheck checkbox 
-        - on every call to readOpenOrders()?
-        - or maybe before looking for new order and if already open order is not found in open/completed lists
-    - NOW
-        Under "Order Book -"
-            ClassNN:	Button6
-            Text:	Display all Orders
-    - Nest
-        ClassNN: Button5
-        Text: Display all Orders
 
 Show current price, status, + add validations
     - One field right of scrip
@@ -25,22 +12,20 @@ Show current price, status, + add validations
     - check current price and warn if posible bad order based on ordertype
     - Example - Limit Buy above price, % diff between Entry price and current price
 
-Price Alerts
-    Audio Alert
-    how to manage multiple triggers - clear on click - Or show price
-    save/load window position
-    Detect if multiple prices trigged - on trigger check for next price and remove all together
-    Reload price triggers
+
+
+
+
+
+
+
+Price Alerts    
     GUI - Add / Remove / View alerts
         Pick Price from AB
-
-
-        
-        
-        
-        
-        
-
+        Reload price triggers
+    Detect if multiple prices trigged - on trigger check for next price and remove all together
+    save/load window position
+    Audio Alert
 Market Order
     - After entry, set average price in Entry box
 Allow Empty Stop price
@@ -60,7 +45,6 @@ Square Off
 
     
     
-
 
 
 

@@ -199,6 +199,8 @@ class OrderbookClass{
 			
 			if( openOrdersOld.size < this.OpenOrders.size || completedOrdersOld.size < this.CompletedOrders.size )
 				break
+			else
+				this.refreshOrderBook()											// Sometimes Orderbook does not update without manual refresh
 			Sleep, 1000
 		}
 		if( openOrdersOld.size >= this.OpenOrders.size  && completedOrdersOld.size >= this.CompletedOrders.size )
@@ -209,6 +211,19 @@ class OrderbookClass{
 			foundOrder := this._getNewOrder( completedOrdersOld, this.CompletedOrders )	
 
 		return foundOrder
+	}
+	
+	/* Uncheck and Check "Display All Orders"
+	*/
+	refreshOrderBook(){
+		global controlObj
+
+		ControlClick, % controlObj.ORDER_BOOK_DISPLAY, % controlObj.ORDER_BOOK_TITLE,,,, NA
+		Sleep, 100
+		ControlGet, isChecked, Checked, , % controlObj.ORDER_BOOK_DISPLAY, % controlObj.ORDER_BOOK_TITLE
+		if( !isChecked ){
+			ControlClick, % controlObj.ORDER_BOOK_DISPLAY, % controlObj.ORDER_BOOK_TITLE,,,, NA
+		}	
 	}
 
 	/*	Open Buy / Sell Window for existing order from Orderbook
