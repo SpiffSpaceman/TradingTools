@@ -27,7 +27,7 @@ initGUI(){
 }
 
 createGUI(){
-	global Qty, EntryPrice, StopPrice, TargetPrice, Direction, CurrentResult, TargetResult, BtnOrder, BtnUpdate, BtnLink, BtnUnlink, BtnCancel, EntryStatus, StopStatus, TargetStatus, LastWindowPosition, EntryOrderType, EntryUpDown, StopUpDown, TargetUpDown, EntryText, AddText, BtnAdd, SelectedScripText, ScripList
+	global Qty, EntryPrice, StopPrice, TargetPrice, Direction, CurrentResult, TargetResult, BtnOrder, BtnUpdate, BtnLink, BtnUnlink, BtnCancel, EntryStatus, StopStatus, TargetStatus, LastWindowPosition, EntryOrderType, EntryUpDown, StopUpDown, TargetUpDown, EntryText, AddText, BtnAdd, SelectedScripText, ScripList, CurrentPrice, AveragePrice, PositionStatus
 	
 	SetFormat, FloatFast, 0.2
 
@@ -37,7 +37,11 @@ createGUI(){
 
 // Column 1
 	Gui, 1:Add, DropDownList, vSelectedScripText gonScripChange w100 Choose1, %ScripList%
-	Gui, 1:Add, ListBox, vDirection gonDirectionChange h30 w20 Choose1, B|S	
+	Gui, 1:Add, Text, vCurrentPrice w45 x+m											// To right of scrip
+	Gui, 1:Add, Text, vAveragePrice w45 x+m
+	Gui, 1:Add, Text, vPositionStatus w35 x+m
+	
+	Gui, 1:Add, ListBox, vDirection gonDirectionChange h30 w20 xm Choose1, B|S		// xm - start from first column ( x coordinate = default margin )
 	Gui, 1:Add, Edit, vQty w30
 		
 // Column 2	- But below Scrip change Dropdown
@@ -63,7 +67,7 @@ createGUI(){
 	Gui, 1:Add, UpDown, vTargetUpDown gOnTargetUpDown  Range0-1 -16 hp
 
 // Column 5
-	Gui, 1:Add, DropDownList, vEntryOrderType w45 Choose1 ym+25, LIM|SL|SLM|M 		// Entry Type
+	Gui, 1:Add, DropDownList, vEntryOrderType w45 Choose1 ym+25 x+m, LIM|SL|SLM|M 	// Entry Type
 	
 	Gui, 1:Add, Text, vCurrentResult  w45	
 	Gui, 1:Add, Text, vTargetResult   w45	
@@ -71,7 +75,7 @@ createGUI(){
 	Gui, 1:Add, Button, gonAdd vBtnAdd xp+0 yp+0, Add
 
 // Column 6
-	Gui, 1:Add, Text, ym+25 vEntryStatus
+	Gui, 1:Add, Text, ym+25 x+20 vEntryStatus
 	Gui, 1:Add, Text, vStopStatus	
 	Gui, 1:Add, Text, vTargetStatus
 		
@@ -103,7 +107,7 @@ openLinkOrdersGUI(){
 	
 	Gui, 2:Add, Radio, vLinkOrdersSelectedDirection gonLinkOrdersDirectionSelect Checked, Long
 	Gui, 2:Add, Radio, gonLinkOrdersDirectionSelect xp+60 yp, Short
-	Gui, 2:Add, DropDownList, vLinkedScripText x+15 w50, %ScripList%
+	Gui, 2:Add, DropDownList, vLinkedScripText x+15 w100, %ScripList%
 
 	// Column 2
 
@@ -246,7 +250,7 @@ updateStatus(){
 	entryOrderDetails := trade.newEntryOrder.getOrderDetails()
 	stopOrderDetails  := trade.stopOrder.getOrderDetails()
 	targetOrderDetails:= trade.targetOrder.getOrderDetails()
-	
+
 	entryLinked 	  := trade.isNewEntryLinked()
 	stopLinked		  := trade.isStopLinked()
 	anyLinked		  := entryLinked || stopLinked 
@@ -372,6 +376,24 @@ setSelectedScrip( alias ){
 	if( alias !=""  &&  oldScrip!=SelectedScripText  ){
 		loadScripSettings()																// onScripChange() is not called by above even though dropdown is changed. So load manually
 	}
+}
+
+setScripCurrentPrice( inPrice ){
+	global CurrentPrice
+	CurrentPrice := inPrice
+	GuiControl, 1:Text, CurrentPrice,  %CurrentPrice%
+}
+
+setAveragePrice( inPrice ){
+	global AveragePrice
+	AveragePrice := inPrice
+	GuiControl, 1:Text, AveragePrice,  %AveragePrice%
+}
+
+setPositionStatus( inResult ){
+	global PositionStatus
+	PositionStatus := inResult
+	GuiControl, 1:Text, PositionStatus,  %PositionStatus%
 }
 
 setQty( inQty ){

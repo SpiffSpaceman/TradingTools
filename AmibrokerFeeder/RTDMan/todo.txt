@@ -1,4 +1,6 @@
 // TODO
+	// Start AB + start RTDMan without NOW - Ab thread seems to disturb AB - Busy cursor every second
+
     // RTD Callback - Use array and construct bars in AB thread
 		// tick completes after Worker::poll() processes all fields
         // More accurate mins - some data gets shifted now

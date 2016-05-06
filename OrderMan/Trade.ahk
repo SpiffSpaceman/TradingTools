@@ -25,6 +25,7 @@ class TradeClass{
 	
 	isStopPending 	 := false												// Is Stop Waiting for Entry/Add order to trigger?
 	positionSize	 := 0													// Open Position Size
+	averageEntryPrice := 0													// Average Entry Price for completed orders weighted by qty
 
 	executedEntryOrderList := []											// List of executed entry/add orders
 																			// entryOrder contains details of current unexecuted order shown in GUI and _entryOrderList has all of executed orders
@@ -106,7 +107,8 @@ class TradeClass{
 				if( this.isStopPending )										// We have pending stop order - Create/Update Stop order if Entry was successful
 					this._triggerPendingStop()
 
-				this.positionSize += this.newEntryOrder.getOrderDetails().totalQty
+				this.averageEntryPrice := this._getAveragePrice( this.positionSize, this.averageEntryPrice, this.newEntryOrder.getOrderDetails() )
+				this.positionSize 	   += this.newEntryOrder.getOrderDetails().totalQty
 				this.executedEntryOrderList.Push( this.newEntryOrder )
 
 				this._handleTargetOrder( this.targetOrder.getPrice() )			// If Entry successful, update target order - Increase target order size
@@ -259,8 +261,9 @@ class TradeClass{
 			return false
 		}		
 		
-		entryOrderListObj := []
-		positionSize  	  := 0
+		entryOrderListObj 	   := []
+		positionSize  	  	   := 0
+		averageEntryPrice 	   := 0 
 		
 		if( executedEntryOrderIDList != ""){										// Fetch Executed Orders			
 			
@@ -288,7 +291,8 @@ class TradeClass{
 				order.setOrderDetails( orderDetails )				
 				
 				entryOrderListObj.Push( order )
-				positionSize += orderDetails.totalQty
+				averageEntryPrice := this._getAveragePrice( positionSize, averageEntryPrice, orderDetails )
+				positionSize	  += orderDetails.totalQty
 			}
 		}
 		
@@ -369,8 +373,9 @@ class TradeClass{
 		}
 
 		this.executedEntryOrderList  := entryOrderListObj
+		this.averageEntryPrice		 := averageEntryPrice
 		this.positionSize			 := positionSize
-		
+
 		if( !newEntryOrderExists ){													// No New Order => We may have Executed Entry Orders. Use the latest Executed Order and copy Input
 			o := this._getLastExecutedInputOrder()
 			if( IsObject(o) )
@@ -405,8 +410,9 @@ class TradeClass{
 		this.stopOrder 		:= -1												// Single stop order covering all executed orders + open entryOrder
 		this.targetOrder 	:= -1 
 		
-		this.isStopPending	:= false											// Is Stop pending for entryOrder to Complete - Applicable for SL/SL M orders
-		this.positionSize   := 0												// Sum of all successfully executed Orders' qty
+		this.isStopPending			:= false									// Is Stop pending for entryOrder to Complete - Applicable for SL/SL M orders
+		this.positionSize   		:= 0										// Sum of all successfully executed Orders' qty
+		this.averageEntryPrice 		:= 0
 		this.executedEntryOrderList := []										// List of successfully executed Orders		
 		
 		this.save()
@@ -489,7 +495,11 @@ class TradeClass{
 		return  IsObject( this.stopOrder ) && this.stopOrder.isClosed()
 	}
 
-
+	/* Is Trade Direction = Long?
+	*/
+	isLong(){
+		return this.direction == "B"
+	}
 
 
 // -- Private ---
@@ -702,5 +712,15 @@ class TradeClass{
 	_validateTargetPrice( direction, stopPrice, targetPrice  ){
 		return direction == "B" ? targetPrice > stopPrice : targetPrice < stopPrice	
 	}
+	
+	/* Returns Updated Average weighted price - Call this before updating this.positionSize
+	*/
+	_getAveragePrice( oldQty, oldAverageprice, newOrderDetails ){
+		_qty   	  := newOrderDetails.totalQty
+		_avgPrice := newOrderDetails.averagePrice
+
+		return ( oldAverageprice*oldQty + _avgPrice*_qty ) / (  oldQty + _qty )
+	}
+
 }
 

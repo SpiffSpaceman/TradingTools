@@ -2,15 +2,45 @@
 test
     Reset default ordertype after unlink/cancel
     Order creation - uncheck and check "Display All Orders"
+    Target order not created by update if there is no existing target order
+    Average Price - Adds + Link with adds
+
+
+
+Bugs
+    OrderLink 
+        - Sets SLM order as Limit since its LIMIT after trigger
+        - If Trigger Price != 0 
+            If Price = 0 set SLM else SLL
+
+
+
+
+Partial Target
+    GUI - move current size to right of Entry + add Target size below
+    Move Target Order to seperate class? Maybe also for Entry and Stop
+    Current target Order + List of Target executed orders
+    _handleTargetOrder()
+        target size should be less than position size
+    save / load executed target orders
+        linkOrders() - reduce position size for executed target orders
+    OCO - trackerCallback - on target execution
+        - reduce position size
+        - update stop size using new position size, cancel only if size 0
+Square Off 
+    - Market Stop order for filled position + cancel rest
+        1) Update stop order Order Type in Entry structure
+            - Set order type as market order
+            - Dont update Order yet - (2) should do it
+        2) Cancel open Entry order ( Add )
+            This will also change stop qty to filled size
+
+
+
+  
     
 
 
-Show current price, status, + add validations
-    - One field right of scrip
-        - Shows current price
-        - Post entry shows current result
-    - check current price and warn if posible bad order based on ordertype
-    - Example - Limit Buy above price, % diff between Entry price and current price
 
 
 
@@ -19,71 +49,70 @@ Show current price, status, + add validations
 
 
 
-Price Alerts    
-    GUI - Add / Remove / View alerts
-        Pick Price from AB
-        Reload price triggers
-    Detect if multiple prices trigged - on trigger check for next price and remove all together
-    save/load window position
-    Audio Alert
+
+
+
+
+    
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-----------------------------------------------------------------------------------------
 Market Order
     - After entry, set average price in Entry box
 Allow Empty Stop price
     - After Entry use default stop size from average size if Stop is not set
-Square Off 
-    - Market Stop order for filled position + cancel rest
-
-
-
-
-
-
-
-
-
-
-
-    
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+RTDMan Price
+    Add Current Price validations
+        - check current price and warn if posible bad order based on ordertype
+        - Example - Limit Buy above price, % diff between Entry price and current price
+Price Alerts
+    save/load window position
+    Pick Price from AB
+        Separate shortcut for long and shorts - pick price + scrip
+        If within some distance of previous value - erase old value
+        Reload price triggers    
+    GUI - Remove / View alerts
+    Detect if multiple prices trigged - on trigger check for next price and remove all together
+    Audio Alert
 Multiple Orders
     - Buttons for each trade to switch quickly 
         - white if no trade, yellow for open trade, green if positionsize>0
     - Context change        
         - Keep array of trades + current context 
         - 1) Load trade from context 2) Settings::loadScrip 3) Refresh gui - loadTradeInputToGui()    
-        - open scrips warning message - 
+        - open scrips warning message - Dont warn
     - call trackerCallback() for each trade
         - Trade.reload() - Move orderbookObj.read(). Should be called only once here
     - Notify on Execution - through button color
@@ -116,6 +145,7 @@ Max Slippage in GUI
 Position Status - Current Risk based on Stop price / avg price
 Log of Major Events - creation/updation/cancel/OrderTracker triggers - show in GUI ?
 -----------------------------------------------------------------------------------------
+Partial Stops
 Partial Fill - Handle Stop/Target orders       // workaround - use SLM
     - Show filled size for Entry/Stop
     - Maybe Stop order only entered once filled and stop size modified if Entry Size increases
@@ -130,17 +160,6 @@ Partial Fill - Handle Stop/Target orders       // workaround - use SLM
         Need to differentiate between original stop and Trailing stop ( only when order is unfilled)
             Orignial Stop for unfilled size cannot be moved beyond Entry price
     - Handle cancel orders
-Partial Target
-    Move Target Order to seperate class? Maybe also for Entry and Stop
-    Current target Order + List of Target executed orders
-    _handleTargetOrder()
-        target size should be less than position size
-    save / load executed target orders
-        linkOrders() - reduce position size for executed target orders
-    OCO - trackerCallback - on target execution
-        - reduce position size
-        - update stop size using new position size, cancel only if size 0
-Partial Square Off
 -----------------------------------------------------------------------------------------
 Settings - change in GUI
 Linked Order Details
@@ -148,6 +167,8 @@ Linked Order Details
     - refresh button?
     - Add pending stop details to linked order
 -----------------------------------------------------------------------------------------
+Swing Trades 
+    - Can support for Derivatives through admin position
 Constant Risk position sizing + Allow Risk %
 Option to change order type for open order
     - SL Order After Trigger - changes to Limit Order - should be editable ( unfilled )

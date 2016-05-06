@@ -73,9 +73,14 @@ onUpdate(){
 	{
 		stop := StopPrice
 	}
+																			// If Target order is linked, check if something changed
+																			// If Target order is not linked, then always create target order if price is filled
 																			// Target Order size is always = completed Entry orders' size
-	target := hasOrderChanged( trade.targetOrder, TargetPrice, positionSize ) ? TargetPrice : -1
-	
+	if( trade.isTargetLinked() )
+		target := hasOrderChanged( trade.targetOrder, TargetPrice, positionSize ) ? TargetPrice : -1
+	else
+		target := TargetPrice
+
 	if( entry != ""  ||  stop != "" || target != -1 ){		
 		trade.update( selectedScrip, EntryOrderType, "SLM", Qty, ProdType, entry, stop, target )
 	}
@@ -296,10 +301,9 @@ linkOrdersSubmit(){
 	if( stopOrderId == "" ){
 		if( entryType == controlObj.ORDER_TYPE_SL_LIMIT || entryType == controlObj.ORDER_TYPE_SL_MARKET ){
 			MsgBox, 262144,, Stop order is not linked, Enter Stop Price and click Update immediately to ready Stop order
-			return
 		}
 		else{
-			MsgBox, 262144,, Select Stop Order					// Skipping Stop order allowed only for SL/SLM Orders
+			MsgBox, 262144,, Select Stop Order				// Skipping Stop order allowed only for SL/SLM Orders
 			return
 		}
 	}
@@ -325,6 +329,7 @@ linkOrdersSubmit(){
 // -- Helpers ---
 
 /*	Check if Order Details in GUI is different than input order 
+	Returns false if input order is empty
 */
 hasOrderChanged( order, price, qty ){
 	return hasPriceChanged( order, price ) || hasQtyChanged( order, qty )	
@@ -422,4 +427,29 @@ validateInput(){
 	return true
 }
 
+/* Returns price of currently selected Scrip
+*/
+getCurrentScripPrice(){
+	global alertsObj, SelectedScripText
+	
+	return alertsObj.getScripCurrentPrice( SelectedScripText )
+}
+
+/* Called by Alerts Timer to trigger price update
+*/
+priceUpdateCallback(){
+	global contextObj
+	
+	scripPrice    	  := getCurrentScripPrice()
+	averageTradePrice := contextObj.getCurrentTrade().averageEntryPrice
+	
+	if( averageTradePrice == 0 )
+		averageTradePrice := ""
+
+	setScripCurrentPrice( scripPrice )
+	setAveragePrice( averageTradePrice  )
+	
+	result := averageTradePrice == "" ? ""  :  (contextObj.getCurrentTrade().isLong() ? scripPrice - averageTradePrice : averageTradePrice - scripPrice)
+	setPositionStatus( result )
+}
 

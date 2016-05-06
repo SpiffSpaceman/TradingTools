@@ -59,7 +59,7 @@ class AlertsClass{
 	}
 	
 	ALERTS_CONFIG 	 := "config/alerts.ini"
-	ALERTS_POLL_TIME := 2000
+	ALERTS_POLL_TIME := 900
 
 	_alerts		  	 := {}									// Long and short prices for alerts taken from settings
 	_prices 	  	 := {}									// Current Prices read from RTDMan tick csv
@@ -75,35 +75,103 @@ class AlertsClass{
 		IniRead, TickPath, % this.ALERTS_CONFIG, OrderMan, TickPath
 
 		if( AlertsEnabled ){
-			this.loadTriggers()
-			this.showGui()
+			this._loadTriggers()
+			this._showGui()
 		}
 
 		SetTimer, alertsTimer, % this.ALERTS_POLL_TIME
 	}
+	
+	/* Remove alert after Double click
+	*/
+	onAlertDismiss(){
+		this._currentAlert := ""
+		this._addTriggeredAlert( this._triggeredAlerts.pop()  )									// pop out next alert and set GUI
+	}
 
-	showGui(){
+	/* Return last raed price of input scrip
+	*/
+	getScripCurrentPrice( scrip ){
+		return this._prices[scrip]
+	}
+	
+	/*	Fetch latest quotes - then compare trigger with close price
+		If price breaks and returns within loop period, there will be no trigger
+		
+		Once triggered, remove triggered price from config
+	*/
+	triggerAlerts(){
+		global ScripList, AlertsEnabled
+		
+		this._fetchPrices()
+		
+		if( !AlertsEnabled ){
+			return
+		}
+
+		Loop, Parse, ScripList, |
+		{
+			scrip := A_LoopField
+			price := this._prices[scrip]
+			
+			scripConfig := this._alerts[scrip]
+			long  := scripConfig.nextLong 
+			short := scripConfig.nextShort
+			
+			if( price != "" && price != 0 && long != "" && price >= long ){								// Long Triggered - Add to Trigger List and remove from settings
+			
+				scripConfig.longTriggers := this._removeFromCsv(scripConfig.longTriggers, long )
+				scripConfig.nextLong	 := this._getFirstCsvField(scripConfig.longTriggers)
+				IniWrite, % scripConfig.longTriggers, % this.ALERTS_CONFIG, OrderMan, % scrip . ".LONG"
+			
+				triggeredAlert := new this.triggeredAlertClass
+				triggeredAlert.setAlert( scrip, "LONG", long )
+				this._addTriggeredAlert( triggeredAlert )
+			}
+				
+			if( price != "" && price != 0 && short != "" && price <= short ){							// Short Triggered
+			
+				scripConfig.shortTriggers := this._removeFromCsv(scripConfig.shortTriggers, short )
+				scripConfig.nextShort	  := this._getFirstCsvField(scripConfig.shortTriggers)
+				IniWrite, % scripConfig.shortTriggers, % this.ALERTS_CONFIG, OrderMan, % scrip . ".SHORT"
+			
+				triggeredAlert := new this.triggeredAlertClass
+				triggeredAlert.setAlert( scrip, "SHORT", short )
+				this._addTriggeredAlert( triggeredAlert )
+			}
+		}
+	}
+
+
+	_showGui(){
 		global AlertText
 		
 		Gui, 9:New, +AlwaysOnTop -Caption +ToolWindow +0x400000
-		gui, 9:font, bold s15
+		gui, 9:font, bold s10
 		Gui, 9:Add, Text, w200 h27 Border Center GuiMove vAlertText, Waiting
 		Gui, 9:Show, AutoSize NoActivate 		// X0 Y0
 	}	
 	
-	addTriggeredAlert( alert ){
+	/* After Alert price triggered - push alert to stack / show alert if empty
+	*/
+	_addTriggeredAlert( alert ){
 		if( this._currentAlert == "" || alert == ""){		// No alert Visible - show new alert. Else push to stack
 			this._currentAlert := alert						// If input alert is empty, reset to Waiting
-			this.updateAlert()
+			this._updateAlertGUI()
 		}
 		else{
 			this._triggeredAlerts.push( alert )
 		}
 	}
 	
-	updateAlert(){
+	/* Updates Alert GUI
+	*/
+	_updateAlertGUI(){
 		if( this._currentAlert != "" ){
-			Gui, 9:Color, red
+			if( this._currentAlert.direction == "LONG" )
+				Gui, 9:Color, green
+			else
+				Gui, 9:Color, red
 			GuiControl, 9:Text, AlertText, % this._currentAlert.scrip . " - " . this._currentAlert.direction
 		}
 		else{
@@ -111,15 +179,10 @@ class AlertsClass{
 			GuiControl, 9:Text, AlertText, Waiting
 		}
 	}
-		
-	onAlertDismiss(){
-		this._currentAlert := ""
-		this.addTriggeredAlert( this._triggeredAlerts.pop()  )											// pop out next alert and set GUI
-	}
 
 	/*	Reads alerts.ini for long and short price alerts for each scrip in ScripList
 	*/
-	loadTriggers(){
+	_loadTriggers(){
 		global ScripList, TickPath, test
 		
 		Loop, Parse, ScripList, |
@@ -145,57 +208,10 @@ class AlertsClass{
 			}
 		}
 	}
-	
-	/*	Fetch latest quotes - then compare trigger with close price
-		If price breaks and returns within loop period, there will be no trigger
-		
-		Once triggered, remove triggered price from config
-	*/
-	triggerAlerts(){
-		global ScripList, AlertsEnabled
-		
-		this.fetchPrices()
-		
-		if( !AlertsEnabled ){
-			return
-		}
-
-		Loop, Parse, ScripList, |
-		{
-			scrip := A_LoopField
-			price := this._prices[scrip]
-			
-			scripConfig := this._alerts[scrip]
-			long  := scripConfig.nextLong 
-			short := scripConfig.nextShort
-			
-			if( price != "" && price != 0 && long != "" && price >= long ){								// Long Triggered - Add to Trigger List and remove from settings
-			
-				scripConfig.longTriggers := this._removeFromCsv(scripConfig.longTriggers, long )
-				scripConfig.nextLong	 := this._getFirstCsvField(scripConfig.longTriggers)
-				IniWrite, % scripConfig.longTriggers, % this.ALERTS_CONFIG, OrderMan, % scrip . ".LONG"
-			
-				triggeredAlert := new this.triggeredAlertClass
-				triggeredAlert.setAlert( scrip, "LONG", long )
-				this.addTriggeredAlert( triggeredAlert )
-			}
-				
-			if( price != "" && price != 0 && short != "" && price <= short ){							// Short Triggered
-			
-				scripConfig.shortTriggers := this._removeFromCsv(scripConfig.shortTriggers, short )
-				scripConfig.nextShort	  := this._getFirstCsvField(scripConfig.shortTriggers)
-				IniWrite, % scripConfig.shortTriggers, % this.ALERTS_CONFIG, OrderMan, % scrip . ".SHORT"
-			
-				triggeredAlert := new this.triggeredAlertClass
-				triggeredAlert.setAlert( scrip, "SHORT", short )
-				this.addTriggeredAlert( triggeredAlert )
-			}
-		}
-	}
 
 	/*	Takes latest price from RTDMan exported tick csv for each scrip in ScripList
 	*/
-	fetchPrices(){
+	_fetchPrices(){
 		global ScripList, TickPath
 
 		lastTicksCsv := TickPath . "last_prices.csv"		
@@ -208,6 +224,8 @@ class AlertsClass{
 				this._prices[scrip] := fields[2]												// close price
 			}
 		}
+		
+		priceUpdateCallback()																	// Callback to GUI
 	}
 
 	_removeFromCsv( csvString, removeme ){

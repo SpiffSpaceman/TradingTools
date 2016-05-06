@@ -82,6 +82,9 @@ hkFlatTrendLine(){															// Sets End price = Start price for trend line 
 					break
 			}	
 			
+			IfWinNotExist, Properties, Start Y:									// Return if Line Properties window not opened
+				return
+			
 			WinWait, Properties, Start Y:, 1
 			WinSet,Transparent, 1, Properties, Start Y:
 			

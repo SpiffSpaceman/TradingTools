@@ -93,7 +93,8 @@ openVwap( inParam1,inParam2,inParam3,inParam4,inParam5,inParam6 ){
 	Control, ChooseString , %inParam1%, ComboBox1, %VWAPWindowTitle%		// Set Params - Exchg-Seg	
 	Control, ChooseString , %inParam2%, ComboBox2, %VWAPWindowTitle%		// Series
 	Control, ChooseString , %inParam3%, ComboBox3, %VWAPWindowTitle%		// Symbol
-	Control, Choose		  , %inParam4%, ComboBox4, %VWAPWindowTitle%		// Expiry Date - Set by Position
+	if( inParam4 != "" )
+		Control, Choose		  , %inParam4%, ComboBox4, %VWAPWindowTitle%	// Expiry Date - Set by Position
 	if( inParam5 != "" )
 		Control, ChooseString , %inParam5%, ComboBox5, %VWAPWindowTitle%	// Opt Type
 	if( inParam6 != "" )

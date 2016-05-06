@@ -82,8 +82,10 @@ getTargetPriceFromAB(){
  
 _guessDirection( entry, stop ){
 	global contextObj
-
-	if( !contextObj.getCurrentTrade().isEntryOrderExecuted() ){			// Guess Direction only if not entered yet
+	
+	trade := contextObj.getCurrentTrade()
+	
+	if( !trade.isEntryOrderExecuted() && !trade.isNewEntryLinked()){			// Guess Direction only at start. Dont change direction once order opened
 		setDirection( entry > stop ? "B" : "S")
 	}
 }
