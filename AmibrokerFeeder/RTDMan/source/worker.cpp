@@ -585,9 +585,10 @@ void Worker::amibrokerPoller(){
 								}
 							}
 							ninja_trader->AskPlayback( Scripname, _prev->ask_rate, _prev->ask_qty, timestamp4);  //bar->ask_qty, timestamp4 );
-							ninja_trader->BidPlayback( Scripname, _prev->bid_rate, _prev->bid_qty, timestamp4 ); //bar->bid_qty, timestamp4);
-/***********************************************************************************************************************
-							std::cout << Scripname     << ','		// $FORMAT Ticker, Date_YMD, Time, Open, High, 
+							ninja_trader->BidPlayback( Scripname, _prev->bid_rate, _prev->bid_qty, timestamp4 ); //bar->bid_qty, timestamp4)
+
+							if(settings.view_NT_data == 1) {
+								std::cout << Scripname     << ','		// $FORMAT Ticker, Date_YMD, Time, Open, High, 
 						        << timestamp4							<< ','		// Low, Close, Volume, OpenInt
 								<< _prev->ltp						<< ','		// ltp is close
 								<< _prev->volume					<< ',' 
@@ -596,7 +597,7 @@ void Worker::amibrokerPoller(){
 								<< _prev->bid_qty		<< ','		//bid_qty goes to Volume
 								<< _prev->ask_qty		<< ','		//ask_qty goes to Oi
 								<< std::endl ;
-/**********************************************************************************************************************/
+							}
 						}
 					}
 			
@@ -653,7 +654,7 @@ void Worker::amibrokerPoller(){
 							}
 							ninja_trader->AskPlayback( Scripname, _current->ask_rate, _current->ask_qty, timestamp4);  //bar->ask_qty, timestamp4 );
 							ninja_trader->BidPlayback( Scripname, _current->bid_rate, _current->bid_qty, timestamp4 ); //bar->bid_qty, timestamp4);
-/***********************************************************************************************************************
+							if(settings.view_NT_data == 1) {
 							std::cout << Scripname     << ','		// $FORMAT Ticker, Date_YMD, Time, Open, High, 
 						        << timestamp4							<< ','		// Low, Close, Volume, OpenInt
 								<< _current->ltp						<< ','		// ltp is close
@@ -663,7 +664,7 @@ void Worker::amibrokerPoller(){
 								<< _current->bid_qty					<< ','		// bid_qty goes to Volume
 								<< _current->ask_qty					<< ','		// ask_qty goes to OI
 								<< std::endl ;
-/**********************************************************************************************************************/
+							}
 						}
 					}
 					else{

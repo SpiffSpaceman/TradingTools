@@ -37,7 +37,9 @@ void Settings::loadSettings(){
 	view_raw_data		  = getINIInt  ("ViewRawData");
 	view_bar_data		  = getINIInt  ("ViewBarData");
 	view_tic_data		  = getINIInt  ("ViewTicData");
-	refresh_period		  = getINIInt   ("RefreshPeriod");
+	view_NT_data		  = getINIInt  ("ViewNTData");
+//	view_AB_data		  = getINIInt  ("ViewABData");
+	refresh_period		  = getINIInt  ("RefreshPeriod");
 
     if( !( (bar_period == 0  ) || (bar_period == 1000  ) || (bar_period == 60000  )) ) {              // check Barperiod
         throw "Bar Period should be 0 or 1000 or 60000 ";        

@@ -28,7 +28,11 @@ public:
 	short			view_raw_data;												// flag to view raw data
 	short			view_bar_data;												// flag to view bar data
 	short			view_tic_data;												// flag to view bar data
+	short			view_NT_data;												// flag to view bar data
+//	short			view_AB_data;												// flag to view bar data
+
 	short			use_ltq	;													// Flag to use LTQ instead of Volume Traded Today
+	
 //-----------------------------------------------------------------------------------------------------------------
 
     struct Scrip {
