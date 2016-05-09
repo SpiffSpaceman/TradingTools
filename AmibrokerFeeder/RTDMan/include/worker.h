@@ -36,6 +36,7 @@ private:
     ScripState                          *current, *previous;                // Maintains Current and last state of each Scrip
     std::string                          today_date;                            // (in same order as Settings::Scrip::topic_name)
     std::ofstream                        csv_file_out;    
+    std::ofstream                        scrip_file_out;    
 
 	// Inserted by Josh1 ------------------------------------------------------------------------------
 	std::string                          timestamp1;                            // (in same order as Settings::Scrip::topic_name)
@@ -64,6 +65,8 @@ private:
     void        amibrokerPoller ();                                             // Fetches Bar data and feeds to Amibroker
     void        writeABCsv      ( const std::vector<ScripBar> & bars  );        // This thread uses members - current , previous, settings
 	void		writeArchiveCsv ( const std::vector<ScripBar> & bars  );    // Archive Ticks in seperate csv. Used in backfill
+	void		writeCurrentPrices( const std::stringstream	  & current_prices);	// Write Current prices of all scrips
+
 	void		pushToNT( const std::vector<ScripBar> & bars  );			// Push ticks to Ninjatrader
     void        notifyActive    ();
     void        notifyInactive  ();                                         // Ring Bell if RTD Inactive    

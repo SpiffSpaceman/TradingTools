@@ -272,7 +272,7 @@ void Worker::processRTDData( const std::map<long,CComVariant>* data ){
 			    }
 /********************************************************************************************************/
 /************************* Append milliseconds to LTT ------- Inserted by Josh1 **************************/
-				if(settings.bar_period==0) {
+				if(settings.bar_period == 0) {
 					SYSTEMTIME lt;
 					GetLocalTime(&lt); 
 					std::stringstream stream;
@@ -284,7 +284,7 @@ void Worker::processRTDData( const std::map<long,CComVariant>* data ){
 				}
 /**********************************************************************************************************/
 				//Convert time from "%H:%M:%S" to "HHmmss" format
-				if(!settings.bar_period==0) {
+				if(!settings.bar_period == 0) {
 					newdata.ltt.erase(2,1);								// Remove colons in the time string
 																		// If Bar Period is 60000 then "HHmm" format, 
 																		//remove all characters after 4th else
@@ -398,7 +398,7 @@ void Worker::processRTDData( const std::map<long,CComVariant>* data ){
 					_current->volume	= _current->volume + newdata.vol_today;
 				}
 				else  {
-					if(settings.bar_period =0){												//Inserted 11-4-16
+					if(settings.bar_period == 0){												//Inserted 11-4-16
 						_current->volume	= newdata.vol_today - _current->vol_today; 
 					}
 					else{
@@ -448,6 +448,8 @@ void Worker::threadEntryDummy(void* _this){
 void Worker::amibrokerPoller(){
 
     std::vector<ScripBar>  new_bars;
+	std::stringstream current_prices; 
+	
 
 	if( settings.isTargetNT()){
 		ninja_trader = new NinjaTrader();
@@ -565,10 +567,13 @@ void Worker::amibrokerPoller(){
 
 			ScripState *_current  =  &current[i];
             ScripState *_prev     =  &previous[i];
-			std::string Scripname = settings.scrips_array[i].ticker;
+			std::string Scripname = settings.scrips_array[i].ticker;	
+			std::stringstream quotation;			
+			std::string quotation2;
 
 		    // Shared data access start
 			EnterCriticalSection( &lock );						    // Shared data access start
+			current_prices <<  Scripname << ":" << _current->ltp << std::endl;
 
 			if (_prev->push == 1) {
 					if( settings.isTargetNT()){	
@@ -602,7 +607,7 @@ void Worker::amibrokerPoller(){
 					}
 			
 					else{
-						csv_file_out <<  Scripname    << ','		// $FORMAT Ticker, Date_YMD, Time, Open, High, 
+						quotation <<  Scripname    << ','		// $FORMAT Ticker, Date_YMD, Time, Open, High, 
 			            << today_date							<< ','		// Low, Close, Volume, OpenInt
 				        << _prev->ltt						<< ',' 
 					    << _prev->bar_open					<< ',' 
@@ -612,13 +617,13 @@ void Worker::amibrokerPoller(){
 						<< _prev->volume					<< ',' 
 						<< _prev->oi	;
 						if (!(_prev->bid_rate == 0 && _prev->ask_rate == 0)){
-							csv_file_out	<< ','
+							quotation	<< ','
 								<< _prev->bid_rate					<< ',' // Say Aux1
 								<< _prev->ask_rate					
 								<< std::endl ;
 
 							if(!(_prev->bid_qty == 0 && _prev->ask_qty == 0)){
-								csv_file_out	<<  Scripname+"e"    << ','		// $FORMAT Ticker, Date_YMD, Time, Open, High, 
+								quotation	<<  Scripname+"e"    << ','		// $FORMAT Ticker, Date_YMD, Time, Open, High, 
 												<< today_date			<< ','		// Low, Close, Volume, OpenInt
 												<< _prev->ltt			<< ',' 
 												<< ','								//open					<< 
@@ -630,15 +635,29 @@ void Worker::amibrokerPoller(){
 												<< std::endl			;				//<< Aux1 and Aux2 empty
 							}
 						}
-						else{csv_file_out << std::endl ;}
+						else{quotation << std::endl ;}
+						quotation2 = quotation.str();
+						csv_file_out << quotation.rdbuf();
+						if(settings.is_archive) {
+							scrip_file_out.open( settings.csv_folder_path + Scripname + ".csv",  std::fstream::out | std::fstream::app  );
+							
+							if( !scrip_file_out.is_open() ){
+							throw( "Error opening file - " + settings.csv_folder_path + Scripname + ".csv" );
+							}
+							scrip_file_out << quotation2 ;
+							if( scrip_file_out.is_open() ){
+								scrip_file_out.close();
+							}
+						}
 					}
 					_prev->push = 0;
+					quotation.clear();
 					records++;
 			}
 
 			if (_current->push == 1) {
 					if( settings.isTargetNT()){	
-						if(settings.bar_period==0) {
+						if(settings.bar_period == 0) {
 							timestamp4=today_date+_current->ltt.substr(0,2)+_current->ltt.substr(3,2)+_current->ltt.substr(6,2);
 						} else {
 							timestamp4=today_date+_current->ltt.substr(6);}
@@ -668,7 +687,7 @@ void Worker::amibrokerPoller(){
 						}
 					}
 					else{
-						csv_file_out	<< Scripname     << ','		// $FORMAT Ticker, Date_YMD, Time, Open, High, 
+						quotation	<< Scripname     << ','		// $FORMAT Ticker, Date_YMD, Time, Open, High, 
 										<< today_date							<< ','		// Low, Close, Volume, OpenInt
 										<< _current->ltt						<< ',' 
 										<< _current->bar_open					<< ','		// O
@@ -678,13 +697,13 @@ void Worker::amibrokerPoller(){
 										<< _current->volume						<< ',' 
 										<< _current->oi ;        
 						if (!(_current->bid_rate == 0 && _current->ask_rate == 0)){
-							csv_file_out << ','
+							quotation << ','
 								<< _current->bid_rate	<< ','		// bid_rate goes to Say Aux1
 								<< _current->ask_rate							// ask_rate goes to say Aux2
 								<< std::endl ;
 
 							if(!(_current->bid_qty == 0 && _current->ask_qty == 0)){
-								csv_file_out	<< Scripname+"e"   << ','		// $FORMAT Ticker, Date_YMD, Time, Open, High, 
+								quotation	<< Scripname+"e"   << ','		// $FORMAT Ticker, Date_YMD, Time, Open, High, 
 												<< today_date					<< ','		// Low, Close, Volume, OpenInt
 												<< _current->ltt				<< ',' 
 												<< ','										// O
@@ -696,10 +715,23 @@ void Worker::amibrokerPoller(){
 												<< std::endl					;			//<< Aux1 and Aux2 empty
 							}
 						}
-						else{csv_file_out << std::endl ;}
+						else{quotation << std::endl ;}
+						quotation2 = quotation.str();
+						csv_file_out << quotation.rdbuf();
+						if(settings.is_archive) {
+							scrip_file_out.open( settings.csv_folder_path + Scripname + ".csv",  std::fstream::out | std::fstream::app  );
+							
+							if( !scrip_file_out.is_open() ){
+							throw( "Error opening file - " + settings.csv_folder_path + Scripname + ".csv" );
+							}
+							scrip_file_out << quotation2;
+							if( scrip_file_out.is_open() )
+								scrip_file_out.close();
+						}
 					}
-						_current->push = 0;
-						records++;
+					_current->push = 0;
+					records++;
+					quotation.clear();
 			}
 
 		LeaveCriticalSection( &lock );    // Shared data access end
@@ -707,6 +739,7 @@ void Worker::amibrokerPoller(){
 		}
 
 		csv_file_out.close();
+		writeCurrentPrices(current_prices); // Output latest prices for each scrip
 		if(records == 0){
             notifyInactive();
 		}
@@ -757,6 +790,9 @@ bool Worker::isMarketTime ( const std::string &time ){                       // 
     return  time >= settings.open_time && time <= settings.close_time ;      // So string compare works
 }
 
+
+/***************************** Removed by Josh1 ***********************************************************
+
 void Worker::writeABCsv( const std::vector<ScripBar> & bars ){
     
     csv_file_out.open( settings.csv_path  );                               // Setup output stream to csv file
@@ -784,7 +820,6 @@ void Worker::writeABCsv( const std::vector<ScripBar> & bars ){
     csv_file_out.close();
 }
 
-/***************************** Removed by Josh1 ***********************************************************
 	Send OHLC to NinjaTrader
 	Workaround - Send OHLC as ticks with 1/4 volume
 
@@ -843,3 +878,19 @@ void Worker::writeArchiveCsv( const std::vector<ScripBar> & bars  ){
 		csv_file_out.close();
 }
 /**********************   end removed by Josh1 *******************************************/
+
+void Worker::writeCurrentPrices( const std::stringstream  & current_prices){
+
+	if( csv_file_out.is_open() )
+		csv_file_out.close();
+
+	csv_file_out.open( settings.csv_folder_path + "last_prices.csv",  std::fstream::out );
+	if( !csv_file_out.is_open() ){
+		throw( "Error opening file - last_prices.csv" );
+	}
+
+	csv_file_out << current_prices.rdbuf() << std::flush;
+	
+	if( csv_file_out.is_open() )
+		csv_file_out.close();
+}
