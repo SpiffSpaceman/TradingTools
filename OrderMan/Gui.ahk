@@ -27,7 +27,7 @@ initGUI(){
 }
 
 createGUI(){
-	global Qty, EntryPrice, StopPrice, TargetPrice, Direction, CurrentResult, TargetResult, BtnOrder, BtnUpdate, BtnLink, BtnUnlink, BtnCancel, EntryStatus, StopStatus, TargetStatus, LastWindowPosition, EntryOrderType, EntryUpDown, StopUpDown, TargetUpDown, EntryText, AddText, BtnAdd, SelectedScripText, ScripList, CurrentPrice, AveragePrice, PositionStatus
+	global Qty, TargetQty, EntryPrice, StopPrice, TargetPrice, Direction, CurrentResult, TargetResult, BtnOrder, BtnUpdate, BtnLink, BtnUnlink, BtnCancel, EntryStatus, StopStatus, TargetStatus, LastWindowPosition, EntryOrderType, EntryUpDown, StopUpDown, TargetUpDown, EntryText, AddText, BtnAdd, SelectedScripText, ScripList, PriceStatus
 	
 	SetFormat, FloatFast, 0.2
 
@@ -36,13 +36,13 @@ createGUI(){
 	Gui, 1:New, +AlwaysOnTop +Resize, OrderMan
 
 // Column 1
-	Gui, 1:Add, DropDownList, vSelectedScripText gonScripChange w100 Choose1, %ScripList%
-	Gui, 1:Add, Text, vCurrentPrice w45 x+m											// To right of scrip
-	Gui, 1:Add, Text, vAveragePrice w45 x+m
-	Gui, 1:Add, Text, vPositionStatus w35 x+m
-	
+	Gui, 1:Add, DropDownList, vSelectedScripText gonScripChange w100 Choose1, %ScripList%	
+// row 1
+	Gui, 1:Add, Text, vPriceStatus w120 x+m
+
+// Column 1 
 	Gui, 1:Add, ListBox, vDirection gonDirectionChange h30 w20 xm Choose1, B|S		// xm - start from first column ( x coordinate = default margin )
-	Gui, 1:Add, Edit, vQty w30
+	Gui, 1:Add, DropDownList, vEntryOrderType w45 Choose1, LIM|SL|SLM|M 			// Entry Type
 		
 // Column 2	- But below Scrip change Dropdown
 	Gui, 1:Add, Text, vEntryText ym+25 x+m, Entry
@@ -67,20 +67,26 @@ createGUI(){
 	Gui, 1:Add, UpDown, vTargetUpDown gOnTargetUpDown  Range0-1 -16 hp
 
 // Column 5
-	Gui, 1:Add, DropDownList, vEntryOrderType w45 Choose1 ym+25 x+m, LIM|SL|SLM|M 	// Entry Type
-	
-	Gui, 1:Add, Text, vCurrentResult  w45	
-	Gui, 1:Add, Text, vTargetResult   w45	
-	Gui, 1:Add, Button, gonCancel vBtnCancel y+14, Cancel		 					// Add or Cancel button	
+	Gui, 1:Add, Edit, vQty w30 ym+25 x+m
+	Gui, 1:Add, Edit, vTargetQty w30  y+32
+	Gui, 1:Add, Button, gonCancel vBtnCancel y+m, Cancel		 					// Add or Cancel button	
 	Gui, 1:Add, Button, gonAdd vBtnAdd xp+0 yp+0, Add
 
 // Column 6
-	Gui, 1:Add, Text, ym+25 x+20 vEntryStatus
+	Gui, 1:Add, Text, vCurrentResult  w38 ym+55 x+m
+	Gui, 1:Add, Text, vTargetResult   w38
+
+// Column 7
+	Gui, 1:Add, Text, ym+25 vEntryStatus
 	Gui, 1:Add, Text, vStopStatus	
 	Gui, 1:Add, Text, vTargetStatus
 		
 	Gui, 1:Add, StatusBar, gstatusBarClick, 										// Status Bar - Shows link order Numbers. Double click to link manually
-	Gui, 1:Show, AutoSize NoActivate %LastWindowPosition% 
+	
+	if( LastWindowPosition != "ERROR" && LastWindowPosition != "" )
+		Gui, 1:Show, AutoSize NoActivate %LastWindowPosition%
+	else
+		Gui, 1:Show, AutoSize NoActivate
 
 	onScripChange()																	// Loads default scrip ini and initializes GUI values to defaults 
 	setDefaultEntryOrderType()
@@ -153,12 +159,17 @@ onLinkOrdersDirectionSelect(){
 	
 	Gui, 2:ListView, SysListView322						// Stop Listview
 	LV_Delete()											// Delete All Rows
-	Loop, % orderbookObj.OpenOrders.size {				// filter: Open + SLM + stop direction
+	Loop, % orderbookObj.OpenOrders.size {				// Open Stop and target
 		o :=  orderbookObj.OpenOrders[A_Index]
 		if( o.orderType == controlObj.ORDER_TYPE_SL_MARKET && o.buySell == stopDirection)
 			addOrderRow( o, "Stop" )
 		if( o.orderType == controlObj.ORDER_TYPE_LIMIT && o.buySell == stopDirection)
-			addOrderRow( o, "Target" )
+			addOrderRow( o, "Target" )					// // filter: Open + SLM + stop direction
+	}
+	Loop, % orderbookObj.CompletedOrders.size {			// Completed targets
+		o :=  orderbookObj.CompletedOrders[A_Index]
+		if( o.orderType == controlObj.ORDER_TYPE_LIMIT && o.buySell == stopDirection)
+			addOrderRow( o, "Target-Executed" )
 	}
 	if(  LV_GetCount() > 0  )
 		LV_ModifyCol()	
@@ -183,10 +194,13 @@ openStatusGUI(){
 	trade := contextObj.getCurrentTrade()
 	addOrderRow( trade.newEntryOrder.getOrderDetails(), "Entry(Open)" )
 	addOrderRow( trade.stopOrder.getOrderDetails(),     "Stop(Open)" )
-	addOrderRow( trade.targetOrder.getOrderDetails(),   "Target(Open)" )
+	addOrderRow( trade.target.getOpenOrder().getOrderDetails(),   "Target(Open)" )
 	
 	For index, value in trade.executedEntryOrderList{
 		addOrderRow( value.getOrderDetails(), "Entry(Executed)" )
+	}
+	For index, value in trade.target.executedOrderList{
+		addOrderRow( value.getOrderDetails(), "Target(Executed)" )
 	}
 	
 	if(  LV_GetCount() > 0  )
@@ -249,7 +263,7 @@ updateStatus(){
 	
 	entryOrderDetails := trade.newEntryOrder.getOrderDetails()
 	stopOrderDetails  := trade.stopOrder.getOrderDetails()
-	targetOrderDetails:= trade.targetOrder.getOrderDetails()
+	targetOrderDetails:= trade.target.getOpenOrder().getOrderDetails()
 
 	entryLinked 	  := trade.isNewEntryLinked()
 	stopLinked		  := trade.isStopLinked()
@@ -303,9 +317,11 @@ updateStatus(){
 		shortStatus	:= getOrderShortStatus( targetOrderDetails.status )
 		status 		:= shortStatus . " (" . targetOrderDetails.totalQty . ")"
 	}
-	if( trade.targetOrder.getPrice() > 0  && entryOpen ){
-		pendingstatus := "P" . "(" . openSize . ")"
-		status 		  := pendingstatus . "  " .  status
+	if( trade.target.getPrice() > 0  && entryOpen ){
+		targetSize	   := trade.target.getGUIQty()
+		openTargetSize := targetSize > openSize ? openSize : targetSize						// Pending target Order size is not more than Open Entry Order size
+		pendingstatus  := "P" . "(" . openTargetSize . ")"
+		status 		   := pendingstatus . "  " .  status
 	}
 	setOrderStatus( "TargetStatus", status )
 	
@@ -314,7 +330,7 @@ updateStatus(){
 	timeStatus    := isTimerActive ? "ON" : "OFF"
 			
 	SB_SetText( "Timer: " . timeStatus . "  Open Position: " . positionSize . ". Unfilled: " . openSize )
-	
+
 	Gui, 1:Show, AutoSize NA
 }
 
@@ -339,20 +355,20 @@ setOrderStatus(  statusGuiId, status  ){
 */
 loadTradeInputToGui(){
 	global contextObj
-	
+
 	trade  		:= contextObj.getCurrentTrade()
+	scripAlias	:= trade.scrip.alias
 	entry  		:= trade.newEntryOrder
 	entryInput  := entry.getInput()
 	stop  		:= trade.stopOrder
-	target	    := trade.targetOrder
-	scripAlias	:= entryInput.scrip.alias
-	
+	target	    := trade.target
+
 	setSelectedScrip( scripAlias )
-	setGUIValues( entryInput.qty, entry.getPrice(), stop.getPrice(), target.getPrice(), entryInput.direction, entryInput.orderType  )
+	setGUIValues( entryInput.qty, entry.getPrice(), stop.getPrice(), target.getPrice(),  target.getGUIQty(), entryInput.direction, entryInput.orderType  )
 	updateCurrentResult()
 }
 
-setGUIValues( inQty, inEntry, inStop, inTargetPrice, inDirection, inEntryOrderType  ){
+setGUIValues( inQty, inEntry, inStop, inTargetPrice, inTargetQty, inDirection, inEntryOrderType  ){
 	
 	setQty( inQty )
 	setEntryPrice( inEntry, inEntry )
@@ -360,6 +376,7 @@ setGUIValues( inQty, inEntry, inStop, inTargetPrice, inDirection, inEntryOrderTy
 	setDirection( inDirection )	
 	selectEntryOrderType( inEntryOrderType )
 	setTargetPrice( inTargetPrice )
+	setTargetQty(inTargetQty)
 	
 	updateStatus()	
 }
@@ -378,28 +395,22 @@ setSelectedScrip( alias ){
 	}
 }
 
-setScripCurrentPrice( inPrice ){
-	global CurrentPrice
-	CurrentPrice := inPrice
-	GuiControl, 1:Text, CurrentPrice,  %CurrentPrice%
-}
-
-setAveragePrice( inPrice ){
-	global AveragePrice
-	AveragePrice := inPrice
-	GuiControl, 1:Text, AveragePrice,  %AveragePrice%
-}
-
-setPositionStatus( inResult ){
-	global PositionStatus
-	PositionStatus := inResult
-	GuiControl, 1:Text, PositionStatus,  %PositionStatus%
+setPriceStatus( inPrice ){
+	global PriceStatus
+	PriceStatus := inPrice
+	GuiControl, 1:Text, PriceStatus,  %PriceStatus%
 }
 
 setQty( inQty ){
 	global Qty
 	Qty := inQty
 	GuiControl, 1:Text, Qty,  %Qty%
+}
+
+setTargetQty( inQty ){
+	global TargetQty
+	TargetQty := inQty
+	GuiControl, 1:Text, TargetQty,  %TargetQty%
 }
 
 setDefaultQty(){

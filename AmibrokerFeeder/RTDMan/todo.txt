@@ -1,6 +1,10 @@
 // TODO
 	// Start AB + start RTDMan without NOW - Ab thread seems to disturb AB - Busy cursor every second
 
+	// check  last_prices.csv 
+		// Sometimes gets duplicate records
+		// check for price = 0 ?
+
     // RTD Callback - Use array and construct bars in AB thread
 		// tick completes after Worker::poll() processes all fields
         // More accurate mins - some data gets shifted now

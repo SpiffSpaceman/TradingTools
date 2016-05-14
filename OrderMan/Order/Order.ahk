@@ -80,7 +80,7 @@ class OrderClass{
 		else
 			return 0	// should not happen
 	}
-	
+
 	isClosed(){																// Indicates whether order is in Order Book > Completed Orders
 		return this._orderDetails.isClosed()
 	}
@@ -91,6 +91,13 @@ class OrderClass{
 	
 	isComplete(){															// Indicates whether order status is "Complete"		
 		return this._orderDetails.isComplete()
+	}
+
+	getExecutedQty(){
+		pendingQty := this._orderDetails.pendingQty
+		if( pendingQty == "" )
+			pendingQty := 0 
+		return this._orderDetails.totalQty - pendingQty
 	}
 
 	getGUIDirection(){
@@ -186,6 +193,14 @@ class OrderClass{
 		if( ! this._hasOrderChanged() )
 			return
 		
+		if( this._input.qty <= 0  ){												// If qty is 0, cancel the order
+			if( !this.cancel() ){
+				orderno := this._orderDetails.nowOrderNo
+				MsgBox, 262144,, Order cancellation failed. Order No: %orderno%
+			}
+			return
+		}
+		
 		winTitle := this._input.direction == "B" ? controlObj.ORDER_ENTRY_TITLE_BUY : controlObj.ORDER_ENTRY_TITLE_SELL	
 		
 		opened := orderbookObj.openModifyOrderForm( this._orderDetails.nowOrderNo, winTitle )	
@@ -243,6 +258,35 @@ class OrderClass{
 		this._orderDetails := orderbookObj.getOrderDetails( this._orderDetails.nowOrderNo )	// Get updated order details from orderbook
 	}
 
+	/*  Reads Data from input orderDetails (ie Orderbook) and sets up OrderClass._orderDetails and OrderClass._input (GUI input)
+		Used to link to existing orders
+		Call orderbookObj.read() before calling this
+		Input orderDetails is optional - If passed, we set it as _orderDetails
+	*/
+	loadOrderFromOrderbook( orderBookDetails  ){
+		
+		global selectedScrip, ProdType
+		
+		if( IsObject(orderBookDetails) )
+			this._orderDetails := orderBookDetails
+
+		od := this._orderDetails
+
+		if( IsObject( od ) ){
+			this.setOrderInput( this.getGUIOrderType(), this.getGUIDirection(), od.totalQty, od.price, od.triggerPrice, ProdType, selectedScrip )				
+			this.isCreated := true
+		}
+	}
+
+	/* Returns true if _orderDetails is set. ie Order is linked to order in orderbook
+	*/
+	isLinked(){
+		return  IsObject( this._orderDetails )
+	}
+
+	getOrderString(){
+		return UtilClass.orderIdentifier( this._input.direction, this._input.price, this._input.trigger )
+	}
 
 // -- Private ---
 
@@ -304,15 +348,16 @@ class OrderClass{
 		
 		Control, ChooseString , % scrip.segment,     	% controlObj.ORDER_ENTRY_EXCHANGE_SEGMENT,  %winTitle%			// Exchange Segment - NFO/NSE etc
 		Control, ChooseString , % scrip.instrument,  	% controlObj.ORDER_ENTRY_INST_NAME,  		%winTitle%			// Inst Name - FUTIDX / EQ  etc
-		
-		if( scrip.type != "" )
-			Control, ChooseString , % scrip.type,  	 	% controlObj.ORDER_ENTRY_TYPE,  			%winTitle%			// Type - XX/PE/CE - Set before Symbol
-		
 		Control, ChooseString , % scrip.symbol, 	 	% controlObj.ORDER_ENTRY_SYMBOL,  		 	%winTitle%			// Scrip Symbol
-		Control, ChooseString , % scrip.strikePrice, 	% controlObj.ORDER_ENTRY_STRIKE_PRICE,  	%winTitle%			// Strike Price for options
-		Control, Choose		  , % scrip.expiryIndex, 	% controlObj.ORDER_ENTRY_EXPIRY_DATE,  	 	%winTitle%			// Expiry Date - Set by Position Index (1/2 etc)
+
+		if( scrip.type != "" )
+			Control, ChooseString , % scrip.type,  	 	% controlObj.ORDER_ENTRY_TYPE,  			%winTitle%			// Type - XX/PE/CE
+		if( scrip.strikePrice != "" )
+			Control, ChooseString , % scrip.strikePrice, 	% controlObj.ORDER_ENTRY_STRIKE_PRICE, 	%winTitle%			// Strike Price for options
+		if( scrip.expiryIndex != "" )
+			Control, Choose		  , % scrip.expiryIndex, 	% controlObj.ORDER_ENTRY_EXPIRY_DATE,  	%winTitle%			// Expiry Date - Set by Position Index (1/2 etc)
 		
-		Control, ChooseString , % ordertype, 		 	% controlObj.ORDER_ENTRY_ORDER_TYPE,  		%winTitle%			// Order Type - LIMIT/MARKET/SL/SL-M		
+		Control, ChooseString , % ordertype, 		 	% controlObj.ORDER_ENTRY_ORDER_TYPE,  		%winTitle%			// Order Type - LIMIT/MARKET/SL/SL-M
 		Control, ChooseString , % this._input.prodType, % controlObj.ORDER_ENTRY_PROD_TYPE,    		%winTitle%			// Prod Type - MIS/NRML/CNC
 		Control, ChooseString , DAY, 	   			 	% controlObj.ORDER_ENTRY_VALIDITY, 			%winTitle%			// Validity - Day/IOC
 

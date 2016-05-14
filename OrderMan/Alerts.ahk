@@ -70,9 +70,7 @@ class AlertsClass{
 	
 
 	init(){
-		global AlertsEnabled, TickPath
-		
-		IniRead, TickPath, % this.ALERTS_CONFIG, OrderMan, TickPath
+		global AlertsEnabled
 
 		if( AlertsEnabled ){
 			this._loadTriggers()

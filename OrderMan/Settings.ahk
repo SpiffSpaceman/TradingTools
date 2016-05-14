@@ -21,15 +21,18 @@ loadSettings(){
 	
 	local value                 												// All variables global by default
 
-    config := "config/OrderMan.ini"
+    config      := "config/OrderMan.ini"
+    config_gen  := "config/save.ini"
+
+    IniRead, SavedOrders,       %config_gen%, OrderMan, SavedOrders
+    IniRead, LastWindowPosition,%config_gen%, OrderMan, LastWindowPosition
 
     IniRead, ScripList,         %config%, OrderMan, ScripList
     IniRead, HKEntryPrice,   	%config%, OrderMan, HKEntryPrice
     IniRead, HKStopPrice,   	%config%, OrderMan, HKStopPrice
     IniRead, HKTargetPrice,   	%config%, OrderMan, HKTargetPrice
-    IniRead, LastWindowPosition,%config%, OrderMan, LastWindowPosition
-    IniRead, SavedOrders,       %config%, OrderMan, SavedOrders
     IniRead, TITLE_NOW,         %config%, OrderMan, WindowTitle
+    IniRead, TickPath,          %config%, OrderMan, TickPath
     
     IniRead, value,     %config%, OrderMan, AlertsEnabled
     AlertsEnabled := value=="true"
@@ -48,6 +51,7 @@ loadSettings(){
     NEW_ORDER_WAIT_TIME			  := 5											// How many maximum seconds to wait for New Submitted Order to appear in orderbook. 
     OPEN_ORDER_WAIT_TIME		  := 5											// How many maximum seconds to wait for Order to be Open ( ie for validation etc to be over)
 																				// Warning message shown after wait period
+    STOP_ORDER_TYPE               := "SLM"                                      // Default Stop Order Type
 }
 
 /*
@@ -87,18 +91,18 @@ loadScrip( alias ){
   Save Current Position to Settings. Used to restore position on next start
 */
 saveLastPosition(){
-    global config
+    global config_gen
     
 	WinGetPos, X, Y,,, OrderMan ahk_class AutoHotkeyGUI
     value = X%X% Y%Y%
-	IniWrite, %value%, %config%, OrderMan, LastWindowPosition
+	IniWrite, %value%, %config_gen%, OrderMan, LastWindowPosition
 }
 
 /*
   Save orders. Used to load open trade on startup
 */
 saveOrders( savestring ){
-    global config
-    IniWrite, %savestring%, %config%, OrderMan, SavedOrders
+    global config_gen
+    IniWrite, %savestring%, %config_gen%, OrderMan, SavedOrders
 }
 

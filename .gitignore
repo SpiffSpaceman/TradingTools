@@ -42,4 +42,7 @@ OrderMan/config/scrips/*
 !OrderMan/config/scrips/SBIN.ini
 # Will be generated through GUI later
 #OrderMan/config/alerts.ini
+# Ignore generated ini
+OrderMan/config/save.ini
+
 

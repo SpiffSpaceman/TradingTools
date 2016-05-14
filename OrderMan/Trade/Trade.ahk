@@ -19,9 +19,10 @@ class TradeClass{
 	
 	scrip			 := ""
 	direction		 := ""													// B/S
+	
 	newEntryOrder	 := -1
-	stopOrder  		 := -1	
-	targetOrder		 := -1
+	stopOrder  		 := -1
+	target		 	 := new TargetClass
 	
 	isStopPending 	 := false												// Is Stop Waiting for Entry/Add order to trigger?
 	positionSize	 := 0													// Open Position Size
@@ -31,9 +32,10 @@ class TradeClass{
 																			// entryOrder contains details of current unexecuted order shown in GUI and _entryOrderList has all of executed orders
 	
 	
+	
 	/*	open new Trade by creating Entry/Stop/Target orders	
 	*/
-	create( inScrip, entryOrderType, stopOrderType, direction, qty, prodType, entryPrice, stopPrice, targetPrice ){
+	create( inScrip, entryOrderType, stopOrderType, direction, qty, prodType, entryPrice, stopPrice, targetPrice, targetQty ){
 	
 		if ( this.positionSize == 0 && !this._checkOpenOrderEmpty() )
 			return
@@ -70,7 +72,7 @@ class TradeClass{
 
 		this.isStopPending := isNewStopPending									// Just mark as pending. Actual Size of Pending Stop will be set when triggered
 		
-		this._handleTargetOrder( targetPrice )
+		this.target.handleTargetOrder( targetPrice, targetQty, this.stopOrder, this.positionSize )
 
 		this.save()
 		updateStatus()
@@ -78,7 +80,7 @@ class TradeClass{
 	
 	/*	Update Trade - Update Entry/Stop/Target orders			
 	*/
-	update( inScrip, entryOrderType, stopOrderType, qty, prodType, entryPrice, stopPrice, targetPrice  ){
+	update( inScrip, entryOrderType, stopOrderType, qty, prodType, entryPrice, stopPrice, targetPrice, targetQty  ){
 				
 		if( this.isNewEntryLinked() && entryPrice != "" ){		
 			
@@ -88,8 +90,9 @@ class TradeClass{
 		}
 		
 		this._updateStop( inScrip, stopOrderType, qty, prodType, stopPrice )
+		
 		if( targetPrice !=-1 )													// -1 indicates no change. Else create/delete target order
-			this._handleTargetOrder( targetPrice )
+			this.target.handleTargetOrder( targetPrice, targetQty, this.stopOrder, this.positionSize )
 
 		this.save()	
 		updateStatus()
@@ -111,7 +114,8 @@ class TradeClass{
 				this.positionSize 	   += this.newEntryOrder.getOrderDetails().totalQty
 				this.executedEntryOrderList.Push( this.newEntryOrder )
 
-				this._handleTargetOrder( this.targetOrder.getPrice() )			// If Entry successful, update target order - Increase target order size
+				this.target.onEntrySuccessful( this.stopOrder, this.positionSize )
+																				// If Entry successful, update target order - Increase target order size
 			}
 			else{																// Entry Order Failed
 				if( this.isStopPending  ){
@@ -122,33 +126,55 @@ class TradeClass{
 					if( this.isEntryOrderExecuted() ){							// LIMIT/Market Order Failed - Reduce Stop Qty
 						this.stopOrder.getInput().qty := this.positionSize		// Reset stop size to current position size, without entryOrder
 						this.stopOrder.update()
+						MsgBox, 262144,, Entry/Add Order Failed. Stop order has been reverted
 					}
-					else														// Position empty, cancel stop order
-						this.stopOrder.cancel()
-					MsgBox, 262144,, Entry/Add Order Failed. Stop order has been reverted / cancelled
+					else{														// Position empty, cancel stop order
+						if( this.stopOrder.cancel() )
+							MsgBox, 262144,, Entry/Add Order Failed. Stop order has been cancelled
+						else
+							MsgBox, 262144,, Entry/Add Order Failed. Stop order cancellation failed
+					}
 				}
 			}
 
-			this.newEntryOrder := -1 											// Unlink Entry Order to allow adds	
+			this.newEntryOrder := -1 											// Unlink Entry Order to allow adds
 			this.save()
-		}	
-
-		if( this.stopOrder.isComplete() || this.targetOrder.isComplete()  ){	// If position closed, then cancel Add order if open
-			this.newEntryOrder.cancel()
 		}
 
-		if( this.stopOrder.isComplete() && this.targetOrder.isOpen() ){			// OCO Stop, Target Order
-			this.targetOrder.cancel()
-		}
-		else if( this.targetOrder.isComplete() && this.stopOrder.isOpen() ){
-			this.stopOrder.cancel()
+		if( this.stopOrder.isClosed() ){										// Stop hit/cancelled, close all open orders
+			this.onTradeClose()
+			return
 		}
 		
+		targetOrder := this.target.getOpenOrder()
+		if( targetOrder.isClosed() ){
+			this.positionSize -= targetOrder.getExecutedQty()					// Target Executed, Reduce position size
+			
+			this._mergeStopSize()												// Update Stop size. If position closed, stop size will be 0 which will cancel the order in update()
+			this.stopOrder.update()
+			
+			this.target.onTargetClose()											// Notify Open target order closure
+			this.save()
+
+			if(this.positionSize <= 0 ){										// Position closed, cancel all open orders
+				this.onTradeClose()
+				return
+			}
+		}
+	}
+
+	/* Close orders if open and unlink
+	*/
+	onTradeClose(){																// OCO Stop, Target Order
+		entry  := this.isNewEntryLinked() ? this.newEntryOrder.cancel() : true	// If position closed, then cancel Add order if open
+		stop   := this.stopOrder.cancel()
+		target := this.isTargetLinked()   ? this.target.cancel() : true
 		
-		if( this.stopOrder.isClosed() ){										// Unlink After close
+		if( !entry || !stop || !target )
+			MsgBox, 262144,, Trade Closed - OCO Failed
+		else
 			MsgBox, 262144,, Trade Closed - Verify
-			this.unlinkOrders()
-		}
+		this.unlinkOrders()														// Unlink After close
 	}
 	
 	/*	cancel open orders - Entry/Stop/Pending Stop
@@ -196,26 +222,28 @@ class TradeClass{
 			
 	/*	Save linked order nos to ini
 		Used on startup to link to open orders on last exit
-		EntryOpenOrderNo:StopOrderNo,isPending,PendingPrice:ExecutedEntryList:TargetOrderNo,TargetPrice
+		Format:		Alias:EntryOpenOrderNo:StopOrderNo,isPending,PendingPrice:ExecutedEntryList:TargetOrderNo,TargetPrice:ExecutedTargetList
 	*/
-	save(){		
-		
-		scripAlias		:= this.newEntryOrder.getInput().scrip.alias
-		openEntryString := this.newEntryOrder.getOrderDetails().nowOrderNo
-		stopString 		:= this.stopOrder.getOrderDetails().nowOrderNo . ( "," . this.isStopPending . "," . this.stopOrder.getInput().trigger ) 		
+	save(){
+		scripAlias	:= this.scrip.alias
+		entryOrder	:= this.newEntryOrder.getOrderDetails().nowOrderNo
+		stopString	:= this.stopOrder.getOrderDetails().nowOrderNo . ( "," . this.isStopPending . "," . this.stopOrder.getInput().trigger )
 		
 		executedEntryString := ""
 		For index, value in this.executedEntryOrderList{
 			executedEntryString := executedEntryString . value.getOrderDetails().nowOrderNo . ","
 		}
 		
-		targetString := this.targetOrder.getOrderDetails().nowOrderNo	. "," .  this.targetOrder.getPrice()
+		targetString 		 := this.target.getOpenOrder().getOrderDetails().nowOrderNo	. "," .  this.target.getPrice() . "," . this.target.getGUIQty()
+		executedTargetString := this.target.getExecutedOrderList()
 		
-		savestring  := scripAlias . ":" . openEntryString . ":" . stopstring . ":" executedEntryString . ":" . targetString
-			 
+		savestring  := scripAlias . ":" . entryOrder . ":" . stopstring . ":" . executedEntryString . ":" . targetString . ":" . executedTargetString
+
 		saveOrders( savestring )			
 	}
 	
+	/* Format:		Alias:EntryOpenOrderNo:StopOrderNo,isPending,PendingPrice:ExecutedEntryList:TargetOrderNo,TargetPrice:ExecutedTargetList
+	*/
 	loadOrders(){
 		global SavedOrders, orderbookObj
 				
@@ -227,6 +255,7 @@ class TradeClass{
 		stopstring   			 := fields[3]
 		executedEntryOrderIDList := fields[4]
 		targetString 			 := fields[5]
+		executedTargetOrderList  := fields[6]
 		
 		fields 	     := StrSplit( stopstring , ",")
 		stopOrderID  := fields[1]
@@ -236,96 +265,79 @@ class TradeClass{
 		fields		  := StrSplit( targetString , ",")
 		targetOrderID := fields[1]
 		_targetPrice  := fields[2]
+		_targetQty	  := fields[3]
 				
-		return this.linkOrders( true, scripAlias, entryOrderID, executedEntryOrderIDList, stopOrderID, isPending, pendingPrice, targetOrderID, _targetPrice  )		
+		return this.linkOrders( true, scripAlias, entryOrderID, executedEntryOrderIDList, stopOrderID, isPending, pendingPrice, targetOrderID, _targetPrice, _targetQty, executedTargetOrderList  )		
 	}
-	
+
 	/*	Link with Input Order
 		Linking Stop Order is optional
 		Does not call this.save() - should be called by caller. loadOrders()->linkOrders() does not need to save
 	*/
-	linkOrders( isSilent, scripAlias, entryOrderID, executedEntryOrderIDList, stopOrderID, isPending, pendingPrice, targetOrderID, targetPrice ){
-		global orderbookObj
+	linkOrders( isSilent, scripAlias, entryOrderID, executedEntryOrderIDList, stopOrderID, isPending, pendingPrice, targetOrderID, targetPrice, targetQty, executedTargetOrderList ){
+		global orderbookObj, STOP_ORDER_TYPE
 		
 		orderbookObj.read()
-		entryOrderDetails   := orderbookObj.getOrderDetails( entryOrderID )
-		stopOrderDetails    := orderbookObj.getOrderDetails( stopOrderID )
-		targetOrderDetails  := orderbookObj.getOrderDetails( targetOrderID )
+		entryOrderDetails   	:= orderbookObj.getOrderDetails( entryOrderID )
+		stopOrderDetails    	:= orderbookObj.getOrderDetails( stopOrderID )
+		targetOrderDetails  	:= orderbookObj.getOrderDetails( targetOrderID )
 		
-		newEntryOrderExists := IsObject(entryOrderDetails)
-		stopOrderExists		:= IsObject(stopOrderDetails)
-		targetOrderExists	:= IsObject(targetOrderDetails)
+		newEntryOrderExists 	:= IsObject(entryOrderDetails)
+		stopOrderExists			:= IsObject(stopOrderDetails)
+		openTargetOrderExists	:= IsObject(targetOrderDetails)
+		
+		newEntrySize 			:= newEntryOrderExists ? entryOrderDetails.totalQty : 0
+		stopSize	 			:= stopOrderDetails.totalQty
 		
 		if( newEntryOrderExists && stopOrderExists && entryOrderDetails.tradingSymbol != stopOrderDetails.tradingSymbol ){
 			UtilClass.conditionalMessage(isSilent, "Trading Symbol does not match for Entry and Stop Order"  ) 					
 			return false
-		}		
-		
-		entryOrderListObj 	   := []
-		positionSize  	  	   := 0
-		averageEntryPrice 	   := 0 
-		
-		if( executedEntryOrderIDList != ""){										// Fetch Executed Orders			
-			
-			ts := newEntryOrderExists ? entryOrderDetails.tradingSymbol : stopOrderDetails.tradingSymbol
-			
-			Loop, parse, executedEntryOrderIDList, `,
-			{				
-				orderID    	 := A_LoopField
-				orderDetails := orderbookObj.getOrderDetails( orderID )
-				
-				if( orderID == "" )													// Extra Comma at the end
-					break
-				
-				if( !IsObject(orderDetails) ){
-					UtilClass.conditionalMessage(isSilent, "Add Order " . orderID . " Not found"  ) 					
-					return false
-				}
-				if( ts != orderDetails.tradingSymbol ){
-					UtilClass.conditionalMessage(isSilent, "Add Order Trading Symbol does not match"  ) 					
-					return false
-				}
-				
-				order 			:= new OrderClass
-				order.isCreated := true
-				order.setOrderDetails( orderDetails )				
-				
-				entryOrderListObj.Push( order )
-				averageEntryPrice := this._getAveragePrice( positionSize, averageEntryPrice, orderDetails )
-				positionSize	  += orderDetails.totalQty
-			}
 		}
-		
-		
-		newEntrySize := newEntryOrderExists ? entryOrderDetails.totalQty : 0
-		stopSize	 := stopOrderDetails.totalQty
-																					// Validations
+
+		positionSize 	 	:= 0
+		entryOrderListObj   := []
+		targetOrderListObj  := []
+		openTargetSize		:= openTargetOrderExists ? targetOrderDetails.totalQty : 0
+
+		if( executedEntryOrderIDList != ""){										// Fetch Executed Entry Orders
+																					// Stop will always exits if atleast 1 entry order has been filled
+			size := this._loadExecutedOrders( isSilent, executedEntryOrderIDList, entryOrderListObj, stopOrderDetails.tradingSymbol  )
+			if(  size == -1 )
+				return false
+			else
+				positionSize += size
+		}
+
+		if( executedTargetOrderList != ""){											// Fetch Executed Target Orders		
+			size := this._loadExecutedOrders( isSilent, executedTargetOrderList, targetOrderListObj, stopOrderDetails.tradingSymbol  )
+			if(  size == -1 )
+				return false
+			else
+				positionSize -= size												// Reduce position size
+		}
+
+
+	// Validations
 		if( isPending && !entryOrderDetails.isOpen() ){								// If Pending stop, then entry order must be open
 			UtilClass.conditionalMessage(isSilent, "Entry Order is not Open" )
 			return false
 		}
-		
+		if( openTargetSize > positionSize ){										// Target and Entry Order size mismatch
+			UtilClass.conditionalMessage(isSilent, "Target total qty exceeds Entry Position" )
+			return false
+		}
 		if( positionSize > 0 ){														// If some entry/add orders are complete, then stop must be open
 			if( !stopOrderDetails.isOpen() ){										// Should never happen with manual linking from link button
 				UtilClass.conditionalMessage(isSilent, "Stop Order is not Open"  )
 				return false
-			}			
-			
+			}
 			expectedStopSize := isPending ? positionSize : positionSize + newEntrySize			
 			if( stopSize != expectedStopSize){
 				UtilClass.conditionalMessage(isSilent, "Stop Size does not match with Entry position size"  )
 				return false	
 			}
-			
-			if( targetOrderExists ){
-				targetSize := targetOrderDetails.totalQty
-				if( targetSize != positionSize  ){
-					UtilClass.conditionalMessage(isSilent, "Target Order Size does not match with size of completed Entry Orders"  )
-					return false	
-				}
-			}
 		}
-		else{																		// If no executed orders, then entry must exist. Also stop should be open or pending
+		if( positionSize == 0 ){													// If no executed orders, then entry must exist. Also stop should be open or pending
 			if( !newEntryOrderExists ){												// Cannot have Open Target Order
 				UtilClass.conditionalMessage(isSilent, "Order " . entryOrderID " Not found" )
 				return false
@@ -342,61 +354,51 @@ class TradeClass{
 				UtilClass.conditionalMessage(isSilent, "Stop Size does not match with Entry size"  )
 				return false
 			}
-			if( targetOrderExists  ){
+			if( openTargetOrderExists || executedTargetOrderList != "" ){
 				UtilClass.conditionalMessage(isSilent, "Cannot link Target Order without some completed Entry Orders"  )
 				return false
 			}
-		}		
+		}	
 
 	// Validations over - Load Data
-		
+
 		loadScrip( scripAlias )
 		
-		this.newEntryOrder  := new OrderClass
-		this.stopOrder 		:= new OrderClass
-		this.targetOrder 	:= new OrderClass
-		
-		if( newEntryOrderExists ){
-			this.newEntryOrder.setOrderDetails( entryOrderDetails ) 
-			this.newEntryOrder.isCreated := true
-			this._loadOrderInputFromOrderbook( this.newEntryOrder )					// OrderClass.InputClass
-		} 		
-		if( stopOrderExists ){
-			this.stopOrder.setOrderDetails( stopOrderDetails ) 
-			this.stopOrder.isCreated := true
-			this._loadOrderInputFromOrderbook( this.stopOrder )
-		}
-		if( targetOrderExists ){
-			this.targetOrder.setOrderDetails( targetOrderDetails ) 
-			this.targetOrder.isCreated := true
-			this._loadOrderInputFromOrderbook( this.targetOrder )
-		}
-
+		this.newEntryOrder := new OrderClass
+		this.newEntryOrder.loadOrderFromOrderbook( entryOrderDetails )
 		this.executedEntryOrderList  := entryOrderListObj
-		this.averageEntryPrice		 := averageEntryPrice
-		this.positionSize			 := positionSize
+		
+		this.stopOrder := new OrderClass
+		this.stopOrder.loadOrderFromOrderbook( stopOrderDetails )
+		
+		this.target.loadTarget( targetOrderDetails )
+		this.target.executedOrderList := targetOrderListObj
 
-		if( !newEntryOrderExists ){													// No New Order => We may have Executed Entry Orders. Use the latest Executed Order and copy Input
-			o := this._getLastExecutedInputOrder()
-			if( IsObject(o) )
-				this._loadOrderInputFromOrderbook( o )
+		this.positionSize := positionSize
+		this._calculateAveragePrice()
+
+		if( !newEntryOrderExists ){													// No New Order => We may have Executed Entry Orders 
+			o := this._getLastExecutedInputOrder()									// Use the latest Executed Order and copy Input to prepare for future Adds
+			if( IsObject(o) ){
+				o.loadOrderFromOrderbook( 0 )
 				i := o.getInput()
 				this.newEntryOrder.setOrderInput( i.orderType, i.direction, i.qty, i.price, i.trigger, i.prodType, i.scrip )
-		} 
+			}
+		}
 		if( isPending ){
 			this.isStopPending := true
 			entryInput		   := this.newEntryOrder.getInput()
 			
 			if( pendingPrice == 0 && stopOrderExists)								// In manual Linking, use stop order price as pending price
 				pendingPrice := this.stopOrder.getInput().trigger
-			this._setupStopOrderInput( "SLM",  entryInput.qty, entryInput.prodType, pendingPrice,  UtilClass.reverseDirection(entryInput.direction), entryInput.scrip )
+			this._setupStopOrderInput( STOP_ORDER_TYPE,  entryInput.qty, entryInput.prodType, pendingPrice,  UtilClass.reverseDirection(entryInput.direction), entryInput.scrip )
 		}
 
 		this.scrip 		 := this.newEntryOrder.getInput().scrip
 		this.direction 	 := this.newEntryOrder.getInput().direction
 
-		if( ! targetOrderExists  && targetPrice > 0 ){
-			this._handleTargetOrder( targetPrice )
+		if( ! openTargetOrderExists  && (targetPrice > 0 || targetQty > 0) ){		// Set up pending Target Order
+			this.target.handleTargetOrder( targetPrice, targetQty, this.stopOrder, this.positionSize )
 		}
 
 		return true
@@ -408,7 +410,7 @@ class TradeClass{
 		
 		this.newEntryOrder	:= -1												// Current Entry/Add order - Not yet executed
 		this.stopOrder 		:= -1												// Single stop order covering all executed orders + open entryOrder
-		this.targetOrder 	:= -1 
+		this.target.unlink()
 		
 		this.isStopPending			:= false									// Is Stop pending for entryOrder to Complete - Applicable for SL/SL M orders
 		this.positionSize   		:= 0										// Sum of all successfully executed Orders' qty
@@ -432,7 +434,7 @@ class TradeClass{
 		if( this.isStopLinked() )
 			this.stopOrder.reloadDetails()
 		if( this.isTargetLinked() )
-			this.targetOrder.reloadDetails()
+			this.target.getOpenOrder().reloadDetails()
 	}
 		
 	/*	New Entry Order Open ? - Returns true if newEntryOrder is an object and is linked with an order in orderbook
@@ -454,7 +456,7 @@ class TradeClass{
 	}
 
 	isTargetLinked(){
-		return IsObject( this.targetOrder ) && IsObject(this.targetOrder.getOrderDetails()) 			
+		return this.target.isLinked()
 	}
 
 	/*	Indicates whether Entry Order has status = complete
@@ -523,7 +525,10 @@ class TradeClass{
 	 * positionSize will be 0 when there is no Existing position
 	*/
 	_mergeStopSize(){
-		this.stopOrder.getInput().qty := this.positionSize + this.newEntryOrder.getOrderDetails().totalQty		
+		openEntrySize := this.newEntryOrder.getOrderDetails().totalQty
+		if( openEntrySize == "" )
+			openEntrySize := 0 
+		this.stopOrder.getInput().qty := this.positionSize + openEntrySize
 	}
 
 	/*	Set Entry Order Input details based on Order Type
@@ -603,20 +608,44 @@ class TradeClass{
 		return true
 	}
 
-	/*  Reads Data from OrderClass._orderDetails ( ie Orderbook) and sets up OrderClass._input used by GUI
-		Used to link to existing orders
-		Call orderbookObj.read() before calling this
+	/* Go through orders in input csv
+	   Check if trading symbol matches against Input
+	   Setup OrderClass and push to input List	
+	   Returns totalQty of Executed Orders if successful, else returns -1
 	*/
-	_loadOrderInputFromOrderbook(  order ){
-		
-		global selectedScrip, ProdType
-		
-		od := order.getOrderDetails()		
-		
-		if( IsObject( od ) )
-			order.setOrderInput( order.getGUIOrderType(), order.getGUIDirection(), od.totalQty, od.price, od.triggerPrice, ProdType, selectedScrip )		
+	_loadExecutedOrders( isSilent, inputOrderCsv, outputOrderList, tradingSymbol  ){
+		global orderbookObj
+
+		totalQty := 0
+
+		Loop, parse, inputOrderCsv, `,
+		{
+			orderID := A_LoopField
+			if( orderID == "" )													// Extra Comma at the end
+				break
+			
+			orderDetails := orderbookObj.getOrderDetails( orderID )
+
+			if( !IsObject(orderDetails) ){
+				UtilClass.conditionalMessage(isSilent, "Order " . orderID . " Not found"  )
+				return -1
+			}
+			if( tradingSymbol != orderDetails.tradingSymbol ){
+				UtilClass.conditionalMessage(isSilent, "Trading Symbol does not match for Order " . orderID  )
+				return -1
+			}
+
+			order 			:= new OrderClass
+			order.isCreated := true
+			order.setOrderDetails( orderDetails )
+
+			outputOrderList.Push( order )
+			totalQty += orderDetails.totalQty
+		}
+
+		return totalQty
 	}
-	
+
 	/* Returns latest order with highest order no from list of Executed Entry Orders
 	*/
 	_getLastExecutedInputOrder(){
@@ -669,48 +698,13 @@ class TradeClass{
 			MsgBox, 262144,, Bug in _updateStop(). No stop order to update
 		}
 	}	
-
-	/* Creates/updates/deletes Target Limit order based on input target price
-	   Entry and stop order must be ready before calling this
-	*/
-	_handleTargetOrder( targetPrice ){
-		global ORDER_TYPE_GUI_LIMIT	
-		
-		if( (targetPrice == 0  ||  targetPrice = "" ) ){
-			this.targetOrder.cancel()											// Cancel if open. Can happen for adds, If target cleared, cancel it
-			this.targetOrder := -1
-			return
-		}
-
-		_entryDirection := this.direction
-		_stopDirection  := UtilClass.reverseDirection(_entryDirection)
-		_prodType	    := this.stopOrder.getInput().prodType
-		_stopPrice	    := this.stopOrder.getPrice()
-
-		if( !IsObject( this.targetOrder ) ){
-			this.targetOrder := new OrderClass
-		}
-																				// Create/Update Target Limit Order - Target always covers only current Executed position 			
-		if( !this._validateTargetPrice(_entryDirection, _stopPrice, targetPrice) ){
-			UtilClass.conditionalMessage( false, "Bug - _handleTargetOrder() validation failure" )
-			return
-		}
 	
-		this.targetOrder.setOrderInput( ORDER_TYPE_GUI_LIMIT, _stopDirection, this.positionSize, targetPrice, 0, _prodType, this.scrip )
-																				// Setup input params. Also used to update GUI
-		if( this.positionSize == 0 ) 											// Keep Target order pending until we have Entered a position
-			return
-		
-		if( this.targetOrder.isCreated )
-			this.targetOrder.update()
-		else
-			this.targetOrder.create()
-	}
-
-	/* For Buy order - Target Price should be more than open stop order
+	/* Calculate Average Entry Price from executedEntryOrderList
 	*/
-	_validateTargetPrice( direction, stopPrice, targetPrice  ){
-		return direction == "B" ? targetPrice > stopPrice : targetPrice < stopPrice	
+	_calculateAveragePrice(){
+		For index, value in this.executedEntryOrderList{
+			this.averageEntryPrice := this._getAveragePrice( this.positionSize, this.averageEntryPrice, value.getOrderDetails() )
+		}	
 	}
 	
 	/* Returns Updated Average weighted price - Call this before updating this.positionSize

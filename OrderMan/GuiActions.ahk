@@ -18,7 +18,7 @@
 /* Button New 
 */
 onNew(){
-	global contextObj, selectedScrip, EntryOrderType, Direction, Qty, ProdType, EntryPrice, StopPrice, TargetPrice
+	global contextObj, selectedScrip, EntryOrderType, Direction, Qty, ProdType, EntryPrice, StopPrice, TargetPrice, TargetQty, STOP_ORDER_TYPE
 		
 	Gui, 1:Submit, NoHide										// sets variables from GUI
 	
@@ -34,7 +34,7 @@ onNew(){
 	}	
 
 	trade 	:= contextObj.getCurrentTrade()
-	trade.create( selectedScrip, EntryOrderType, "SLM", Direction, Qty, ProdType, EntryPrice, StopPrice, TargetPrice )
+	trade.create( selectedScrip, EntryOrderType, STOP_ORDER_TYPE, Direction, Qty, ProdType, EntryPrice, StopPrice, TargetPrice, TargetQty )
 	
 }
 
@@ -47,7 +47,7 @@ onAdd(){
 /* Button Update
 */
 onUpdate(){
-	global contextObj, selectedScrip, EntryOrderType, Qty, ProdType, EntryPrice, StopPrice, TargetPrice
+	global contextObj, selectedScrip, EntryOrderType, Qty, ProdType, EntryPrice, StopPrice, TargetPrice, TargetQty, STOP_ORDER_TYPE
 	
 	trade := contextObj.getCurrentTrade()	
 	
@@ -77,12 +77,12 @@ onUpdate(){
 																			// If Target order is not linked, then always create target order if price is filled
 																			// Target Order size is always = completed Entry orders' size
 	if( trade.isTargetLinked() )
-		target := hasOrderChanged( trade.targetOrder, TargetPrice, positionSize ) ? TargetPrice : -1
+		target := hasOrderChanged( trade.target.getOpenOrder(), TargetPrice, TargetQty ) ? TargetPrice : -1
 	else
 		target := TargetPrice
 
 	if( entry != ""  ||  stop != "" || target != -1 ){		
-		trade.update( selectedScrip, EntryOrderType, "SLM", Qty, ProdType, entry, stop, target )
+		trade.update( selectedScrip, EntryOrderType, STOP_ORDER_TYPE, Qty, ProdType, entry, stop, target, TargetQty  )
 	}
 	else{
 		MsgBox, 262144,, Nothing to update or Order status is not open
@@ -156,7 +156,7 @@ loadScripSettings(){
 	
 	setDefaultFocus()															// Change Focus to Entry price to prevent change by mouse scroll
 	loadScrip( SelectedScripText )
-	setGUIValues( DefaultQty, 0, 0, 0, "B", EntryOrderType )					// Reset to default state
+	setGUIValues( DefaultQty, 0, 0, 0, 0, "B", EntryOrderType )					// Reset to default state
 }
 
 /* Direction Switch
@@ -228,13 +228,14 @@ linkOrdersSubmit(){
 		return
 	}
 
-	entryId   			:= ""
-	entryType 			:= ""
-	executedEntryIDList	:= ""
-	stopOrderId	    	:= ""
-	targetOrderId		:= ""
-	isPending			:= false
-	rowno				:= 0
+	entryId   			 := ""
+	entryType 			 := ""
+	executedEntryIDList	 := ""
+	stopOrderId	    	 := ""
+	targetOrderId		 := ""
+	executedtargetIDList := ""
+	isPending			 := false
+	rowno				 := 0
 
 	Gui, 2:ListView, SysListView321
 	Loop % LV_GetCount("Selected")
@@ -275,14 +276,19 @@ linkOrdersSubmit(){
 		
 		LV_GetText( orderId,   rowno, listViewOrderIDPosition )
 		LV_GetText( ordertype, rowno, listViewOrderTypePosition )
+		LV_GetText( status,    rowno, listViewOrderStatusPosition )
 		
-		if( ordertype == controlObj.ORDER_TYPE_LIMIT){
-			if( targetOrderId == "" )
+		if( ordertype == controlObj.ORDER_TYPE_LIMIT){			// Target - Open / Executed
+			if( status == controlObj.ORDER_STATUS_OPEN ){
+				if( targetOrderId != ""  ){
+					MsgBox, 262144,, Select Only One Open Target Order
+					return
+				}
 				targetOrderId := orderId
+			}
 			else{
-				MsgBox, 262144,, Select only one Target Order
-				return	
-			}					
+				executedtargetIDList := orderId . "," . executedtargetIDList
+			}
 		}
 		else if( ordertype == controlObj.ORDER_TYPE_SL_MARKET){
 			if( stopOrderId == "" )
@@ -314,7 +320,7 @@ linkOrdersSubmit(){
 	
 	trade := contextObj.getCurrentTrade()					// Link Orders in Current Context	
 
-	if( !trade.linkOrders( false, LinkedScripText, entryId, executedEntryIDList, stopOrderId, isPending, 0, targetOrderId, 0 ) )
+	if( !trade.linkOrders( false, LinkedScripText, entryId, executedEntryIDList, stopOrderId, isPending, 0, targetOrderId, 0, 0, executedtargetIDList ) )
 		return
 	
 	Gui, 2:Destroy
@@ -445,11 +451,9 @@ priceUpdateCallback(){
 	
 	if( averageTradePrice == 0 )
 		averageTradePrice := ""
-
-	setScripCurrentPrice( scripPrice )
-	setAveragePrice( averageTradePrice  )
 	
 	result := averageTradePrice == "" ? ""  :  (contextObj.getCurrentTrade().isLong() ? scripPrice - averageTradePrice : averageTradePrice - scripPrice)
-	setPositionStatus( result )
+		
+	setPriceStatus( scripPrice . "  " . averageTradePrice . "  " . result )
 }
 
