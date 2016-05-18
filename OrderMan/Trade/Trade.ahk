@@ -100,6 +100,8 @@ class TradeClass{
 		
 	/*	Called by Tracker Thread - orderStatusTracker()
 		Create pending SL order when entry completes
+		Handle Target-Stop OCO
+		Handle Stop update after Target partial fill
 	*/
 	trackerCallback(){
 
@@ -124,7 +126,7 @@ class TradeClass{
 				}
 				else{
 					if( this.isEntryOrderExecuted() ){							// LIMIT/Market Order Failed - Reduce Stop Qty
-						this.stopOrder.getInput().qty := this.positionSize		// Reset stop size to current position size, without entryOrder
+						this._updateStopSize()									// Reset stop size to current position size, without entryOrder
 						this.stopOrder.update()
 						MsgBox, 262144,, Entry/Add Order Failed. Stop order has been reverted
 					}
@@ -148,9 +150,8 @@ class TradeClass{
 		
 		targetOrder := this.target.getOpenOrder()
 		if( targetOrder.isClosed() ){
-			this.positionSize -= targetOrder.getExecutedQty()					// Target Executed, Reduce position size
-			
-			this._mergeStopSize()												// Update Stop size. If position closed, stop size will be 0 which will cancel the order in update()
+			this.positionSize -= targetOrder.getFilledQty()						// Target Executed, Reduce position size
+			this._updateStopSize()												// Update Stop size. If position closed, stop size will be 0 which will cancel the order in update()
 			this.stopOrder.update()
 			
 			this.target.onTargetClose()											// Notify Open target order closure
@@ -159,6 +160,14 @@ class TradeClass{
 			if(this.positionSize <= 0 ){										// Position closed, cancel all open orders
 				this.onTradeClose()
 				return
+			}
+		}
+		else{																	// If Target LIMIT order is filled partially, update stop order
+			filledQty := this.target.isPartiallyFilled()
+			if( filledQty > 0  ){
+				this.positionSize -= filledQty									// Reduce Position size and update Stop qty
+				this._updateStopSize()
+				this.stopOrder.update()
 			}
 		}
 	}
@@ -294,10 +303,11 @@ class TradeClass{
 			return false
 		}
 
-		positionSize 	 	:= 0
-		entryOrderListObj   := []
-		targetOrderListObj  := []
-		openTargetSize		:= openTargetOrderExists ? targetOrderDetails.totalQty : 0
+		positionSize 	 	 := 0
+		entryOrderListObj    := []
+		targetOrderListObj   := []
+		openTargetSize		 := openTargetOrderExists ? targetOrderDetails.totalQty : 0
+		openTargetFilledSize := openTargetOrderExists ? targetOrderDetails.totalQty - targetOrderDetails.pendingQty : 0
 
 		if( executedEntryOrderIDList != ""){										// Fetch Executed Entry Orders
 																					// Stop will always exits if atleast 1 entry order has been filled
@@ -315,7 +325,9 @@ class TradeClass{
 			else
 				positionSize -= size												// Reduce position size
 		}
-
+		
+		if( openTargetFilledSize > 0  )												// Partial Target Fill - Reduce Position size
+			positionSize -= openTargetFilledSize
 
 	// Validations
 		if( isPending && !entryOrderDetails.isOpen() ){								// If Pending stop, then entry order must be open
@@ -436,7 +448,9 @@ class TradeClass{
 		if( this.isTargetLinked() )
 			this.target.getOpenOrder().reloadDetails()
 	}
-		
+
+
+
 	/*	New Entry Order Open ? - Returns true if newEntryOrder is an object and is linked with an order in orderbook
 	*/
 	isNewEntryLinked(){		
@@ -529,6 +543,16 @@ class TradeClass{
 		if( openEntrySize == "" )
 			openEntrySize := 0 
 		this.stopOrder.getInput().qty := this.positionSize + openEntrySize
+	}
+
+	/* Update Stop size after change to positionSize
+	*/
+	_updateStopSize(){
+		openEntrySize := this.newEntryOrder.getOrderDetails().totalQty
+		if( openEntrySize == "" || this.newEntryOrder.isClosed() )
+			openEntrySize := 0 
+		
+		this.stopOrder.getInput().qty := this.positionSize + (this.isStopPending ? 0 : openEntrySize)
 	}
 
 	/*	Set Entry Order Input details based on Order Type

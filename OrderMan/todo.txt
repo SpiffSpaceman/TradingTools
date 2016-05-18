@@ -2,83 +2,7 @@
 test
     Average Price - Adds + Link with adds
     Reset default ordertype after unlink/cancel
-    
-
-
-Test 
-    ManualLink with multiple targets + adds
-
-
-Partial fill for target Orders
-    - give few seconds to fill
-    - Reduce Stop size  
-        - Stop size = position size - Target Executed size
-        - handle position size shown in GUI + manage above
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
------------------------------------------------------------------------------------------
+ 
 Bugs
     OrderLink
         - Sets SLM order as Limit since its LIMIT after trigger
@@ -88,20 +12,70 @@ Bugs
         Window title : NEST - GJ109
         Window text: "Exchange or Series or Symbol is not selected"
         Buttonid (ok) "Button1"
+
+
+
+
+
+
+
+
+
+
+    
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 -----------------------------------------------------------------------------------------
 Separate class for Entry, Stop Orders similar to Target
-1 Click Market Buy/Sell
-    Market Order
-        - After entry, set average price in Entry box
-    Allow Empty Stop price
-        - After Entry use default stop size from average size if Stop is not set
-Square Off 
-    - Market Stop order for filled position + cancel rest
-        1) Update stop order Order Type in Entry structure
-            - Set order type as market order
-            - Dont update Order yet - (2) should do it
-        2) Cancel open Entry order ( Add )
-            This will also change stop qty to filled size
 Multiple Orders
     - Buttons for each trade to switch quickly 
         - white if no trade, yellow for open trade, green if positionsize>0   +   indicate current trade
@@ -112,6 +86,23 @@ Multiple Orders
     - call trackerCallback() for each trade
         - Trade.reload() - Move orderbookObj.read(). Should be called only once here
     - Notify on Execution - through button color
+1 Click Market Buy/Sell
+    Market Order
+        - After entry, set average price in Entry box
+    Allow Empty Stop price
+        - After Entry use default stop size from average size if Stop is not set
+Verify Values in Buy/Sell Order window 
+    Can help if settings are incorrect else can end up with wrong scrip
+If order not found 
+    test with market order
+    prompt list of orders
+Square Off 
+    - Market Stop order for filled position + cancel rest
+        1) Update stop order Order Type in Entry structure
+            - Set order type as market order
+            - Dont update Order yet - (2) should do it
+        2) Cancel open Entry order ( Add )
+            This will also change stop qty to filled size
 -----------------------------------------------------------------------------------------
 Position Status 
     - Current Risk based on Stop price, avg price
@@ -140,6 +131,7 @@ Icons in buttons
     https://autohotkey.com/board/topic/80584-how-to-simulate-a-graphical-button-in-a-gui/
 Export Trade Execution Log
     In trackerCallback() before unlink
+    Or In Order create / update
 Partial Entry Fill - Handle Stop       // workaround - use SLM
     - Show filled size for Entry/Stop
     - Maybe Stop order only entered once filled and stop size modified if Entry Size increases

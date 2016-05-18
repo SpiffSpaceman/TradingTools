@@ -93,11 +93,15 @@ class OrderClass{
 		return this._orderDetails.isComplete()
 	}
 
-	getExecutedQty(){
+	getFilledQty(){
+		return this._orderDetails.totalQty - this.getOpenQty()
+	}
+	
+	getOpenQty(){
 		pendingQty := this._orderDetails.pendingQty
 		if( pendingQty == "" )
 			pendingQty := 0 
-		return this._orderDetails.totalQty - pendingQty
+		return pendingQty
 	}
 
 	getGUIDirection(){
@@ -287,6 +291,7 @@ class OrderClass{
 	getOrderString(){
 		return UtilClass.orderIdentifier( this._input.direction, this._input.price, this._input.trigger )
 	}
+
 
 // -- Private ---
 

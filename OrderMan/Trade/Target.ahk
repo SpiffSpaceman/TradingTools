@@ -21,8 +21,11 @@
 class TargetClass{
 
     openOrder         := -1
+    executedOrderList := []
+	
 	guiQty			  := 0														// Save qty entered in GUI separately as target order qty depends on open position size
-    executedOrderList := []															// Saving GUI qty will allow context change to other orders without loosing input target qty
+																				// Saving GUI qty will allow context change to other orders without loosing input target qty
+	fillQty			  := 0														// Keeps Track of partial fills to update stop
   
     /* Creates/updates/deletes Target Limit order based on input target price
 	   Entry and stop order must be ready before calling this
@@ -32,8 +35,7 @@ class TargetClass{
 		
 		if( (_targetPrice == 0  ||  _targetPrice == "" || _targetQty == 0 ) ){
 			this.openOrder.cancel()											    // Cancel if open. Can happen for adds, If target cleared, cancel it
-			this.guiQty	   := 0	  
-			this.openOrder := -1
+			this.resetOpenOrder()
 			return
 		}
 
@@ -79,6 +81,8 @@ class TargetClass{
 		
 		if( this.guiQty < this.getOrderQty() )									// If GUI qty is not set, use target order qty
 			this.guiQty := this.getOrderQty()
+		
+		this.fillQty := this.openOrder.getFilledQty()
 	}
 
 	/* Create/Update Target Order after Entry/Add order is Filled
@@ -92,8 +96,7 @@ class TargetClass{
     onTargetClose(){
         if( this.isTargetSuccessful() )
 			this.executedOrderList.Push( this.openOrder )
-        this.openOrder := -1
-		this.guiQty    := 0
+        this.resetOpenOrder()
 		setTargetQty( 0 )														// Remove Target Qty from GUI
     }
 
@@ -101,8 +104,7 @@ class TargetClass{
     */
     cancel(){
 		if( this.openOrder.cancel() ){
-			this.openOrder := -1
-			this.guiQty	   := 0
+			this.resetOpenOrder()
 			return true
 		}
 		return false
@@ -111,12 +113,31 @@ class TargetClass{
 	/* Reset Linked orders
 	*/
 	unlink(){
-		this.openOrder := -1
-		this.guiQty	   := 0
+		this.resetOpenOrder()
 		this.executedOrderList := []
 	}
 
+	/* Clears Open order links
+	*/
+	resetOpenOrder(){
+		this.openOrder := -1
+		this.guiQty	   := 0
+		this.fillQty   := 0
+	}
 
+	/* checks if Target was filled partially
+	   Returns incremental filled qty, returns 0 if no change
+	*/
+	isPartiallyFilled(){
+		newFillQty 		:= this.openOrder.getFilledQty()
+		incrementalFill := newFillQty - this.fillQty							// How much got filled since last check
+		
+		if( incrementalFill > 0 ){
+			this.fillQty := newFillQty											// update Fill size for next call
+		}
+		
+		return incrementalFill
+	}
 
     getOpenOrder(){
         return this.openOrder

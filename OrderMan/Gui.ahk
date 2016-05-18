@@ -73,7 +73,7 @@ createGUI(){
 	Gui, 1:Add, Button, gonAdd vBtnAdd xp+0 yp+0, Add
 
 // Column 6
-	Gui, 1:Add, Text, vCurrentResult  w38 ym+55 x+m
+	Gui, 1:Add, Text, vCurrentResult  w38 ym+53 x+m
 	Gui, 1:Add, Text, vTargetResult   w38
 
 // Column 7
@@ -168,7 +168,7 @@ onLinkOrdersDirectionSelect(){
 	}
 	Loop, % orderbookObj.CompletedOrders.size {			// Completed targets
 		o :=  orderbookObj.CompletedOrders[A_Index]
-		if( o.orderType == controlObj.ORDER_TYPE_LIMIT && o.buySell == stopDirection)
+		if( o.orderType == controlObj.ORDER_TYPE_LIMIT && o.buySell == stopDirection && o.isComplete() )
 			addOrderRow( o, "Target-Executed" )
 	}
 	if(  LV_GetCount() > 0  )
@@ -313,15 +313,19 @@ updateStatus(){
 	setOrderStatus( "StopStatus", status )
 	
 	status := "" 
+	targetOpenSize := 0
 	if( targetLinked  ){
-		shortStatus	:= getOrderShortStatus( targetOrderDetails.status )
-		status 		:= shortStatus . " (" . targetOrderDetails.totalQty . ")"
+		shortStatus		:= getOrderShortStatus( targetOrderDetails.status )
+		targetOpenSize  := trade.target.getOpenOrder().getOpenQty()
+		status 			:= shortStatus . " (" . targetOpenSize . ")"
 	}
 	if( trade.target.getPrice() > 0  && entryOpen ){
-		targetSize	   := trade.target.getGUIQty()
-		openTargetSize := targetSize > openSize ? openSize : targetSize						// Pending target Order size is not more than Open Entry Order size
-		pendingstatus  := "P" . "(" . openTargetSize . ")"
-		status 		   := pendingstatus . "  " .  status
+		targetSize	   		:= trade.target.getGUIQty() - targetOpenSize					// Balance Qty Available for Pending
+		pendingTargetSize   := targetSize > openSize ? openSize : targetSize				// Pending target Order size is not more than Open Entry Order size
+		if( pendingTargetSize > 0  ){
+			pendingstatus  		:= "P" . "(" . pendingTargetSize . ")"
+			status 		   		:= pendingstatus . "  " .  status
+		}
 	}
 	setOrderStatus( "TargetStatus", status )
 	
@@ -497,8 +501,8 @@ getOrderShortStatus( status ){
 initalizeListViewVars(){
 	global
 	
-	listViewFields 	   	         := "Type|Scrip|Status|OrderType|Buy/Sell|Qty|Price|Trigger|Average|Order No|Time"
-	listViewOrderIDPosition   	 := 10
+	listViewFields 	   	         := "Type|Scrip|Status|OrderType|Buy/Sell|Qty|PendingQty|Price|Trigger|Average|Order No|Time"
+	listViewOrderIDPosition   	 := 11
 	listViewOrderStatusPosition  := 3
 	listViewOrderTypePosition	 := 4
 }
@@ -507,7 +511,7 @@ initalizeListViewVars(){
 */
 addOrderRow( o, type ) {
 	if( IsObject(o) )
-		LV_Add("", type, o.tradingSymbol, o.status, o.orderType, o.buySell, o.totalQty, o.price, o.triggerPrice, o.averagePrice, o.nowOrderNo, o.nowUpdateTime )
+		LV_Add("", type, o.tradingSymbol, o.status, o.orderType, o.buySell, o.totalQty, o.pendingQty, o.price, o.triggerPrice, o.averagePrice, o.nowOrderNo, o.nowUpdateTime )
 }
 
 

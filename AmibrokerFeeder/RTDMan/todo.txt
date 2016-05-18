@@ -1,9 +1,14 @@
 // TODO
-	// Start AB + start RTDMan without NOW - Ab thread seems to disturb AB - Busy cursor every second
+	// Once - RTDMan crashes on starting OrderMan
+		// Maybe something related to csv
+		// Add below to main to catch some possible exceptions and check using e.what()
+			// try { ... } catch( const std::exception &e) { ... }
 
+	// Start AB + start RTDMan without NOW - Ab thread seems to disturb AB - Busy cursor every second
 	// check  last_prices.csv 
 		// Sometimes gets duplicate records
 		// check for price = 0 ?
+
 
     // RTD Callback - Use array and construct bars in AB thread
 		// tick completes after Worker::poll() processes all fields
