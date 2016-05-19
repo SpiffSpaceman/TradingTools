@@ -110,12 +110,22 @@ class OrderClass{
 	}
 	
 	getGUIOrderType(){
-		global
+		global controlObj, ORDER_TYPE_GUI_LIMIT, ORDER_TYPE_GUI_MARKET, ORDER_TYPE_GUI_SL_LIMIT, ORDER_TYPE_GUI_SL_MARKET
 		
-		local nowtype := this._orderDetails.orderType
+		nowtype 	  := this._orderDetails.orderType
+		triggerPrice  := this._orderDetails.triggerPrice
+		price  		  := this._orderDetails.price
 		
-		if( nowtype == controlObj.ORDER_TYPE_LIMIT)
-			return ORDER_TYPE_GUI_LIMIT
+		if( nowtype == controlObj.ORDER_TYPE_LIMIT){						// LIMIT -  If Trigger price is set, its triggered Stop Order
+			if( triggerPrice != "" && triggerPrice != 0 ){
+				if( price == "" || price == 0 )
+					return ORDER_TYPE_GUI_SL_MARKET
+				else
+					return ORDER_TYPE_GUI_SL_LIMIT
+			}
+			else 
+				return ORDER_TYPE_GUI_LIMIT
+		}
 		else if( nowtype == controlObj.ORDER_TYPE_MARKET )
 			return ORDER_TYPE_GUI_MARKET
 		else if( nowtype == controlObj.ORDER_TYPE_SL_LIMIT )

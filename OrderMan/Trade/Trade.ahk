@@ -386,13 +386,13 @@ class TradeClass{
 		this.target.loadTarget( targetOrderDetails )
 		this.target.executedOrderList := targetOrderListObj
 
-		this.positionSize := positionSize
 		this._calculateAveragePrice()
+		this.positionSize := positionSize
 
 		if( !newEntryOrderExists ){													// No New Order => We may have Executed Entry Orders 
 			o := this._getLastExecutedInputOrder()									// Use the latest Executed Order and copy Input to prepare for future Adds
 			if( IsObject(o) ){
-				o.loadOrderFromOrderbook( 0 )
+				o.loadOrderFromOrderbook( 0 )										// Load input from Orderbook, passing 0 
 				i := o.getInput()
 				this.newEntryOrder.setOrderInput( i.orderType, i.direction, i.qty, i.price, i.trigger, i.prodType, i.scrip )
 			}
@@ -724,6 +724,7 @@ class TradeClass{
 	}	
 	
 	/* Calculate Average Entry Price from executedEntryOrderList
+	   Call this before updating this.positionSize
 	*/
 	_calculateAveragePrice(){
 		For index, value in this.executedEntryOrderList{

@@ -2,12 +2,17 @@
 test
     Average Price - Adds + Link with adds
     Reset default ordertype after unlink/cancel
- 
-Bugs
+TEST
     OrderLink
         - Sets SLM order as Limit since its LIMIT after trigger
         - If Trigger Price != 0
             If Price = 0 set SLM else SLL
+        - Test Manual / Auto link 
+            - getGUIOrderType()
+            - Auto Link Also sets Entry price as 0
+            - Entry filled then link
+
+Bugs
     SASOnline - NFO Select error - click ok after submit
         Window title : NEST - GJ109
         Window text: "Exchange or Series or Symbol is not selected"

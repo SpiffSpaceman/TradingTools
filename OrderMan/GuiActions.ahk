@@ -371,7 +371,7 @@ hasQtyChanged( order, qty ){
 /* Validations before trade orders creation/updation
 */
 validateInput(){
-	global contextObj, EntryPrice, StopPrice, TargetPrice, Direction, CurrentResult, MaxStopSize, MinTargetStopDiff
+	global contextObj, EntryPrice, StopPrice, TargetPrice, TargetQty, Direction, CurrentResult, MaxStopSize, MinTargetStopDiff
 	
 	trade 		:= contextObj.getCurrentTrade()
 	checkEntry  := trade.positionSize==0  ||  trade.isNewEntryLinked()		// Skip Entry Price Validations if Entry is Complete and No Add Orders created yet
@@ -394,7 +394,7 @@ validateInput(){
 		return false
 	}	
 	
-	if( TargetPrice != ""  && TargetPrice != 0 ){
+	if( TargetPrice != "" && TargetPrice != 0 && TargetQty != "" && TargetQty != 0 ){
 		StopDiff := Direction == "B" ? TargetPrice-StopPrice : StopPrice-TargetPrice
 		if( StopDiff < 0  ){
 			MsgBox, 262144,, Target should be ahead of Stop
