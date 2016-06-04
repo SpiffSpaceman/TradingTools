@@ -34,6 +34,9 @@ installHotKey( key, function ){
 			
 	Hotkey, IfWinActive, OrderMan
 	Hotkey, %key%, %function%
+	
+	Hotkey, IfWinActive, ahk_class XTPDockingPaneMiniWnd					// Floating Window
+	Hotkey, %key%, %function%
 }
 
 setScrip(){
@@ -125,10 +128,8 @@ _shortPriceAdjust(){
 /* Get scrip name from Ticker ToolBar
 */
 getScripFromAB(){
-	IfWinActive, OrderMan
-		WinActivate, ahk_class AmiBrokerMainFrameClass
-			
-	IfWinActive, ahk_class AmiBrokerMainFrameClass
+
+	IfWinExist, ahk_class AmiBrokerMainFrameClass
 	{	
 		ControlGetText, scrip, RichEdit20A1, ahk_class AmiBrokerMainFrameClass
 		return scrip
@@ -140,10 +141,8 @@ getScripFromAB(){
 	Get price from line under cursor if found, else get from tooltip text
 */
 getPriceFromAB(){
-	IfWinActive, OrderMan
-		WinActivate, ahk_class AmiBrokerMainFrameClass
-			
-	IfWinActive, ahk_class AmiBrokerMainFrameClass
+
+	IfWinExist, ahk_class AmiBrokerMainFrameClass
 	{	
 		BlockInput, MouseMove
 		price := getPriceAtCursor()
@@ -211,6 +210,9 @@ getPriceFromLine(){
 	Tooltip text row format is assumed to be either "Value = 7747.650"(cursor over empty space) or "Begin:     09-09-2015 09:44:59, Value: 7785.28" ( cursor over line)
 */
 getPriceAtCursorTooltip(){
+
+	//IfWinActive, OrderMan
+	//	WinActivate, ahk_class AmiBrokerMainFrameClass
 
 	SendMode Event														// Input mode moves cursor immediately - Tooltip open is unreliable
 	Loop, 5 {

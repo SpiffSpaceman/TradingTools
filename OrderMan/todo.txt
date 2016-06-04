@@ -11,7 +11,6 @@ TEST
             - getGUIOrderType()
             - Auto Link Also sets Entry price as 0
             - Entry filled then link
-
 Bugs
     SASOnline - NFO Select error - click ok after submit
         Window title : NEST - GJ109
@@ -20,6 +19,17 @@ Bugs
 
 
 
+
+Default target size
+Rename DefaultStopSize/DefaultTargetSize to DefaultStopDistance/DefaultTargetDistance
+Bug 
+    Target Triggered - Timer off, New/link button visible - unlinked?
+        Stop size reduced fine and on reopen also linked fine with TIMER on
+        debug - check trackerCallback, updateStatus() , trade/gui unlink
+    Another time stop size not increased after add triggered
+        - Maybe both issues are caused by old data in Orderbook - Try to refresh orderbook after callback trigger
+        - So call orderbook.refreshOrderBook() and then trade.reload()
+    For now - Just add logs to confirm issue, didnt face again
 
 
 
@@ -91,6 +101,12 @@ Multiple Orders
     - call trackerCallback() for each trade
         - Trade.reload() - Move orderbookObj.read(). Should be called only once here
     - Notify on Execution - through button color
+Partial Stops
+    Ex - Add Order Stop
+        - Option to keep seperate
+        - Merge when Normal stop moves past add stop
+    Ex - Trail partial aggresively after spike
+-----------------------------------------------------------------------------------------
 1 Click Market Buy/Sell
     Market Order
         - After entry, set average price in Entry box
@@ -151,10 +167,6 @@ Partial Entry Fill - Handle Stop       // workaround - use SLM
         Need to differentiate between original stop and Trailing stop ( only when order is unfilled)
             Orignial Stop for unfilled size cannot be moved beyond Entry price
     - Handle cancel orders
-Partial Stops
-    Ex - Add Order Stop
-        - Option to keep seperate
-        - Merge when Normal stop moves past add stop
 Option to change order type for open order
     - SL Order After Trigger - changes to Limit Order - should be editable ( unfilled )
     - Square Off - Market Stop order only if entry is complete - else cancel    // show cancel if not entered else squareoff 

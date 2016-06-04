@@ -3,8 +3,8 @@
 		// Maybe something related to csv
 		// Add below to main to catch some possible exceptions and check using e.what()
 			// try { ... } catch( const std::exception &e) { ... }
-
 	// Start AB + start RTDMan without NOW - Ab thread seems to disturb AB - Busy cursor every second
+	// Bug - Sometimes Open = yesterday close is still sent at 09:15 - becomes part of 1st second bar's open
 	// check  last_prices.csv 
 		// Sometimes gets duplicate records
 		// check for price = 0 ?
@@ -21,20 +21,12 @@
         // NT - Pass ticks instead of OHLC
 			// Send ticks if Price/Volume changed or if B/A changed
 		// Verify Threads - If AB blocked, ensure RTD thread saves bars in array
-
-		
-	// Bug - Sometimes Open = yesterday close is still sent at 09:15 - becomes part of 1st second bar's open
 	// Bug - Negative Volume ? 
             // Atleast set volume to 0. Currently check for ==0 but not <0
             // Maybe Current Volume not set - Not passed by RTD? 
-
-	// Change month in future / options scrips if cannot connect + detect last thrusday has passed + check current date month + setting to enable
-		// Or just do it in OrderMan GUI
-    // Bell - Change wav + in project 
+    // Bell - Change wav + in project     
     
-    // Check direct call using quotations api - No need for csv, ram drive
-
-
+	
 	
     // Check for memory leaks in COM calls/callbacks - esp SAFEARRAY/BSTR/VARIANT/COM input/output
         // https://vld.codeplex.com/
