@@ -584,13 +584,13 @@ class TradeClass{
 	/*	Set Stop Order Input details based on Order Type
 	*/
 	_setupStopOrderInput( stopOrderType, qty, prodType, stopPrice, direction, scrip ){
-		global ORDER_TYPE_GUI_SL_MARKET
+		global ORDER_TYPE_GUI_SL_MARKET, ORDER_TYPE_GUI_SL_LIMIT															// ORDER_TYPE_GUI_SL_LIMIT added
 		
 		if( !IsObject( this.stopOrder ) )
 			this.stopOrder := new OrderClass
 				
-		if( stopOrderType == ORDER_TYPE_GUI_SL_MARKET ){
-			this.stopOrder.setOrderInput( stopOrderType, direction, qty, 0, stopPrice, prodType, scrip )
+		if( stopOrderType == ORDER_TYPE_GUI_SL_MARKET  || stopOrderType == ORDER_TYPE_GUI_SL_LIMIT){						// set limit order if SL-M not available
+			this.stopOrder.setOrderInput( stopOrderType, direction, qty, 0, stopPrice, prodType, scrip )					//Limit Price = 0 means market price
 		}	
 		else{			// should not happen
 			MsgBox, 262144,, Stop Ordertype: %stopOrderType% is invalid
@@ -600,11 +600,11 @@ class TradeClass{
 	/* Update Stop price - Set price / trigger price based on ordertype		
 	*/
 	_setStopPrice( price ){
-		global ORDER_TYPE_GUI_SL_MARKET
+		global ORDER_TYPE_GUI_SL_MARKET, ORDER_TYPE_GUI_SL_LIMIT                    										// ORDER_TYPE_GUI_SL_LIMIT added 
 		
 		stopOrderType := this.stopOrder.getInput().orderType
 		
-		if( stopOrderType == ORDER_TYPE_GUI_SL_MARKET ){
+		if( stopOrderType == ORDER_TYPE_GUI_SL_MARKET || stopOrderType == ORDER_TYPE_GUI_SL_LIMIT){							// set limit order if SL-M not available
 			this.stopOrder.setInputPrice( 0, price )
 		}	
 		else{			// should not happen
