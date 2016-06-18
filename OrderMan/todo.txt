@@ -20,8 +20,16 @@ Bugs
 
 
 
-Default target size
 Rename DefaultStopSize/DefaultTargetSize to DefaultStopDistance/DefaultTargetDistance
+Default target size
+Allow Target Trailing - say checkbox
+
+1 Click Market Buy/Sell
+    Market Order
+        - After entry, set average price in Entry box
+    Allow Empty Stop price
+        - After Entry use default stop size from average size if Stop is not set
+
 Bug 
     Target Triggered - Timer off, New/link button visible - unlinked?
         Stop size reduced fine and on reopen also linked fine with TIMER on
@@ -107,11 +115,6 @@ Partial Stops
         - Merge when Normal stop moves past add stop
     Ex - Trail partial aggresively after spike
 -----------------------------------------------------------------------------------------
-1 Click Market Buy/Sell
-    Market Order
-        - After entry, set average price in Entry box
-    Allow Empty Stop price
-        - After Entry use default stop size from average size if Stop is not set
 Verify Values in Buy/Sell Order window 
     Can help if settings are incorrect else can end up with wrong scrip
 If order not found 
