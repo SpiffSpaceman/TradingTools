@@ -51,7 +51,8 @@ loadSettings(){
     NEW_ORDER_WAIT_TIME			  := 5											// How many maximum seconds to wait for New Submitted Order to appear in orderbook. 
     OPEN_ORDER_WAIT_TIME		  := 5											// How many maximum seconds to wait for Order to be Open ( ie for validation etc to be over)
 																				// Warning message shown after wait period
-    STOP_ORDER_TYPE               := "SLM"                                      // Default Stop Order Type
+    IniRead, DefaultStopOrderType, %config%, OrderMan, StopOrderType            //      added to accomodate SL-Limit as Default Stop Order
+    STOP_ORDER_TYPE := DefaultStopOrderType                                     // Default Stop Order Type
 }
 
 /*
