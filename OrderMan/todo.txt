@@ -109,6 +109,11 @@ Multiple Orders
     - call trackerCallback() for each trade
         - Trade.reload() - Move orderbookObj.read(). Should be called only once here
     - Notify on Execution - through button color
+1 Click Market Buy/Sell
+    Market Order
+        - After entry, set average price in Entry box
+    Allow Empty Stop price
+        - After Entry use default stop size from average size if Stop is not set
 Partial Stops
     Ex - Add Order Stop
         - Option to keep seperate

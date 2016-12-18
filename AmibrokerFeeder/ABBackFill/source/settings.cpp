@@ -20,7 +20,8 @@ void Settings::loadSettings(){
     close_minute           = getINIString("CloseMinute");
 
 	is_no_tick_mode		   = getINIString("NoTickMode") == "true";
-	is_intraday_mode       = getINIString("IntradayMode")   == "true";
+	is_filter_time		   = getINIString("FilterTime") == "true";
+	is_singleday_mode	   = getINIString("SingleDay") == "true";
 		
     Util::createDirectory( csv_file_path );                            // If folder does not exist, create it
 	csv_file_path.append("backfill.csv");

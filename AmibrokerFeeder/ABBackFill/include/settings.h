@@ -16,7 +16,8 @@ public:
     std::string   close_minute;
 
 	bool		  is_no_tick_mode;
-    bool          is_intraday_mode;
+    bool          is_filter_time;
+	bool          is_singleday_mode;
 
     void loadSettings();
 

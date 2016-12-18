@@ -17,7 +17,7 @@
 class Worker{
 
 public:
-    Worker();
+    Worker(  const std::string &settings_file_name = ""  );
     ~Worker();
 
     void connect();

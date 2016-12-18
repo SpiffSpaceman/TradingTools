@@ -19,6 +19,7 @@
     <None Include="RTDManStartHighPriority.bat" />
     <None Include="RTDMan.ini" />
     <None Include="todo.txt" />
+    <None Include="RTDMan2.ini" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\rtd_callback.h">

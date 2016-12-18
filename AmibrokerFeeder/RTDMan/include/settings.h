@@ -7,8 +7,10 @@
 class Settings{
 
 public:
-    void loadSettings();
+    void loadSettings( std::string file = ".\\RTDMan.ini");
 	bool isTargetNT();													  // Is target Client NinjaTrader
+
+	std::string settings_file_path;										  // ini file
 
     std::string rtd_server_prog_id;
     int         bar_period;                                               // In milliseconds    
@@ -30,14 +32,15 @@ public:
         std::string topic_vol_today;
         std::string topic_OI; 
         int         ltp_multiplier;                                       // Multiple LTP with this- Default 1
+		int         vol_multiplier;                                       // Multiple Volume with this- Default 1
     };
 
     std::vector<Scrip> scrips_array;                                      // RTD Topics for each scrip
     int                no_of_scrips;
 
 private:
-    static std::string     getINIString( const char *key );
-    static int             getINIInt   ( const char *key );
+    std::string     getINIString( const char *key );
+    int             getINIInt   ( const char *key );
 };
 
 

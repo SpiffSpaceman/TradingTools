@@ -33,6 +33,10 @@ loadSettings(){
 	IniRead, EODBackfillTriggerTime, BackfillMan.ini, BackfillMan, EODBackfillTriggerTime
 	IniRead, HKBackfill, 			 BackfillMan.ini, BackfillMan, HKBackfill
 	IniRead, HKFlattenTL, 			 BackfillMan.ini, BackfillMan, HKFlattenTL
+	IniRead, HKSetLayer, 			 BackfillMan.ini, BackfillMan, HKSetLayer
+	IniRead, HKDelStudies, 		 	 BackfillMan.ini, BackfillMan, HKDelStudies
+	
+	
 	
 	IniRead, value, BackfillMan.ini, BackfillMan, PingerPeriod	
 	PingerPeriod  :=  value * 60 * 1000										// Mins to ms	

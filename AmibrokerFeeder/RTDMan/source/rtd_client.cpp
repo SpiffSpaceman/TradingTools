@@ -79,14 +79,24 @@ void RTDClient::initializeServer(){
                                                                             // COINIT_MULTITHREADED needed for callback to work.
     hr = CLSIDFromProgID(progid, &classid);                                 // Else need a message loop for STA - Single Thread Apartment
     hr = CoCreateInstance(classid, NULL, CLSCTX_LOCAL_SERVER, __uuidof(IScripRTD), (LPVOID*) &comObjectScripRTD );
-                                                                            // Get COM Object for IScripRTD interface
+                                                                           // Get COM Object for IScripRTD interface		
+
     while( FAILED( hr ) ){
 		
 		std::cout << "Unable to connect to application. Waiting \r";
 		std::flush(std::cout);
 		
 		Sleep(1000);
+		// TODO This causes mouse cursor to show busy for a moment - every second untill NOW/Nest starts
 		hr = CoCreateInstance(classid, NULL, CLSCTX_LOCAL_SERVER, __uuidof(IScripRTD), (LPVOID*) &comObjectScripRTD );
+		
+		// TODO - Temp workaround for SASOnline Nest - CLSIDFromProgID fails. Using clsid Directly
+			// clsid readable in EXE - open EXE with editor. 
+			// Also, visible in IDL, uuid within NESTClientLib
+		if( !is_NOW && FAILED( hr ) ){			
+			class __declspec(uuid("{831F7347-85AB-4F88-8252-CEC80930C7B0}")) NEST;
+			hr = CoCreateInstance(__uuidof(NEST), NULL, CLSCTX_LOCAL_SERVER, __uuidof(IScripRTD), (LPVOID*) &comObjectScripRTD );
+		}
 	}
 }
 

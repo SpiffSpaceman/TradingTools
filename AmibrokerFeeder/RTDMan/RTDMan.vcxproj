@@ -102,11 +102,17 @@ del *.bat</Command>
   <ItemGroup>
     <None Include="RTDMan.ini" />
     <None Include="rtd.format" />
+    <None Include="RTDMan2.ini" />
     <None Include="RTDManStartHighPriority.bat" />
     <None Include="todo.txt" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="RTDMan.ini">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="RTDMan2.ini">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

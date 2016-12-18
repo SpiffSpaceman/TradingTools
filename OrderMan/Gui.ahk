@@ -161,10 +161,10 @@ onLinkOrdersDirectionSelect(){
 	LV_Delete()											// Delete All Rows
 	Loop, % orderbookObj.OpenOrders.size {				// Open Stop and target
 		o :=  orderbookObj.OpenOrders[A_Index]
-		if( o.orderType == controlObj.ORDER_TYPE_SL_MARKET && o.buySell == stopDirection)
-			addOrderRow( o, "Stop" )
+		if( (o.orderType == controlObj.ORDER_TYPE_SL_MARKET || o.orderType == controlObj.ORDER_TYPE_SL_LIMIT)  && o.buySell == stopDirection)
+			addOrderRow( o, "Stop" )					// filter: Open + SL/SLM + stop direction
 		if( o.orderType == controlObj.ORDER_TYPE_LIMIT && o.buySell == stopDirection)
-			addOrderRow( o, "Target" )					// // filter: Open + SLM + stop direction
+			addOrderRow( o, "Target" )					
 	}
 	Loop, % orderbookObj.CompletedOrders.size {			// Completed targets
 		o :=  orderbookObj.CompletedOrders[A_Index]

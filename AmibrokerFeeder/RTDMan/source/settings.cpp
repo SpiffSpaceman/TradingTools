@@ -2,14 +2,20 @@
 #include "settings.h"
 #include "util.h"
 
+#include <iostream>
+
 std::string Settings::getINIString( const char *key ){
-    return Util::getINIString(".\\RTDMan.ini", "RTDMan", key );
+	return Util::getINIString(settings_file_path.c_str(), "RTDMan", key );
 }
 int Settings::getINIInt( const char *key ){
-    return Util::getINIInt(".\\RTDMan.ini", "RTDMan", key );
+    return Util::getINIInt(settings_file_path.c_str(), "RTDMan", key );
 }
 
-void Settings::loadSettings(){
+void Settings::loadSettings(  std::string file ){
+
+	settings_file_path	  = file;
+
+	std::cout << "Reading " << file << std::endl;
 
     rtd_server_prog_id    = getINIString("RTDServerProgID");     
     bar_period            = getINIInt   ("BarPeriod");
@@ -73,8 +79,14 @@ void Settings::loadSettings(){
         else {
             scrip_topics.ltp_multiplier  =  1;
         }
+		if(split_strings.size() >=8 && !split_strings[7].empty() ){ 
+            scrip_topics.vol_multiplier  =  std::stoi( split_strings[7] );
+        }
+        else {
+            scrip_topics.vol_multiplier  =  1;
+        }
 
-        scrips_array.push_back(  scrip_topics ) ;
+		scrips_array.push_back(  scrip_topics ) ;
         no_of_scrips++;
     } 
 }

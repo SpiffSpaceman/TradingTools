@@ -41,7 +41,8 @@ private:
 	void writeRTDTicks();									// Add tick data with timestamp greater than Backfill data's last minute
 
     void changeHHFrom12To24( std::string &time ); 
-    bool isIntraday        ( const std::string &time, const std::string &date = "" );
+    bool isMarketHours     ( const std::string &time );
+	bool isToday		   ( const std::string &date = "" );
     
 };
 

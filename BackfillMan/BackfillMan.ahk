@@ -42,7 +42,7 @@ try{
 return
 
 installHotKeys(){
-	global HKFlattenTL, HKBackfill
+	global HKFlattenTL, HKBackfill, HKSetLayer, HKDelStudies
 		
 	if( HKBackfill == "ERROR" ||  HKBackfill == "" ){
 		MsgBox, Set backfill Hotkey
@@ -54,6 +54,19 @@ installHotKeys(){
 	Hotkey, IfWinActive, ahk_class AmiBrokerMainFrameClass					// Context sensitive HK - only active if window is active	
 	if( HKFlattenTL != "" && HKFlattenTL != "ERROR")
 		Hotkey, %HKFlattenTL%, hkFlatTrendLine	
+		
+	if( HKSetLayer != "" && HKSetLayer != "ERROR")
+		Hotkey, %HKSetLayer%, hkSetLayer
+	
+	if( HKDelStudies != "" && HKDelStudies != "ERROR")
+		Hotkey, %HKDelStudies%, hkDelStudies
+	
+	Hotkey, Numpad9, hkWatchList											// Numpad9 to activate Watchlist and Numpad3 for symbols
+	Hotkey, Numpad3, hkSymbols
+	Hotkey, ^3, hk3min														// Redirect AB Timeframe change shortcuts to only 1 tab
+	Hotkey, ^5, hk5min
+	Hotkey, ^d, hkDaily
+	Hotkey, ^w, hkWeekly
 }
 
 hkBackfill(){
@@ -66,33 +79,136 @@ hkBackfill(){
 	}
 }
 
+// Control Ids change on layout selection, So instead click on hardcoded coordinates
+hkWatchList(){
+	try{
+		//ControlClick, SysTreeView321, ahk_class AmiBrokerMainFrameClass,, LEFT,,NA
+		Click 75,350
+	} catch e {
+		handleException(e)
+	}
+}
+hkSymbols(){
+	try{
+		//ControlClick, SysListView323, ahk_class AmiBrokerMainFrameClass,, LEFT,,NA
+		Click 75,605
+	} catch e {
+		handleException(e)
+	}
+}
+
+hk3min(){
+	try{		
+		Click 1600,300
+		Send ^3	
+	} catch e {
+		handleException(e)
+	}
+}
+hk5min(){
+	try{		
+		Click 1600,300
+		Send ^5	
+	} catch e {
+		handleException(e)
+	}
+}
+hkDaily(){
+	try{		
+		Click 1600,300
+		Send ^d
+	} catch e {
+		handleException(e)
+	}
+}
+hkWeekly(){
+	try{		
+		Click 1600,300
+		Send ^w
+	} catch e {
+		handleException(e)
+	}
+}
+
+openDrawProperties(){	
+	Click 2																// Double click at mouse position
+	Loop, 20{															// Try to hide window as soon as possible. WinWait seems to take too long
+		Sleep 25
+		try{															// Ignore Error and keep trying until it opens
+			WinSet,Transparent, 1, Properties, Start Y:					// Line Properties
+			WinSet,Transparent, 1, Text box properties, Start Y:		// text properties
+		}
+		catch e{
+		}
+		IfWinExist, Properties, Start Y:
+			break
+		IfWinExist, Text box properties, Start Y:
+			break
+	}	
+		
+	IfWinExist, Properties, Start Y:									// Line Properties window opened?
+	{
+		WinWait, Properties, Start Y:, 1
+		WinSet,Transparent, 1, Properties, Start Y:
+		return true
+	}
+	IfWinExist, Text box properties, Start Y:
+	{
+		WinWait, Text box properties, Start Y:, 1
+		WinSet,Transparent, 1, Text box properties, Start Y:
+		return true
+	}
+
+	return false
+}
+
+closeDrawProperties(){
+	IfWinExist, Properties, Start Y:
+		ControlSend, Edit2, {Enter}, Properties, Start Y:
+	IfWinExist, Text box properties, Start Y:
+		ControlSend, Edit2, {Enter}, Text box properties, Start Y:
+}
+
+
+/* AB - Set Layer Name = Interval
+*/
+hkSetLayer(){
+	try{
+		if( !openDrawProperties() )
+			return
+
+		ControlGetText, interval, RichEdit20A2, ahk_class AmiBrokerMainFrameClass		// Copy interval
+		IfWinExist, Properties, Start Y:
+			Control, ChooseString, %interval%, ComboBox3, Properties, Start Y:
+		IfWinExist, Text box properties, Start Y:
+			Control, ChooseString, %interval%, ComboBox1, Text box properties, Start Y:
+		closeDrawProperties()
+	} catch e {
+		handleException(e)
+	}
+}
+
+hkDelStudies(){
+	try{
+		Click right
+		//Send l		// When disabled, l select lock
+		Send {Down 14}
+		Send {Enter}
+		Send {Space}
+		Send {Esc}
+	} catch e {
+		handleException(e)
+	}
+}
+
 hkFlatTrendLine(){															// Sets End price = Start price for trend line at current mouse position
 	try{
-		IfWinActive, ahk_class AmiBrokerMainFrameClass							// Only works in select mode
-		{
-			Click 2																// Double click at mouse position ( assumed to be trendline) to modify trendline
-			Loop, 8{															// Try to hide window as soon as possible. WinWait seems to take too long
-				Sleep 25
-				try{															// Ignore Error and keep trying until it opens
-					WinSet,Transparent, 1, Properties, Start Y:
-				}
-				catch e{
-				}
-				IfWinExist, Properties, Start Y:
-					break
-			}	
-			
-			IfWinNotExist, Properties, Start Y:									// Return if Line Properties window not opened
-				return
-			
-			WinWait, Properties, Start Y:, 1
-			WinSet,Transparent, 1, Properties, Start Y:
-			
-			ControlGet, price, Line, 1, Edit1, Properties, Start Y:				// Copy Start Price into End Price and press enter
+		if( openDrawProperties() ){
+			ControlGet, price, Line, 1, Edit1, Properties, Start Y:			// Copy Start Price into End Price and press enter
 			ControlSetText, Edit2, %price%, Properties, Start Y:
-			ControlSend, Edit2, {Enter}, Properties, Start Y:
-		}	
-	} catch e {
+			closeDrawProperties()
+		}		
+	}catch e {
 		handleException(e)
 	}
 }
@@ -183,8 +299,8 @@ PingNOW(){
 	
 	IfWinExist, %NowWindowTitle%
 	{		
-		ControlClick, Button10, %NowWindowTitle%,, LEFT,,NA					// Just click on Button10  ( First INT status Button ) 
-	}
+		ControlClick, Button9, %NowWindowTitle%,, LEFT,,NA					// Just click on Button9  (  INT/Boardcast status Button ) 
+	}																		// Button9 is common to both Now and Nest
 }
 
 installEOD(){
