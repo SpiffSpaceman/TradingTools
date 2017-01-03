@@ -16,7 +16,7 @@
 */
 
 installHotkeys(){
-	global HKEntryPrice, HKStopPrice, HKTargetPrice	
+	global HKEntryPrice, HKStopPrice, HKTargetPrice, scripControl
 
 	if( HKEntryPrice != "" && HKEntryPrice != "ERROR")		
 		installHotKey( HKEntryPrice, "getEntryPriceFromAB" )
@@ -26,6 +26,8 @@ installHotkeys(){
 	
 	if( HKTargetPrice != "" && HKTargetPrice != "ERROR")
 		installHotKey( HKTargetPrice, "getTargetPriceFromAB" )
+	
+	scripControl := "RichEdit20A3"			// Symbol control with one Analysis window open
 }
 
 installHotKey( key, function ){
@@ -125,15 +127,47 @@ _shortPriceAdjust(){
 	setStopPrice(   UtilClass.ceilToTickSize( StopPriceActual),   StopPriceActual )
 }
 
+
+
+
 /* Get scrip name from Ticker ToolBar
 */
 getScripFromAB(){
-
+	global scripControl
+	
 	IfWinExist, ahk_class AmiBrokerMainFrameClass
 	{	
-		ControlGetText, scrip, RichEdit20A1, ahk_class AmiBrokerMainFrameClass
-		return scrip
+		try{
+			if( scripControl != "" ){			
+				ControlGetText, scrip, %scripControl%, ahk_class AmiBrokerMainFrameClass
+				if( isValidScrip(scrip) ){
+					return scrip
+				}
+			}
+		}
+		catch ex{				// Control does not exist
+			scripControl := ""
+		}
+		
+		Loop, 20{															// Find Symbol Control
+			try{
+				controlName := "RichEdit20A" . A_Index
+				ControlGetText, scrip, %controlName%, ahk_class AmiBrokerMainFrameClass
+
+				if( isValidScrip(scrip) ){
+					scripControl := controlName
+					return scrip
+				}
+				else
+					continue		// Found Control can be Symbol dropdown or dropdowns from AA etc
+			} catch ex{				// Control does not exist
+				continue
+			}
+		}	
 	}
+	
+	MsgBox, Could not select Scrip from AB
+	
 	return ""
 }
 

@@ -18,8 +18,10 @@
 /* Button New 
 */
 onNew(){
-	global contextObj, selectedScrip, EntryOrderType, Direction, Qty, ProdType, EntryPrice, StopPrice, TargetPrice, TargetQty, STOP_ORDER_TYPE
-		
+	global contextObj, selectedScrip, EntryOrderType, Direction, Qty, ProdType, EntryPrice, StopPrice, TargetPrice, TargetQty, STOP_ORDER_TYPE, isButtonTrigger
+
+	isButtonTrigger := true
+	
 	Gui, 1:Submit, NoHide										// sets variables from GUI
 	
 	adjustPrices( EntryPrice, StopPrice)
@@ -36,6 +38,7 @@ onNew(){
 	trade 	:= contextObj.getCurrentTrade()
 	trade.create( selectedScrip, EntryOrderType, STOP_ORDER_TYPE, Direction, Qty, ProdType, EntryPrice, StopPrice, TargetPrice, TargetQty )
 	
+	isButtonTrigger := false
 }
 
 /* Button Add
@@ -47,7 +50,9 @@ onAdd(){
 /* Button Update
 */
 onUpdate(){
-	global contextObj, selectedScrip, EntryOrderType, Qty, ProdType, EntryPrice, StopPrice, TargetPrice, TargetQty, STOP_ORDER_TYPE
+	global contextObj, selectedScrip, EntryOrderType, Qty, ProdType, EntryPrice, StopPrice, TargetPrice, TargetQty, STOP_ORDER_TYPE, isButtonTrigger
+	
+	isButtonTrigger := true
 	
 	trade := contextObj.getCurrentTrade()	
 	
@@ -87,6 +92,8 @@ onUpdate(){
 	else{
 		MsgBox, 262144,, Nothing to update or Order status is not open
 	}
+	
+	isButtonTrigger := false
 }
 
 /*	Status Bar Double Click
@@ -104,16 +111,21 @@ statusBarClick(){
 */
 stopClick(){	
 	if( A_GuiEvent == "DoubleClick"  ){
-		setDefaultStop()
+		setBreakevenStop()
 	}
 }
 
-/* Target Text Double Click 
+/* Target Text 
+	Click = Increase by 1X
+	Double Click = Reset to 1X
 */
 TargetClick(){
 	if( A_GuiEvent == "DoubleClick"  ){
-		setDefaultTarget()
+		resetTarget1X()
 	}	
+	else if( A_GuiEvent == "Normal" ){
+		increaseTarget1X()
+	}
 }
 
 /*  Unlink Button
@@ -152,11 +164,11 @@ onScripChange(){
 }
 
 loadScripSettings(){
-	global SelectedScripText, DefaultQty, EntryOrderType
+	global SelectedScripText, EntryOrderType
 	
 	setDefaultFocus()															// Change Focus to Entry price to prevent change by mouse scroll
 	loadScrip( SelectedScripText )
-	setGUIValues( DefaultQty, 0, 0, 0, 0, "B", EntryOrderType )					// Reset to default state
+	setGUIValues( 0, 0, 0, 0, 0, "B", EntryOrderType )							// Reset to default state
 }
 
 /* Direction Switch
@@ -217,14 +229,40 @@ OnTargetUpDown(){
 	setTargetPrice( TargetPrice )
 }
 
+OnTargetQtyPercChange(){
+	global TargetQtyPerc, TargetQty, Qty, contextObj
+	
+	Gui, 1:Submit, NoHide
+	
+	positionSize	:= contextObj.getCurrentTrade().positionSize	
+	totalSize		:= Qty + positionSize	
+	TargetQty  		:= Ceil( totalSize * TargetQtyPerc/100  )			// Input Target qty is fraction of Total filled and unfilled entry orders
+}
+
+OnEntrySizeChange(){
+	global EntryRiskPerc, Qty, EntryPrice, StopPrice
+		
+	Gui, 1:Submit, NoHide
+	riskPerTrade := UtilClass.getRiskPerTrade()
+	fullQty		 := riskPerTrade /  Abs(EntryPrice - StopPrice) 
+	Qty 		 := Floor(fullQty * EntryRiskPerc/100)
+	
+	GuiControl, 1:Text, Qty,  %Qty%		// Dont call setQty as that will try to change EntryRiskPerc
+}
+
 /* Links Context to selected existing orders
 */
 linkOrdersSubmit(){
-	global contextObj, controlObj, listViewOrderIDPosition, listViewOrderTypePosition, listViewOrderStatusPosition, LinkedScripText
+	global contextObj, controlObj, orderbookObj, listViewOrderIDPosition, listViewOrderTypePosition, listViewOrderStatusPosition, LinkedScripText, LinkInitialStopPrice
 
 	Gui, 2:Submit, NoHide										// sets variables from GUI
 	if( LinkedScripText == "" ){
 		MsgBox, 262144,, Select Scrip Alias
+		return
+	}
+	
+	if( LinkInitialStopPrice == "" || !UtilClass.isNumber( LinkInitialStopPrice) ){
+		MsgBox, 262144,, Set Initial Stop Price
 		return
 	}
 
@@ -236,18 +274,22 @@ linkOrdersSubmit(){
 	executedtargetIDList := ""
 	isPending			 := false
 	rowno				 := 0
+	firstEntryOrderId	 := 0
 
 	Gui, 2:ListView, SysListView321
 	Loop % LV_GetCount("Selected")
 	{		
-		rowno := LV_GetNext( rowno )							// Entry Order ListView Selected row
+		rowno := LV_GetNext( rowno )								// Entry Order ListView Selected row
 		if( rowno == 0 )
 			break
 		
 		LV_GetText( orderId,   rowno, listViewOrderIDPosition )
 		LV_GetText( ordertype, rowno, listViewOrderTypePosition )
 		LV_GetText( status,    rowno, listViewOrderStatusPosition )
-																// Is this Open Order?
+		
+		if(firstEntryOrderId == 0 || firstEntryOrderId > orderId )	// Assuming Entry Order with lowest id is First Entry Order
+			firstEntryOrderId := orderId
+																	// Is this Open Order?
 		if( status == controlObj.ORDER_STATUS_OPEN || status == controlObj.ORDER_STATUS_TRIGGER_PENDING ){
 			if( entryId != ""  ){
 				MsgBox, 262144,, Select Only One Open Entry Order
@@ -323,6 +365,14 @@ linkOrdersSubmit(){
 	if( !trade.linkOrders( false, LinkedScripText, entryId, executedEntryIDList, stopOrderId, isPending, 0, targetOrderId, 0, 0, executedtargetIDList ) )
 		return
 	
+	// Set Initial Entry Price and Stop distance
+	entryOrder := new OrderClass
+	entryOrder.loadOrderFromOrderbook(  orderbookObj.getOrderDetails(firstEntryOrderId) )
+	
+	LinkInitialEntryPrice := entryOrder.getPrice()
+	risk := abs( LinkInitialEntryPrice -LinkInitialStopPrice )
+	trade.saveInitialStopDistance( risk, LinkInitialEntryPrice )
+	
 	Gui, 2:Destroy
 	Gui  1:Default	
 	
@@ -371,7 +421,7 @@ hasQtyChanged( order, qty ){
 /* Validations before trade orders creation/updation
 */
 validateInput(){
-	global contextObj, EntryPrice, StopPrice, TargetPrice, TargetQty, Direction, CurrentResult, MaxStopSize, MinTargetStopDiff
+	global contextObj, EntryPrice, StopPrice, TargetPrice, TargetQty, Direction, CurrentResult, MinTargetStopDiff
 	
 	trade 		:= contextObj.getCurrentTrade()
 	checkEntry  := trade.positionSize==0  ||  trade.isNewEntryLinked()		// Skip Entry Price Validations if Entry is Complete and No Add Orders created yet
@@ -423,12 +473,7 @@ validateInput(){
 		}	
 	}
 
-	updateCurrentResult()
-	if( CurrentResult < -MaxStopSize  ){
-		MsgBox, % 262144+4,, Stop size more than Maximum Allowed. Continue?
-		IfMsgBox No
-			return false
-	}
+	updateCurrentResult()	
 	
 	return true
 }

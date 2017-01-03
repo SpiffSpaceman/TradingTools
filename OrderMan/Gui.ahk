@@ -24,10 +24,16 @@ initGUI(){
 	ORDER_TYPE_GUI_SL_LIMIT	  := "SL"
 	ORDER_TYPE_GUI_SL_MARKET  := "SLM"
 	SelectedScripText 		  := ""													// To avoid uninitialized error
+	
+	InitialStopDistance		  := 0
+	InitialEntry			  := 0
+	
+	isButtonTrigger		  	  := false
+	
 }
 
 createGUI(){
-	global Qty, TargetQty, EntryPrice, StopPrice, TargetPrice, Direction, CurrentResult, TargetResult, BtnOrder, BtnUpdate, BtnLink, BtnUnlink, BtnCancel, EntryStatus, StopStatus, TargetStatus, LastWindowPosition, EntryOrderType, EntryUpDown, StopUpDown, TargetUpDown, EntryText, AddText, BtnAdd, SelectedScripText, ScripList, PriceStatus
+	global Qty, QtyPerc, TargetQtyPerc, EntryPrice, StopPrice, TargetPrice, Direction, CurrentResult, TargetResult, BtnOrder, BtnUpdate, BtnLink, BtnUnlink, BtnCancel, EntryStatus, StopStatus, TargetStatus, LastWindowPosition, EntryOrderType, EntryUpDown, StopUpDown, TargetUpDown, EntryText, AddText, BtnAdd, SelectedScripText, ScripList, PriceStatus
 	
 	SetFormat, FloatFast, 0.2
 
@@ -51,9 +57,9 @@ createGUI(){
 	Gui, 1:Add, Text, gTargetClick, Target
 
 // Column 3	
-	Gui, 1:Add, Edit, vEntryPrice  w55    gonEntryPriceChange ym+25 x+m
-	Gui, 1:Add, Edit, vStopPrice   w55    gonStopPriceChange
-	Gui, 1:Add, Edit, vTargetPrice w55    gupdateCurrentResult
+	Gui, 1:Add, Edit, vEntryPrice  w55 ReadOnly   gonEntryPriceChange ym+25 x+m 
+	Gui, 1:Add, Edit, vStopPrice   w55 ReadOnly   gonStopPriceChange
+	Gui, 1:Add, Edit, vTargetPrice w55 ReadOnly   gupdateCurrentResult
 		
 	Gui, 1:Add, Button, gonNew vBtnOrder xp-35 y+m, New								// New or Update
 	Gui, 1:Add, Button, gonUpdate vBtnUpdate  xp+0 yp+0, Update	
@@ -66,14 +72,15 @@ createGUI(){
 	Gui, 1:Add, UpDown, vStopUpDown   gOnStopUpDown    Range0-1 -16 hp
 	Gui, 1:Add, UpDown, vTargetUpDown gOnTargetUpDown  Range0-1 -16 hp
 
-// Column 5
-	Gui, 1:Add, Edit, vQty w30 ym+25 x+m
-	Gui, 1:Add, Edit, vTargetQty w30  y+32
+// Column 5	 
+	Gui, 1:Add, Edit, vEntryRiskPerc gOnEntrySizeChange w25 ym+25 x+m				// Entry/Add Qty is always shown as percentage of Risk per trade
+	Gui, 1:Add, Edit, vTargetQtyPerc gOnTargetQtyPercChange w25 y+32 Number			// Target size as ratio of Initial Trade Size
 	Gui, 1:Add, Button, gonCancel vBtnCancel y+m, Cancel		 					// Add or Cancel button	
 	Gui, 1:Add, Button, gonAdd vBtnAdd xp+0 yp+0, Add
 
-// Column 6
-	Gui, 1:Add, Text, vCurrentResult  w38 ym+53 x+m
+// Column 6		
+	Gui, 1:Add, Text, vQty w38  ym+30 x+m
+	Gui, 1:Add, Text, vCurrentResult  w38  //ym+53 x+m
 	Gui, 1:Add, Text, vTargetResult   w38
 
 // Column 7
@@ -100,7 +107,7 @@ createGUI(){
 */
 openLinkOrdersGUI(){	
 	
-	global listViewFields, LinkOrdersSelectedDirection, LinkedScripText, ScripList
+	global listViewFields, LinkOrdersSelectedDirection, LinkedScripText, ScripList, LinkInitialStopPrice
 	
 	LinkedScripText := ""
 	
@@ -113,7 +120,10 @@ openLinkOrdersGUI(){
 	
 	Gui, 2:Add, Radio, vLinkOrdersSelectedDirection gonLinkOrdersDirectionSelect Checked, Long
 	Gui, 2:Add, Radio, gonLinkOrdersDirectionSelect xp+60 yp, Short
+	Gui, 2:Add, Text, x+10, Select Scrip
 	Gui, 2:Add, DropDownList, vLinkedScripText x+15 w100, %ScripList%
+	Gui, 2:Add, Text,x+10, Initial Stop Price 
+	Gui, 2:Add, Edit, vLinkInitialStopPrice x+10 w55
 
 	// Column 2
 
@@ -220,31 +230,47 @@ updateCurrentResult(){
 	CurrentResult := Direction == "B" ? StopPrice-EntryPrice : EntryPrice-StopPrice
 	TargetResult  := TargetPrice == 0 ? "" : (Direction == "B" ? TargetPrice-EntryPrice : EntryPrice-TargetPrice)
 	
-	GuiControl, 1:Text, CurrentResult, %CurrentResult%	
-	GuiControl, 1:Text, TargetResult,  %TargetResult%	
+	if( InitialStopDistance > 0 ){
+		CurrentResult := CurrentResult/InitialStopDistance
+		TargetResult  := TargetResult/InitialStopDistance
+	}
+	
+	GuiControl, 1:Text, CurrentResult, % Format( "{1:0.1f}X", CurrentResult )
+	GuiControl, 1:Text, TargetResult,  % Format( "{1:0.1f}X", TargetResult )
 }
 
-/* Sets Stop price using default Stop size 
+/* Moves stop to breakeven
 */
-setDefaultStop(){
-	global
-		
-	Gui, 1:Submit, NoHide			
-	StopPrice :=  Direction == "B" ? EntryPrice-DefaultStopSize : EntryPrice+DefaultStopSize		
-	GuiControl, 1:Text, StopPrice, %StopPrice%
+setBreakevenStop(){
+	global StopPrice, InitialEntry, contextObj
 	
+	if( contextObj.getCurrentTrade().positionSize <= 0  )
+		return
+	
+	Gui, 1:Submit, NoHide			
+	StopPrice :=  InitialEntry
+	GuiControl, 1:Text, StopPrice, %StopPrice%
+
 	updateCurrentResult()
 }
 
-/* Sets Target price using default Target size 
+/*
+	Set Target Price to 1X from initial Entry Price
 */
-setDefaultTarget(){
-	global
-		
-	Gui, 1:Submit, NoHide			
-	TargetPrice :=  Direction == "B" ? EntryPrice+DefaultTargetSize : EntryPrice-DefaultTargetSize		
-	GuiControl, 1:Text, TargetPrice, %TargetPrice%
+resetTarget1X(){
+	global TargetPrice, InitialEntry
 	
+	setTargetPrice( InitialEntry )
+	increaseTarget1X()	
+}
+
+/* Add 1X to Target price
+*/
+increaseTarget1X(){
+	global InitialStopDistance, TargetPrice, Direction
+
+	Gui, 1:Submit, NoHide
+	setTargetPrice( Direction == "B" ? TargetPrice+InitialStopDistance : TargetPrice-InitialStopDistance )
 	updateCurrentResult()
 }
 
@@ -358,7 +384,7 @@ setOrderStatus(  statusGuiId, status  ){
 	Used when linking to existing orders
 */
 loadTradeInputToGui(){
-	global contextObj
+	global contextObj, InitialStopDistance, InitialEntry
 
 	trade  		:= contextObj.getCurrentTrade()
 	scripAlias	:= trade.scrip.alias
@@ -366,6 +392,9 @@ loadTradeInputToGui(){
 	entryInput  := entry.getInput()
 	stop  		:= trade.stopOrder
 	target	    := trade.target
+
+	InitialStopDistance	 := trade.InitialStopDistance
+	InitialEntry 		 := trade.InitialEntry
 
 	setSelectedScrip( scripAlias )
 	setGUIValues( entryInput.qty, entry.getPrice(), stop.getPrice(), target.getPrice(),  target.getGUIQty(), entryInput.direction, entryInput.orderType  )
@@ -406,20 +435,70 @@ setPriceStatus( inPrice ){
 }
 
 setQty( inQty ){
-	global Qty
-	Qty := inQty
-	GuiControl, 1:Text, Qty,  %Qty%
+	global Qty, EntryRiskPerc,  EntryPrice, StopPrice
+	
+	Qty	:= inQty	
+	
+	riskPerTrade := UtilClass.getRiskPerTrade()
+	fullQty		 := riskPerTrade /  Abs(EntryPrice - StopPrice) 
+	
+	EntryRiskPerc := ceil(Qty/fullQty * 100)				// % of target risk per trade, ceil so that OnEntrySizeChange() sets Qty correctly using floor
+	
+	GuiControl, 1:Text, EntryRiskPerc,  %EntryRiskPerc%
+	//GuiControl, 1:Text, Qty,  %Qty%						// 	EntryRiskPerc triggers OnEntrySizeChange() which updates GUI
 }
 
+
+/* Set Entry size for a new order
+   Also set Target at 1X
+*/
+setTradeRisk(){
+	global InitialStopDistance, InitialEntry, contextObj, EntryPrice, StopPrice, DefaultTargetSize, isButtonTrigger
+	
+	trade        := contextObj.getCurrentTrade()
+	positionSize := trade.positionSize
+	
+	if( !isButtonTrigger && positionSize <= 0 && EntryPrice > 0 && StopPrice > 0  ) {			// Only set before Initial Entry
+		
+		InitialEntry 		:= EntryPrice
+		InitialStopDistance	:= Abs( EntryPrice - StopPrice )
+		riskPerTrade		:= UtilClass.getRiskPerTrade()
+		tradeQty	   		:= Floor( riskPerTrade / InitialStopDistance )
+	
+		setQty(tradeQty)
+		setTargetAtRiskMultiple( 1 )
+		setTargetQty( ceil(tradeQty * DefaultTargetSize/100) )
+		trade.saveInitialStopDistance( InitialStopDistance, InitialEntry )  					// bandaid code for now
+	}
+}
+
+/*
+  Set Target at 1X/2X etc
+*/
+setTargetAtRiskMultiple( RiskMultiple ){
+	global  Direction, InitialEntry, InitialStopDistance
+
+	if( Direction == "B" )
+		target := InitialEntry + InitialStopDistance * RiskMultiple
+	else if( Direction == "S" )
+		target := InitialEntry - InitialStopDistance * RiskMultiple
+	
+	setTargetPrice(target)
+}
+
+/*
+  Sets input Qty and updates TargetPerc
+*/
 setTargetQty( inQty ){
-	global TargetQty
-	TargetQty := inQty
-	GuiControl, 1:Text, TargetQty,  %TargetQty%
-}
-
-setDefaultQty(){
-	global DefaultQty
-	setQty( DefaultQty )
+	global TargetQty, TargetQtyPerc, Qty, contextObj
+	
+	positionSize	:= contextObj.getCurrentTrade().positionSize
+	totalSize		:= Qty + positionSize
+	
+	TargetQty  		:= inQty
+	TargetQtyPerc   := Floor(TargetQty/totalSize*100)											// Displayed Target qty is fraction of Total filled and unfilled entry orders
+	
+	GuiControl, 1:Text, TargetQtyPerc,  %TargetQtyPerc%
 }
 
 /* EntryPriceActual should contain the original values taken from AB
@@ -430,6 +509,8 @@ setEntryPrice( inEntry, inEntryPriceActual){
 	EntryPrice 		 := inEntry
 	EntryPriceActual := inEntryPriceActual
 	GuiControl, 1:Text, EntryPrice,  %EntryPrice%
+	
+	setTradeRisk()
 }
 
 /* StopPriceActual should contain the original values taken from AB
@@ -440,6 +521,8 @@ setStopPrice( inStop, inStopPriceActual ){
 	StopPrice 		:= inStop
 	StopPriceActual := inStopPriceActual
 	GuiControl, 1:Text, StopPrice, %StopPrice%
+	
+	setTradeRisk()
 }
 
 setTargetPrice( inTarget ){

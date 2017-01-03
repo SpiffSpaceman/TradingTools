@@ -169,6 +169,28 @@ closeDrawProperties(){
 		ControlSend, Edit2, {Enter}, Text box properties, Start Y:
 }
 
+/* Find Interval control, Id is dynamic - RichEdit20A*
+   Map Interval value to Layer Name
+*/
+getIntervalLayerName(){
+	
+	Loop, 20{															// check if control exists, if found map value
+		try{
+			controlName := "RichEdit20A" . A_Index
+			ControlGetText, interval, %controlName%, ahk_class AmiBrokerMainFrameClass
+
+			if( interval == "3m" || interval == "15m" || interval == "75m" || interval == "78m" || interval == "D" || interval == "W" )
+				return interval
+			else if( interval == "5m" || interval == "1m" )
+				return "3m"
+			else
+				continue		// Found Control can be Symbol dropdown or dropdowns from AA etc
+		} catch e{				// Control does not exist
+			continue
+		}
+	}
+	return ""
+}
 
 /* AB - Set Layer Name = Interval
 */
@@ -176,8 +198,11 @@ hkSetLayer(){
 	try{
 		if( !openDrawProperties() )
 			return
-
-		ControlGetText, interval, RichEdit20A2, ahk_class AmiBrokerMainFrameClass		// Copy interval
+		
+		interval := getIntervalLayerName()
+		if( interval == "" )
+			return
+		
 		IfWinExist, Properties, Start Y:
 			Control, ChooseString, %interval%, ComboBox3, Properties, Start Y:
 		IfWinExist, Text box properties, Start Y:

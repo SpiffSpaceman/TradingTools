@@ -32,7 +32,6 @@ try{
 
   contextObj   := new ContextClass                                          // Keep Class string in class names to avoid conflict - can get overwritten by object of same name
                                                                             // without new, class members are not initialized
-  //chartObj   := new AmibrokerClass
   orderbookObj := new OrderbookClass
   controlObj   := isServerNOW  ? new NowControlsClass : new NestControlsClass // Contains All control ids, window titles for Now/Nest
   alertsObj    := new AlertsClass
@@ -46,8 +45,8 @@ try{
   installHotkeys()
   alertsObj.init()
 
-} catch e {
-    UtilClass.handleException( e )
+} catch exc {
+    UtilClass.handleException( exc )
 }
 
 return

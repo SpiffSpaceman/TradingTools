@@ -31,6 +31,9 @@ class TradeClass{
 	executedEntryOrderList := []											// List of executed entry/add orders
 																			// entryOrder contains details of current unexecuted order shown in GUI and _entryOrderList has all of executed orders
 	
+	InitialStopDistance  := 0	
+	InitialEntry 		 := 0
+	
 	
 	
 	/*	open new Trade by creating Entry/Stop/Target orders	
@@ -228,10 +231,15 @@ class TradeClass{
 		this.save()
 		updateStatus()
 	}
-			
+
+	saveInitialStopDistance( risk, entry  ){
+		this.InitialStopDistance  := risk		
+		this.InitialEntry 		  := entry
+	}
+	
 	/*	Save linked order nos to ini
 		Used on startup to link to open orders on last exit
-		Format:		Alias:EntryOpenOrderNo:StopOrderNo,isPending,PendingPrice:ExecutedEntryList:TargetOrderNo,TargetPrice:ExecutedTargetList
+		Format:		Alias:EntryOpenOrderNo:StopOrderNo,isPending,PendingPrice:ExecutedEntryList:TargetOrderNo,TargetPrice:ExecutedTargetList:InitialStopDistance,InitialEntry
 	*/
 	save(){
 		scripAlias	:= this.scrip.alias
@@ -246,12 +254,14 @@ class TradeClass{
 		targetString 		 := this.target.getOpenOrder().getOrderDetails().nowOrderNo	. "," .  this.target.getPrice() . "," . this.target.getGUIQty()
 		executedTargetString := this.target.getExecutedOrderList()
 		
-		savestring  := scripAlias . ":" . entryOrder . ":" . stopstring . ":" . executedEntryString . ":" . targetString . ":" . executedTargetString
-
+		InitialStopDistanceString := this.InitialStopDistance . "," . this.InitialEntry
+		
+		savestring  := scripAlias . ":" . entryOrder . ":" . stopstring . ":" . executedEntryString . ":" . targetString . ":" . executedTargetString . ":" . InitialStopDistanceString
+		
 		saveOrders( savestring )			
 	}
 	
-	/* Format:		Alias:EntryOpenOrderNo:StopOrderNo,isPending,PendingPrice:ExecutedEntryList:TargetOrderNo,TargetPrice:ExecutedTargetList
+	/* Format:		Alias:EntryOpenOrderNo:StopOrderNo,isPending,PendingPrice:ExecutedEntryList:TargetOrderNo,TargetPrice:ExecutedTargetList:InitialStopDistance,InitialEntry
 	*/
 	loadOrders(){
 		global SavedOrders, orderbookObj
@@ -265,6 +275,7 @@ class TradeClass{
 		executedEntryOrderIDList := fields[4]
 		targetString 			 := fields[5]
 		executedTargetOrderList  := fields[6]
+		InitialStopDistanceString := fields[7]
 		
 		fields 	     := StrSplit( stopstring , ",")
 		stopOrderID  := fields[1]
@@ -276,7 +287,16 @@ class TradeClass{
 		_targetPrice  := fields[2]
 		_targetQty	  := fields[3]
 				
-		return this.linkOrders( true, scripAlias, entryOrderID, executedEntryOrderIDList, stopOrderID, isPending, pendingPrice, targetOrderID, _targetPrice, _targetQty, executedTargetOrderList  )		
+		if( this.linkOrders( true, scripAlias, entryOrderID, executedEntryOrderIDList, stopOrderID, isPending, pendingPrice, targetOrderID, _targetPrice, _targetQty, executedTargetOrderList  ) ){
+			
+			fields := StrSplit( InitialStopDistanceString , ",")
+			this.InitialStopDistance  := fields[1]			
+			this.InitialEntry 		  := fields[2]
+			
+			return true
+		}
+		
+		return false
 	}
 
 	/*	Link with Input Order
@@ -316,7 +336,7 @@ class TradeClass{
 				return false
 			else
 				positionSize += size
-		}
+		}		
 
 		if( executedTargetOrderList != ""){											// Fetch Executed Target Orders		
 			size := this._loadExecutedOrders( isSilent, executedTargetOrderList, targetOrderListObj, stopOrderDetails.tradingSymbol  )
@@ -430,8 +450,7 @@ class TradeClass{
 		this.executedEntryOrderList := []										// List of successfully executed Orders		
 		
 		this.save()
-		
-		setDefaultQty()															// Reset Qty in GUI to Default Size
+
 		setDefaultEntryOrderType()												// Reset to default order type
 	}
 	
@@ -635,7 +654,7 @@ class TradeClass{
 	/* Go through orders in input csv
 	   Check if trading symbol matches against Input
 	   Setup OrderClass and push to input List	
-	   Returns totalQty of Executed Orders if successful, else returns -1
+	   Returns totalQty of Executed Orders if successful, else returns -1	   
 	*/
 	_loadExecutedOrders( isSilent, inputOrderCsv, outputOrderList, tradingSymbol  ){
 		global orderbookObj

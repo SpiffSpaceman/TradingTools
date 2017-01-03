@@ -1,186 +1,90 @@
 
-test
-    Average Price - Adds + Link with adds
-    Reset default ordertype after unlink/cancel
-TEST
-    OrderLink
-        - Sets SLM order as Limit since its LIMIT after trigger
-        - If Trigger Price != 0
-            If Price = 0 set SLM else SLL
-        - Test Manual / Auto link 
-            - getGUIOrderType()
-            - Auto Link Also sets Entry price as 0
-            - Entry filled then link
-Bugs
-    SASOnline - NFO Select error - click ok after submit
-        Window title : NEST - GJ109
-        Window text: "Exchange or Series or Symbol is not selected"
-        Buttonid (ok) "Button1"
-
-
-
-
-Rename DefaultStopSize/DefaultTargetSize to DefaultStopDistance/DefaultTargetDistance
-Default target size
-Allow Target Trailing - say checkbox
-
-1 Click Market Buy/Sell
-    Market Order
-        - After entry, set average price in Entry box
-    Allow Empty Stop price
-        - After Entry use default stop size from average size if Stop is not set
-
-Bug 
-    Target Triggered - Timer off, New/link button visible - unlinked?
-        Stop size reduced fine and on reopen also linked fine with TIMER on
-        debug - check trackerCallback, updateStatus() , trade/gui unlink
-    Another time stop size not increased after add triggered
-        - Maybe both issues are caused by old data in Orderbook - Try to refresh orderbook after callback trigger
-        - So call orderbook.refreshOrderBook() and then trade.reload()
-    For now - Just add logs to confirm issue, didnt face again
-
-
-
-
-
-
-
-    
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
------------------------------------------------------------------------------------------
-Separate class for Entry, Stop Orders similar to Target
 Multiple Orders
-    - Buttons for each trade to switch quickly 
-        - white if no trade, yellow for open trade, green if positionsize>0   +   indicate current trade
+    - Buttons for each trade to switch quickly
+        - white if no trade, yellow for open trade, green if positionsize>0 + indicate current trade
     - Context change
-        - Keep array of trades + current context 
-        - 1) Load trade from context 2) Settings::loadScrip 3) Refresh gui - loadTradeInputToGui()    
+        - Keep array of trades + current context
+        - 1) Load trade from context 2) Settings::loadScrip 3) Refresh gui - loadTradeInputToGui()
         - open scrips warning message - Dont warn
     - call trackerCallback() for each trade
         - Trade.reload() - Move orderbookObj.read(). Should be called only once here
     - Notify on Execution - through button color
-1 Click Market Buy/Sell
-    Market Order
-        - After entry, set average price in Entry box
-    Allow Empty Stop price
-        - After Entry use default stop size from average size if Stop is not set
-Partial Stops
-    Ex - Add Order Stop
-        - Option to keep seperate
-        - Merge when Normal stop moves past add stop
-    Ex - Trail partial aggresively after spike
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Current Status (Partial/Stop X) after Add ? What should it show ? 
 -----------------------------------------------------------------------------------------
-Verify Values in Buy/Sell Order window 
-    Can help if settings are incorrect else can end up with wrong scrip
-If order not found 
-    test with market order
-    prompt list of orders
-Square Off 
-    - Market Stop order for filled position + cancel rest
-        1) Update stop order Order Type in Entry structure
-            - Set order type as market order
-            - Dont update Order yet - (2) should do it
-        2) Cancel open Entry order ( Add )
-            This will also change stop qty to filled size
------------------------------------------------------------------------------------------
-Position Status 
-    - Current Risk based on Stop price, avg price
-    - Show this besides stop and target after Entry Executed
-Add Current Price validations
-    - check current price and warn if posible bad order based on ordertype
-    - Example - Limit Buy above price, % diff between Entry price and current price
-Price Alerts
-    save/load window position
-    Pick Price from AB
-        Separate shortcut for long and shorts - pick price + scrip
-        If within some distance of previous value - erase old value
-        Reload price triggers    
-    GUI - Remove / View alerts
-    Detect if multiple prices trigged - on trigger check for next price and remove all together
-    Audio Alert
------------------------------------------------------------------------------------------
-Bugs
-    - Cancel order - in between - gives error. Detect and check again
-        ---------------------------
-        NOW
-        ---------------------------
-        Please Select Order To Cancel
-Icons in buttons
-    Repace button with Picture
-    https://autohotkey.com/board/topic/80584-how-to-simulate-a-graphical-button-in-a-gui/
-Export Trade Execution Log
-    In trackerCallback() before unlink
-    Or In Order create / update
-Partial Entry Fill - Handle Stop       // workaround - use SLM
-    - Show filled size for Entry/Stop
-    - Maybe Stop order only entered once filled and stop size modified if Entry Size increases
-        - But should always have protective stop for limit orders ( and so also for SL-Limit orders once triggered ) 
-    - Even for Limit Entry orders, partial fill affects trailing stop orders
-    - Modify Stop Size = Filled size when Trailing 
-    - Unfilled -> Need to have seperate protective stop behind Limit price for unfilled orders once order is a LIMIT order 
-            ( Limit / SL-Limit after trigger)
-        Should be cancelled once size = 0, ie Filled completely
-        option to cancel both - remaining qty 
-        Trailing Stop size should be always = Filled Size
-        Need to differentiate between original stop and Trailing stop ( only when order is unfilled)
-            Orignial Stop for unfilled size cannot be moved beyond Entry price
-    - Handle cancel orders
-Option to change order type for open order
-    - SL Order After Trigger - changes to Limit Order - should be editable ( unfilled )
-    - Square Off - Market Stop order only if entry is complete - else cancel    // show cancel if not entered else squareoff 
------------------------------------------------------------------------------------------
-Swing Trades 
-    - Can support for Derivatives through admin position
-Qty in terms of multiple size instead of actual qty
-Constant Risk position sizing + Allow Risk %
------------------------------------------------------------------------------------------
+Port to c++/qt
+	commit to different git project
+    Separate AHK specific code - create/update/read etc, IPC
+        Keep Tracker and OM code separate
+    Simulator from start
+    Logging from start
+    Db from start
+        Save everything in sqlite DB, can be used as Trade log
+    Misc new 
+        Separate class for Entry, Stop Orders similar to Target
+        Multiple Trades, Calculate Open Risk including partial targets
+        Verify Values in Buy/Sell Order window
+        Current Price validations, % diff between Entry price and current price etc
+        partial fills ? 
+        Swing Trades, derivatives through admin position or can save internally
+        One click Entry after setting stop
+        Square Off
+    Replace TradeLog + more
+		Per Part  Stats - Targets vs Trail
+        Setup specific Stats
+        Slippage ?
+       	More stats
+			Grimes - page 254, 388
+			Max Drawdown, Highest  win / loss streaks
+			Average drawdown size, hit rate, Sharpe ratio, average daily P/L volatility, etc
+    excel/csv import to fill missing trades
+    Reconcile with contract notes
+ -----------------------------------------------------------------------------------------
+  
+
+
+
+
+

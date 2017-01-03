@@ -82,4 +82,9 @@ class UtilClass{
 	handleException( e ){
 		MsgBox % "Error in " . e.What . ", Location " . e.File . ":" . e.Line . " Message:" . e.Message . " Extra:" . e.Extra
 	}
+	
+	getRiskPerTrade(){
+		 global Capital, TradeRisk
+		 return  Capital * TradeRisk/100	
+	}
 }

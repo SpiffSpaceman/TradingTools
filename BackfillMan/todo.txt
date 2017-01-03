@@ -1,7 +1,7 @@
 
 Data loading check
-	Move to ABBackfill + Return code - esp for Datatable - very slow
 	verify scrip name ** // Data corruption
+	Move to ABBackfill + Return code - esp for Datatable - very slow	
 Datatable
 	- Get Date Time column position instead of assuming 2
 
@@ -25,10 +25,9 @@ Datatable intraday MultiDay Backfill + Filter out outside market time quotes
 Maintain 15Day intraday Data
 	Option for some scrips to have say 15 days intraday data - get intraday data from archive / google
 	1st backfill with daily + tick mode 1. Then backfill intraday data with tickmode 1
-NT Backfill
 
 
-Better Error Handling			
+Better Error Handling
 	Make list of Failed Scrips and prompt to retry with both VWAP / DT
 GUI 
 	- option to cancel/skip Scrip
