@@ -31,7 +31,7 @@ try{
   loadSettings()
 
   contextObj   := new ContextClass                                          // Keep Class string in class names to avoid conflict - can get overwritten by object of same name
-                                                                            // without new, class members are not initialized
+  contextObj.init()                                                         // without new, class members are not initialized
   orderbookObj := new OrderbookClass
   controlObj   := isServerNOW  ? new NowControlsClass : new NestControlsClass // Contains All control ids, window titles for Now/Nest
   alertsObj    := new AlertsClass
@@ -54,21 +54,42 @@ return
 
 checkForOpenOrders(){
 	global orderbookObj, contextObj
-
-    trade := contextObj.getCurrentTrade()    
   
-	if( orderbookObj.doOpenOrdersExist() ) {
-        if( trade.loadOrders() ){                                           // Load open orders if saved Else Ask to link manually
+	if( orderbookObj.doOpenOrdersExist() ) {        // Try to load from saved orders
+        
+        isLoaded3 := loadTradeAt(3)
+        isLoaded2 := loadTradeAt(2)
+        isLoaded1 := loadTradeAt(1)
+        
+        if( isLoaded1 ){                            // switch to 1st active trade and update GUI            
             loadTradeInputToGui()
-            return
         }
-      
-		MsgBox, % 262144+4,, Open Orders exist, Link with Existing order?
-			IfMsgBox Yes
-				openLinkOrdersGUI()
+        else if ( isLoaded2 ){
+            contextObj.switchContext(2)
+        }
+        else if( isLoaded3 ){
+            contextObj.switchContext(3)
+        }
+        
+        if( isLoaded1 || isLoaded2 || isLoaded3 )
+            toggleStatusTracker("on")
 	}
 }
 
+/* Load Trade data, without updating GUI
+*/
+loadTradeAt( i ){
+    global  contextObj
+    
+    contextObj.switchContextIndex(i)
+    trade := contextObj.getCurrentTrade()
+    
+    if( trade.loadOrders() ){
+        contextObj.loadTradeToContext()
+        return true
+    }
+    return false
+}
 
 
 #include Settings.ahk

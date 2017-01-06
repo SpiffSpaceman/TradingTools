@@ -103,6 +103,9 @@ class OrderClass{
 			pendingQty := 0 
 		return pendingQty
 	}
+	getTotalQty(){
+		return this._orderDetails.totalQty
+	}
 
 	getGUIDirection(){
 		global controlObj
@@ -400,7 +403,7 @@ class OrderClass{
 		WinWaitClose, %winTitle%
 	}
 
-	/*	Wait for order to be validated - wait if status is validation pending or put order req recieved
+	/*	Wait for order to be validated - wait if status is 'validation pending', 'open pending' or 'put order req recieved'
 	*/
 	_waitforOrderValidation(){
 		global orderbookObj, OPEN_ORDER_WAIT_TIME, controlObj
@@ -409,7 +412,7 @@ class OrderClass{
 			
 			status := this._orderDetails.status
 
-			if( status == controlObj.ORDER_STATUS_PUT || status == controlObj.ORDER_STATUS_VP ){
+			if( status == controlObj.ORDER_STATUS_PUT || status == controlObj.ORDER_STATUS_VP ||  status == controlObj.ORDER_STATUS_OPEN_PENDING ){
 				Sleep, 250
 				orderbookObj.read()
 				this.reloadDetails()

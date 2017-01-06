@@ -24,7 +24,9 @@ loadSettings(){
     config      := "config/OrderMan.ini"
     config_gen  := "config/save.ini"
 
-    IniRead, SavedOrders,       %config_gen%, OrderMan, SavedOrders
+    IniRead, SavedOrders1,       %config_gen%, OrderMan, SavedOrders1
+    IniRead, SavedOrders2,       %config_gen%, OrderMan, SavedOrders2
+    IniRead, SavedOrders3,       %config_gen%, OrderMan, SavedOrders3
     IniRead, LastWindowPosition,%config_gen%, OrderMan, LastWindowPosition
 
     IniRead, ScripList,         %config%, OrderMan, ScripList
@@ -110,9 +112,10 @@ saveLastPosition(){
 
 /*
   Save orders. Used to load open trade on startup
+    Trades are saved under SavedOrders1, SavedOrders2 & SavedOrders3
 */
-saveOrders( savestring ){
-    global config_gen
-    IniWrite, %savestring%, %config_gen%, OrderMan, SavedOrders
+saveOrders( index, savestring ){
+    global config_gen    
+    IniWrite, %savestring%, %config_gen%, OrderMan, % "SavedOrders" . index
 }
 

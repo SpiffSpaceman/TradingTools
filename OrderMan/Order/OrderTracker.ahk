@@ -28,7 +28,7 @@ initializeStatusTracker(){
 */
 toggleStatusTracker( on_off ){
 	
-	static isTimerActive := false
+	global isTimerActive
 	
 	if( on_off == "on" ){		
 		isTimerActive := true
@@ -46,16 +46,26 @@ toggleStatusTracker( on_off ){
 	Also creates pending order if Stop Entry order was triggered
 */
 orderStatusTracker(){
-	global contextObj, GUI_POLL_TIME_MULTIPLE
+	global contextObj, orderbookObj, GUI_POLL_TIME_MULTIPLE
 	
-	static i := 0
+	static i 	:= 0
+	noOpenTrade := true
 	
-	trade := contextObj.getCurrentTrade()	
+	orderbookObj.read()
+	trades := contextObj.getAllTrades()	
 	
 	Critical 														// Mark Timer thread Data fetch as Critical to avoid any possible Mixup with main thread 
-																	// Marking it as critical should avoid Main thread from running
-	trade.reload()													// Otherwise can get problem with entryOrder / stopOrder in unlink()
-	trade.trackerCallback()
+	for index, trade in trades {									// Marking it as critical should avoid Main thread from running
+		if( trade.isEntryOpen() || trade.isEntryOrderExecuted() ){  // Otherwise can get problem with entryOrder / stopOrder in unlink()
+			trade.reload()												
+			trade.trackerCallback()	
+			noOpenTrade := false
+		}
+	}
+	if( noOpenTrade  ){
+		toggleStatusTracker( "off" )								// Turn off Tracker if there is no open trade to track
+		updateStatus()
+	}
 	Critical , off
 	
 	if(  mod(i, GUI_POLL_TIME_MULTIPLE) == 0 )						// Update GUI less frequently

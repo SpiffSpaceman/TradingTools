@@ -42,16 +42,29 @@ installHotKey( key, function ){
 }
 
 setScrip(){
+	global contextObj
+	
 	scrip := getScripFromAB()
-	if( scrip != "" )
-		setSelectedScrip( scrip )
+	
+	if( scrip == "" )
+		return false
+	
+	contextObj.switchContextByScrip(scrip)								// If a trade already has this scrip, switch to it
+	
+	if( isScripChangeBlocked( scrip) )
+		return false
+
+	setSelectedScrip( scrip ) 
+	return true
 }
 
 getEntryPriceFromAB(){
 	global EntryPriceActual, StopPrice, isABPick
 	
-	setScrip()
-	price := getPriceFromAB()
+	price := getPriceFromAB()											// Get price 1st to avoid delay, else mouse movement can cause wrong price to be picked up
+	
+	if( !setScrip() )													// For trades with open orders, Only update prices if scrip matches
+		return
 
 	if( price > 0 ){		
 		EntryPriceActual := price
@@ -64,9 +77,11 @@ getEntryPriceFromAB(){
 getStopPriceFromAB(){
 	global EntryPrice, StopPriceActual, isABPick
 	
-	setScrip()
 	price := getPriceFromAB()
-
+	
+	if( !setScrip() )														// For trades with open orders, Only update prices if scrip matches
+		return
+	
 	if( price > 0 ){		
 		StopPriceActual := price
 		_guessDirection( EntryPrice, price )
@@ -76,10 +91,12 @@ getStopPriceFromAB(){
 }
 
 getTargetPriceFromAB(){
-
-	setScrip()
+	
 	price := getPriceFromAB()
 	
+	if( !setScrip() )														// For trades with open orders, Only update prices if scrip matches
+		return
+
 	if( price > 0 ){		
 		setTargetPrice( UtilClass.roundToTickSize(price) )
 	}
@@ -171,8 +188,8 @@ getScripFromAB(){
 	return ""
 }
 
-/*
-	Get price from line under cursor if found, else get from tooltip text
+/*	Get price from X-Y Labels else from line under cursor if found 
+	// Else get from tooltip text
 */
 getPriceFromAB(){
 
@@ -182,8 +199,8 @@ getPriceFromAB(){
 		price := getPriceAtCursor()
 		if( price <= 0 )
 			price := getPriceFromLine()
-		if( price <= 0 )
-			price := getPriceAtCursorTooltip()
+		//if( price <= 0 )
+		//	price := getPriceAtCursorTooltip()
 		BlockInput, MouseMoveOff
 
 		return price
@@ -192,8 +209,7 @@ getPriceFromAB(){
 		return -1
 }
 
-/*
-	If Price/Y Axis Tooltip is enabled - pick price from it
+/*	If Price/Y Axis Tooltip is enabled - pick price from it
 	This is fastest way to pick price
 */
 getPriceAtCursor(){
@@ -209,8 +225,7 @@ getPriceAtCursor(){
 	return ""
 }
 
-/*
-	Selects line and opens properties. Price copied from start price
+/*  Selects line and opens properties. Price copied from start price
 */
 getPriceFromLine(){
 	
@@ -237,8 +252,7 @@ getPriceFromLine(){
 	return -1
 }
 
-/*
-	If View > X-Y Labels set to Off - Pick price from tooltip at cursor
+/*	If View > X-Y Labels set to Off - Pick price from tooltip at cursor
 	Tries to trigger tooltip in Amibroker and copies price using Value property
 	Tooltip is Triggered by moving right slowly. This takes little extra time.
 	Tooltip text row format is assumed to be either "Value = 7747.650"(cursor over empty space) or "Begin:     09-09-2015 09:44:59, Value: 7785.28" ( cursor over line)
@@ -281,3 +295,4 @@ getPriceAtCursorTooltip(){
 
 	return ""
 }
+

@@ -70,6 +70,7 @@ class NowControlsClass{
 	static ORDER_STATUS_VP				  			:= "validation pending"
 	static ORDER_STATUS_OPEN	  		  			:= "open"
 	static ORDER_STATUS_TRIGGER_PENDING  			:= "trigger pending"
+	static ORDER_STATUS_OPEN_PENDING				:= "open pending"
 	static ORDER_STATUS_COMPLETE 		  			:= "complete"
 	static ORDER_STATUS_REJECTED		  			:= "rejected"
 	static ORDER_STATUS_CANCELLED		  			:= "cancelled"

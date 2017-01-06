@@ -1,57 +1,12 @@
-
-Multiple Orders
-    - Buttons for each trade to switch quickly
-        - white if no trade, yellow for open trade, green if positionsize>0 + indicate current trade
-    - Context change
-        - Keep array of trades + current context
-        - 1) Load trade from context 2) Settings::loadScrip 3) Refresh gui - loadTradeInputToGui()
-        - open scrips warning message - Dont warn
-    - call trackerCallback() for each trade
-        - Trade.reload() - Move orderbookObj.read(). Should be called only once here
-    - Notify on Execution - through button color
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+search - GUI calls from trade with GUI in different context
+    // for all, check how loadTradeToContext() loads data 
+Test Average price and result after real entry
+    Show in terms of trade risk instead of points priceUpdateCallback()
+    
+    
+    
+    
+    
 Current Status (Partial/Stop X) after Add ? What should it show ? 
 -----------------------------------------------------------------------------------------
 Port to c++/qt
@@ -67,7 +22,7 @@ Port to c++/qt
         Multiple Trades, Calculate Open Risk including partial targets
         Verify Values in Buy/Sell Order window
         Current Price validations, % diff between Entry price and current price etc
-        partial fills ? 
+        partial fills? 1) Target-Stop 2) Entry/Add, Option to cancel pending and manage filled part
         Swing Trades, derivatives through admin position or can save internally
         One click Entry after setting stop
         Square Off
@@ -80,7 +35,11 @@ Port to c++/qt
 			Max Drawdown, Highest  win / loss streaks
 			Average drawdown size, hit rate, Sharpe ratio, average daily P/L volatility, etc
     excel/csv import to fill missing trades
-    Reconcile with contract notes
+    Reconcile with contract notes, show review page
+    Import from gmail 
+        can forward contract notes to dummy email address 
+        read from inbox and move to folder
+        save all contract logs
  -----------------------------------------------------------------------------------------
   
 

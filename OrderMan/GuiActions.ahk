@@ -20,18 +20,21 @@
 onNew(){
 	global contextObj, selectedScrip, EntryOrderType, Direction, Qty, ProdType, EntryPrice, StopPrice, TargetPrice, TargetQty, STOP_ORDER_TYPE, isButtonTrigger
 
-	isButtonTrigger := true
+	isButtonTrigger := true										// Avoid triggering setTradeRisk() by adjustPrices()
 	
 	Gui, 1:Submit, NoHide										// sets variables from GUI
 	
 	adjustPrices( EntryPrice, StopPrice)
 		
-	if( !validateInput() )
+	if( !validateInput() ){
+		isButtonTrigger := false
 		return
+	}
 	
 	TargetEntryDiff := Direction == "B" ? TargetPrice-EntryPrice : EntryPrice-TargetPrice
 	if( TargetEntryDiff <= 0  && TargetPrice != "" && TargetPrice != 0 ){
 		MsgBox, 262144,, Target Should be ahead of Entry Price for new order
+		isButtonTrigger := false
 		return
 	}	
 
@@ -50,7 +53,7 @@ onAdd(){
 /* Button Update
 */
 onUpdate(){
-	global contextObj, selectedScrip, EntryOrderType, Qty, ProdType, EntryPrice, StopPrice, TargetPrice, TargetQty, STOP_ORDER_TYPE, isButtonTrigger
+	global contextObj, orderbookObj, selectedScrip, EntryOrderType, Qty, ProdType, EntryPrice, StopPrice, TargetPrice, TargetQty, STOP_ORDER_TYPE, isButtonTrigger
 	
 	isButtonTrigger := true
 	
@@ -60,9 +63,12 @@ onUpdate(){
 	
 	adjustPrices( EntryPrice, StopPrice)
 	
-	if( !validateInput() )
+	if( !validateInput() ){
+		isButtonTrigger := false
 		return
-		
+	}
+
+	orderbookObj.read()
 	trade.reload()
 
 	entry 		 := ""														// Update if order linked and status is open/trigger pending and price/qty has changed
@@ -133,8 +139,7 @@ TargetClick(){
 onUnlink(){
 	global contextObj
 	trade := contextObj.getCurrentTrade()
-	
-	toggleStatusTracker( "off" )
+		
 	trade.unlinkOrders()
 	updateStatus()
 }
@@ -146,6 +151,7 @@ onCancel(){
 	trade := contextObj.getCurrentTrade()
 	
 	trade.cancel()
+	clearGUI()
 }
 
 /* Scrip combobox change
@@ -168,7 +174,18 @@ loadScripSettings(){
 	
 	setDefaultFocus()															// Change Focus to Entry price to prevent change by mouse scroll
 	loadScrip( SelectedScripText )
-	setGUIValues( 0, 0, 0, 0, 0, "B", EntryOrderType )							// Reset to default state
+		
+	setGUIValues( 0, 0, 0, 0, 0, "B", EntryOrderType )							// clear GUI but keep selected order type
+	
+	priceUpdateCallback()
+}
+
+clearGUI(){																		// Reset to default state
+	global DefaultEntryOrderType, InitialStopDistance, InitialEntry
+	
+	setGUIValues( 0, 0, 0, 0, 0, "B", DefaultEntryOrderType )
+	InitialStopDistance  := 0
+    InitialEntry         := 0
 }
 
 /* Direction Switch
@@ -230,13 +247,22 @@ OnTargetUpDown(){
 }
 
 OnTargetQtyPercChange(){
-	global TargetQtyPerc, TargetQty, Qty, contextObj
+	global contextObj, TargetQtyPerc, TargetQty, Qty
 	
 	Gui, 1:Submit, NoHide
 	
-	positionSize	:= contextObj.getCurrentTrade().positionSize	
-	totalSize		:= Qty + positionSize	
-	TargetQty  		:= Ceil( totalSize * TargetQtyPerc/100  )			// Input Target qty is fraction of Total filled and unfilled entry orders
+	trade			:= contextObj.getCurrentTrade()
+	
+	positionSize	:= trade.positionSize
+	openSize		:= trade.isEntryOpen() ? trade.newEntryOrder.getTotalQty() : 0
+	totalSize		:= openSize + positionSize
+
+	if( totalSize == 0 )
+		totalSize := Qty														// Initially allow setting based on Qty so that we can set default targets
+		
+	TargetQty  		:= Ceil( totalSize * TargetQtyPerc/100  )					// Input Target qty is fraction of Total filled and unfilled entry orders
+	
+	updateCurrentResult()
 }
 
 OnEntrySizeChange(){
@@ -247,7 +273,8 @@ OnEntrySizeChange(){
 	fullQty		 := riskPerTrade /  Abs(EntryPrice - StopPrice) 
 	Qty 		 := Floor(fullQty * EntryRiskPerc/100)
 	
-	GuiControl, 1:Text, Qty,  %Qty%		// Dont call setQty as that will try to change EntryRiskPerc
+	GuiControl, 1:Text, Qty,  %Qty%		// Dont call setQty as that will again try to change EntryRiskPerc
+	OnTargetQtyPercChange()
 }
 
 /* Links Context to selected existing orders
@@ -381,6 +408,22 @@ linkOrdersSubmit(){
 	trade.save()											// Manually Linked orders - save order nos to ini
 }
 
+/*Switch between trades
+*/
+contextSwitch1(){
+	global contextObj
+	contextObj.switchContext(1)	
+}
+
+contextSwitch2(){
+	global contextObj
+	contextObj.switchContext(2)
+}
+
+contextSwitch3(){
+	global contextObj
+	contextObj.switchContext(3)
+}
 
 // -- Helpers ---
 

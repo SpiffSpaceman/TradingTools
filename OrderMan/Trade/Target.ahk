@@ -93,11 +93,14 @@ class TargetClass{
 	
     /* Callback from Trade on open order completion
     */
-    onTargetClose(){
+    onTargetClose( tradeIndex ){
+		global contextObj
+		
         if( this.isTargetSuccessful() )
 			this.executedOrderList.Push( this.openOrder )
         this.resetOpenOrder()
-		setTargetQty( 0 )														// Remove Target Qty from GUI
+		
+		contextObj.clearTargetQtyFromContext( tradeIndex )						// Remove Target Qty from trade
     }
 
     /* Cancel open order
