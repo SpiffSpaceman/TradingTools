@@ -1,13 +1,38 @@
-search - GUI calls from trade with GUI in different context
+
+
+
+
+
+GUI calls from trade with GUI in different context can overwrite current context
+    // Look if any calls left
     // for all, check how loadTradeToContext() loads data 
-Test Average price and result after real entry
-    Show in terms of trade risk instead of points priceUpdateCallback()
+
+
+
+	
+
+ 
     
     
-    
-    
-    
+
+
+
+
+
+
+
+
+
+
+
+
+
+Order - Verify all fields after setting and before submit
+    Maybe also verify after order creation
 Current Status (Partial/Stop X) after Add ? What should it show ? 
+Constant risk, check if needed
+    SL-Limit - Use Limit price for calculating risk / Qty
+    Use Average Entry price for target (1X..)
 -----------------------------------------------------------------------------------------
 Port to c++/qt
 	commit to different git project

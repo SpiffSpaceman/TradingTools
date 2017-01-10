@@ -403,6 +403,8 @@ linkOrdersSubmit(){
 	Gui, 2:Destroy
 	Gui  1:Default	
 	
+	toggleStatusTracker("on")								// Turn on Tracker thread once Trade has been loaded successfully
+	
 	loadTradeInputToGui()									// Load Gui with data from Order->Input	
 	
 	trade.save()											// Manually Linked orders - save order nos to ini
@@ -532,7 +534,7 @@ getCurrentScripPrice(){
 /* Called by Alerts Timer to trigger price update
 */
 priceUpdateCallback(){
-	global contextObj
+	global contextObj, InitialStopDistance
 	
 	scripPrice    	  := getCurrentScripPrice()
 	averageTradePrice := contextObj.getCurrentTrade().averageEntryPrice
@@ -540,8 +542,13 @@ priceUpdateCallback(){
 	if( averageTradePrice == 0 )
 		averageTradePrice := ""
 	
-	result := averageTradePrice == "" ? ""  :  (contextObj.getCurrentTrade().isLong() ? scripPrice - averageTradePrice : averageTradePrice - scripPrice)
-		
+	result := ""
+	if( averageTradePrice != "" ){
+		result := contextObj.getCurrentTrade().isLong() ? scripPrice - averageTradePrice : averageTradePrice - scripPrice
+		result := result / InitialStopDistance
+		result := % Format( "{1:0.1f}X", result )
+	}	
+
 	setPriceStatus( scripPrice . "  " . averageTradePrice . "  " . result )
 }
 
