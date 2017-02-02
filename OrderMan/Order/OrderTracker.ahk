@@ -55,8 +55,8 @@ orderStatusTracker(){
 	trades := contextObj.getAllTrades()	
 	
 	Critical 														// Mark Timer thread Data fetch as Critical to avoid any possible Mixup with main thread 
-	for index, trade in trades {									// Marking it as critical should avoid Main thread from running
-		if( trade.isEntryOpen() || trade.isEntryOrderExecuted() ){  // Otherwise can get problem with entryOrder / stopOrder in unlink()
+	for index, trade in trades {									// Marking it as critical should avoid Main thread from running. Otherwise can get problem with entryOrder / stopOrder in unlink()
+	if( trade.isEntryOpen() || trade.isEntrySuccessful() || trade.isEntryOrderExecuted() ){ 
 			trade.reload()												
 			trade.trackerCallback()	
 			noOpenTrade := false

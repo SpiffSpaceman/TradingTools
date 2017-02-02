@@ -24,7 +24,7 @@ vwapBackFill()
 	isQuickMode := false
 	Loop, %VWAPCount% {														// check for QuickMode, In QuickMode, only "NOW" scrips will be updated
 		local fields := StrSplit( VWAP%A_Index% , ",")
-		if( fields[8] == "NOW" ){											// if atleast one scrip found then enable Quick Mode
+		if( fields[8] == "NOW" && !isMarketClosed() ){						// if atleast one scrip found then enable Quick Mode - intraday only
 			isQuickMode := True
 			break
 		}

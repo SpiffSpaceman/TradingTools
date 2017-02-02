@@ -1,8 +1,15 @@
 
 
+    
+    
+
+Use Entry average price for Target
+FT, 50% size changes on price change
+	Use some button to toggle full and half risk
 
 
 
+Support Lot size
 GUI calls from trade with GUI in different context can overwrite current context
     // Look if any calls left
     // for all, check how loadTradeToContext() loads data 
@@ -32,7 +39,6 @@ Order - Verify all fields after setting and before submit
 Current Status (Partial/Stop X) after Add ? What should it show ? 
 Constant risk, check if needed
     SL-Limit - Use Limit price for calculating risk / Qty
-    Use Average Entry price for target (1X..)
 -----------------------------------------------------------------------------------------
 Port to c++/qt
 	commit to different git project

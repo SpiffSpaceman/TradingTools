@@ -30,7 +30,7 @@ dtBackFill(){
 	isQuickMode := false
 	Loop, %DTCount% {
 		local fields := StrSplit( DT%A_Index% , ",")
-		if( fields[3] == "NOW" ){											// if atleast one scrip found then enable Quick Mode
+		if( fields[3] == "NOW" && !isMarketClosed() ){						// if atleast one scrip found then enable Quick Mode - intraday only
 			isQuickMode := True
 			break
 		}
