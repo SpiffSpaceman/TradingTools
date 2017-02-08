@@ -63,7 +63,7 @@ class NowControlsClass{
 	static ORDER_BOOK_MENU			  				:= "Orders and Trades,Order Book"				// Takes 2 comma separated values
 																									// Column Header Text - Array order must match with OrderbookClass::_readColumnHeaders()
 	static ORDER_BOOK_OPEN_HEADERS_TEXT				:= ["Order Type", "Buy/Sell", "Trading Symbol", "Total Qty", "Pending Qty", "Price", "TriggerPrice", "Average Price", "Status", "NOWOrderNo", "NOW UpdateTime"]
-	static ORDER_BOOK_COMPLETED_HEADERS_TEXT		:= ["Order Type", "Buy/Sell", "Trading Symbol", "Total Qty", "Price", "TriggerPrice", "Average Price", "Status", "NOWOrderNo", "NOW UpdateTime", "Rejection Reason"]
+	static ORDER_BOOK_COMPLETED_HEADERS_TEXT		:= ["Order Type", "Buy/Sell", "Trading Symbol", "Total Qty", "Pending Qty", "Price", "TriggerPrice", "Average Price", "Status", "NOWOrderNo", "NOW UpdateTime", "Rejection Reason"]
 	
 // OrderBook -> Order status column
 	static ORDER_STATUS_PUT			  				:= "put order req received"

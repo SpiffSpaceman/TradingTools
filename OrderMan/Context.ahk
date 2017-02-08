@@ -110,7 +110,7 @@ class ContextClass{
        ie update ratio while keeping actual TargetQty unchanged, any Target size increase has to be manually triggered
        If trade is out of context, no change needed as context load will update TargetQtyPerc from TargetQty
     */
-    refreshQtyPercFromContext( i ){
+    refreshTargetQtyPercFromContext( i ){
         global TargetQty
         if( i == this.currentIndex ){
 			setTargetQty( TargetQty )

@@ -102,7 +102,7 @@ class TradeClass{
 
 		this.save()	
 		updateStatus()
-		contextObj.refreshQtyPercFromContext( this.index )						// Refresh Target Qty % keeping actual qty unchanged
+		contextObj.refreshTargetQtyPercFromContext( this.index )				// Refresh Target Qty % keeping actual qty unchanged
 	}
 		
 	/*	Called by Tracker Thread - orderStatusTracker()

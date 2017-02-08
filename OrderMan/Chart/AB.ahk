@@ -199,8 +199,8 @@ getPriceFromAB(){
 		price := getPriceAtCursor()
 		if( price <= 0 )
 			price := getPriceFromLine()
-		//if( price <= 0 )
-		//	price := getPriceAtCursorTooltip()
+		if( price <= 0 )
+			price := getPriceAtCursorTooltip()
 		BlockInput, MouseMoveOff
 
 		return price
