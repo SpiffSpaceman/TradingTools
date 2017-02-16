@@ -83,7 +83,7 @@ hkBackfill(){
 hkWatchList(){
 	try{
 		//ControlClick, SysTreeView321, ahk_class AmiBrokerMainFrameClass,, LEFT,,NA
-		Click 75,350
+		Click 75,405
 	} catch e {
 		handleException(e)
 	}

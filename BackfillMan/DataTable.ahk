@@ -167,7 +167,7 @@ openIndexDataTable( inIndexSymbol ){
 		ControlClick, Static7, 		%NowWindowTitle%,, RIGHT,,NA			// Open Datatable
 		ControlSend,  Static7, {D}, %NowWindowTitle%
 	}
-	Until waitforDTOpen( inIndexSymbol, A_Index, 5, 5 )						// Check upto 5 times. Check every 5 seconds
+	Until waitforDTOpen( inIndexSymbol, A_Index, 1, 30 )					// Check upto 1 times. Check every 30 seconds
 
 	isDataLoaded := waitForDTData( inIndexSymbol )
 	WinMinimize, %DTWindowTitle%

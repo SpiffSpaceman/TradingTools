@@ -633,7 +633,7 @@ getOrderShortStatus( status ){
 initalizeListViewVars(){
 	global
 	
-	listViewFields 	   	         := "Type|Scrip|Status|OrderType|Buy/Sell|Qty|PendingQty|Price|Trigger|Average|Order No|Time"
+	listViewFields 	   	         := "Type|Scrip|Status|OrderType|Buy/Sell|Qty|TradedQty|Price|Trigger|Average|Order No|Time"
 	listViewOrderIDPosition   	 := 11
 	listViewOrderStatusPosition  := 3
 	listViewOrderTypePosition	 := 4
@@ -643,7 +643,7 @@ initalizeListViewVars(){
 */
 addOrderRow( o, type ) {
 	if( IsObject(o) )
-		LV_Add("", type, o.tradingSymbol, o.status, o.orderType, o.buySell, o.totalQty, o.pendingQty, o.price, o.triggerPrice, o.averagePrice, o.nowOrderNo, o.nowUpdateTime )
+		LV_Add("", type, o.tradingSymbol, o.status, o.orderType, o.buySell, o.totalQty, o.tradedQty, o.price, o.triggerPrice, o.averagePrice, o.nowOrderNo, o.nowUpdateTime )
 }
 
 

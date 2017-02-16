@@ -94,14 +94,11 @@ class OrderClass{
 	}
 
 	getFilledQty(){
-		return this._orderDetails.totalQty - this.getOpenQty()
+		return this._orderDetails.tradedQty
 	}
 	
 	getOpenQty(){
-		pendingQty := this._orderDetails.pendingQty
-		if( pendingQty == "" )
-			pendingQty := 0 
-		return pendingQty
+		return this._orderDetails.totalQty - this.getFilledQty()
 	}
 	getTotalQty(){
 		return this._orderDetails.totalQty

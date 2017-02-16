@@ -80,8 +80,8 @@ class OrderbookClass{
 					order.tradingSymbol := A_LoopField
 				else if( A_Index ==  index.totalQty ) 
 					order.totalQty 		 := A_LoopField
-				else if( A_Index ==  index.pendingQty ) 
-					order.pendingQty 	 := A_LoopField
+				else if( A_Index ==  index.tradedQty ) 
+					order.tradedQty 	 := A_LoopField
 				else if( A_Index ==  index.price ) 
 					order.price 		 := A_LoopField
 				else if( A_Index ==  index.triggerPrice ) 
@@ -128,8 +128,8 @@ class OrderbookClass{
 					order.tradingSymbol  := A_LoopField
 				else if( A_Index ==  index.totalQty ) 
 					order.totalQty 	     := A_LoopField
-				else if( A_Index ==  index.pendingQty ) 
-					order.pendingQty 	 := A_LoopField
+				else if( A_Index ==  index.tradedQty ) 
+					order.tradedQty 	 := A_LoopField
 				else if( A_Index ==  index.price ) 
 					order.price 		 := A_LoopField
 				else if( A_Index ==  index.triggerPrice ) 
@@ -312,14 +312,14 @@ class OrderbookClass{
 																			// Read column header texts and extract position for columns that we need
 		allHeaders  := GetExternalHeaderText( controlObj.ORDER_BOOK_TITLE, controlObj.ORDER_BOOK_OPEN_LIST_HEADER)	
 		headers		:= % controlObj.ORDER_BOOK_OPEN_HEADERS_TEXT
-		keys		:= ["orderType",  "buySell",  "tradingSymbol",  "totalQty",  "pendingQty",  "price", "triggerPrice", "averagePrice" , "status", "nowOrderNo", "nowUpdateTime"]			
+		keys		:= ["orderType",  "buySell",  "tradingSymbol",  "totalQty",  "tradedQty",  "price", "triggerPrice", "averagePrice" , "status", "nowOrderNo", "nowUpdateTime"]			
 		
 		this._extractColumnIndices( "Order Book > Open Orders",  allHeaders, headers, this._openOrdersColumnIndex, keys )
 		
 	// Completed Orders
 		allHeaders  := GetExternalHeaderText( controlObj.ORDER_BOOK_TITLE, controlObj.ORDER_BOOK_COMPLETE_LIST_HEADER)
 		headers		:= % controlObj.ORDER_BOOK_COMPLETED_HEADERS_TEXT
-		keys		:= ["orderType",  "buySell",  "tradingSymbol",  "totalQty", "pendingQty", "price", "triggerPrice", "averagePrice" , "status", "nowOrderNo", "nowUpdateTime", "rejectionReason"]
+		keys		:= ["orderType",  "buySell",  "tradingSymbol",  "totalQty", "tradedQty", "price", "triggerPrice", "averagePrice" , "status", "nowOrderNo", "nowUpdateTime", "rejectionReason"]
 		
 		this._extractColumnIndices( "Order Book > Completed Orders",  allHeaders, headers, this._completedOrdersColumnIndex, keys )	
 		

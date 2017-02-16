@@ -24,7 +24,7 @@ class OrderDetailsClass{
 	buySell 	 	:= ""
 	tradingSymbol   := ""
 	totalQty 	    := ""
-	pendingQty 	 	:= ""
+	tradedQty 	 	:= ""
 	price 		 	:= ""
 	triggerPrice   	:= ""
 	averagePrice   	:= ""

@@ -347,7 +347,7 @@ class TradeClass{
 		entryOrderListObj    := []
 		targetOrderListObj   := []
 		openTargetSize		 := openTargetOrderExists ? targetOrderDetails.totalQty : 0
-		openTargetFilledSize := openTargetOrderExists ? targetOrderDetails.totalQty - targetOrderDetails.pendingQty : 0
+		openTargetFilledSize := openTargetOrderExists ? targetOrderDetails.tradedQty : 0
 
 		if( executedEntryOrderIDList != ""){										// Fetch Executed Entry Orders
 																					// Stop will always exits if atleast 1 entry order has been filled

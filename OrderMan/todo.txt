@@ -1,16 +1,14 @@
 
 
+Use Entry average price for Target
+FT, 50% size changes on price change
+	Use some button to toggle full and half risk
+    Also separate default target size
 Price Status flickers empty sometimes, but sometimes stays steady
     priceUpdateCallback() - setPriceStatus()
     Maybe also call from updateStatus ? 
-    
-Bug
-    Entry done, FT at 50 % size(13) and inital target 50% (7) of that
-    Now update target price close to entry looking for exit
-    This updated Target price but also updated stop size from 13 to 7 -> Bug
-        => Stop size set to target size on target update, there was no Target/Stop fill and no cancel 
-    target updated to 13 - But Stop size remains same at 7
-    => Not sure when this happens, could not repeat 
+ 
+
 
 
 
@@ -26,12 +24,14 @@ Bug
 
 
 
-Use Entry average price for Target
-FT, 50% size changes on price change
-	Use some button to toggle full and half risk
-    Also separate default target size
 
-
+Bug
+    Entry done, FT at 50 % size(13) and inital target 50% (7) of that
+    Now update target price close to entry looking for exit
+    This updated Target price but also updated stop size from 13 to 7 -> Bug
+        => Stop size set to target size on target update, there was no Target/Stop fill and no cancel 
+    target updated to 13 - But Stop size remains same at 7
+    => Not sure when this happens, could not repeat
 Support Lot size
 GUI calls from trade with GUI in different context can overwrite current context
     // Look if any calls left
@@ -60,8 +60,6 @@ GUI calls from trade with GUI in different context can overwrite current context
 Order - Verify all fields after setting and before submit
     Maybe also verify after order creation
 Current Status (Partial/Stop X) after Add ? What should it show ? 
-Constant risk, check if needed
-    SL-Limit - Use Limit price for calculating risk / Qty
 -----------------------------------------------------------------------------------------
 Port to c++/qt
 	commit to different git project
