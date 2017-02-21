@@ -172,6 +172,9 @@ class TradeClass{
 				return
 			}
 		}
+		// Target update price/qty sometimes triggers stop order update with incorrect size
+		// commenting to check if this causes it
+		/*
 		else{																	// If Target LIMIT order is filled partially, update stop order
 			filledQty := this.target.isPartiallyFilled()
 			if( filledQty > 0  ){
@@ -180,6 +183,7 @@ class TradeClass{
 				this.stopOrder.update()
 			}
 		}
+		*/
 	}
 
 	/* Close orders if open and unlink

@@ -29,8 +29,8 @@ initGUI(){
 	InitialEntry			  := 0
 	TargetQty				  := 0 
 	
-	isButtonTrigger		  	  := false
-	
+	isButtonTrigger		  	  := false	
+	PriceStatus				  := ""	
 }
 
 createGUI(){
@@ -48,7 +48,7 @@ createGUI(){
 	Gui, 1:Add, Button, vButton1 gcontextSwitch1 x+m, 1
 	Gui, 1:Add, Button, vButton2 gcontextSwitch2 x+m, 2
 	Gui, 1:Add, Button, vButton3 gcontextSwitch3 x+m, 3
-	Gui, 1:Add, Text, vPriceStatus w100 x+m
+	Gui, 1:Add, Text, vPriceStatus w125 x+m	
 
 // Column 1 
 	Gui, 1:Add, ListBox, vDirection gonDirectionChange h30 w20 xm Choose1, B|S		// xm - start from first column ( x coordinate = default margin )
@@ -88,7 +88,7 @@ createGUI(){
 	Gui, 1:Add, Text, vTargetResult   w50
 
 // Column 7
-	Gui, 1:Add, Text, ym+25 vEntryStatus
+	Gui, 1:Add, Text, ym+25 x+m vEntryStatus
 	Gui, 1:Add, Text, vStopStatus	
 	Gui, 1:Add, Text, vTargetStatus
 		
@@ -378,7 +378,7 @@ setOrderStatus(  statusGuiId, status  ){
 	}
 	
 	length := StrLen(status)
-	width  := length <= 12 ? "w50" : ( length <= 20 ? "w75" : "w125")
+	width  := length <= 12 ? "w75" : ( length <= 20 ? "w100" : "w150")
 	
 	GuiControl, 1:Text, %statusGuiId%, % status
 	GuiControl, 1:Move, %statusGuiId%, % width		

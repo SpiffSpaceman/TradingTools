@@ -53,7 +53,7 @@ loadSettings(){
 	END_HOUR	:= split[1]
 	END_MIN		:= split[2]
 
-	VWAPCount = 0
+	VWAPCount := 0
 	Loop{	
 		IniRead, value, BackfillMan.ini, BackfillMan, VWAP%A_Index%
 		if value = ERROR 
@@ -62,7 +62,7 @@ loadSettings(){
 		VWAPCount 	   :=  A_Index
 	}
 
-	DTCount = 0
+	DTCount := 0
 	Loop{	
 		IniRead, value, BackfillMan.ini, BackfillMan, DataTable%A_Index%
 		if value = ERROR 
@@ -71,7 +71,7 @@ loadSettings(){
 		DTCount 	 :=  A_Index
 	}
 
-	IndexCount = 0
+	IndexCount := 0
 	Loop{	
 		IniRead, value, BackfillMan.ini, BackfillMan, Index%A_Index%
 		if value = ERROR 

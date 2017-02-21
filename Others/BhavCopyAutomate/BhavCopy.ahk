@@ -15,7 +15,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
-#CommentFlag // 
+#CommentFlag //
 #Include %A_ScriptDir%														// Set Include Directory path
 #SingleInstance force														// Reloads if already running
 #NoEnv																		// Recommended for new scripts
@@ -27,21 +27,25 @@ SetTitleMatchMode, 2 														// A window's title can contain the text anyw
 SetControlDelay, -1 														// Without this ControlClick fails sometimes
 
 																			// If scrip name change, add both old and new names, old will be replaced by new name using sed later
-scrips := "LT|MARUTI|PFC|SUNPHARMA|TATAMOTORS|TATASTEEL"
 bhavCopyPath := "../NSE/*"
+scrips := "SBIN|TATAMOTORS|TATASTEEL|AXISBANK|ICICIBANK|HDFC|BPCL|ONGC|YESBANK|HINDALCO|RELIANCE|INFY|ITC|LT|SUNPHARMA|HDFCBANK|VEDL|MARUTI|ASIANPAINT|TCS|HINDPETRO|BHARATFIN|Nifty50|NiftyBank|NiftyMetal|NiftyIT|NiftyEnergy|NiftyAuto|NiftyFMCG|NiftyPharma"
+command := "grep.exe -h -w -E -v """ . scrips . """ " . bhavCopyPath . " > data/output.csv"	// Import all, except above
 
-//bhavCopyPath := "Archive/*"
 
+//bhavCopyPath := "archive/NSE/*"
+//scrips := "INDUSINDBK|IOC"
+//command := "grep.exe -h -w -E """ . scrips . """ " . bhavCopyPath . " > data/output.csv"	// Import only above
 
 FileDelete, Data\*.csv
 
 RunWait, rebol.exe -s ABCD.r, ..
 
-command := "grep.exe -h -w -E """ . scrips . """ " . bhavCopyPath . " > data/output.csv"	// Extract quotes
 RunWait %comspec% /c %command%,, hide
 
-//command := "sed.exe -i ""s/PIRHEALTH/PEL/g;"" data/output.csv"				        // Replace old name with new
-//RunWait %comspec% /c %command%,, hide										            // For Multiple add after ';' Example - s/JAM/BUTTER/g;s/BREAD/CRACKER/g
+
+//command := "sed.exe -i ""s/PIRHEALTH/PEL/g;"" data/output.csv"				        		// Replace old name with new
+//RunWait %comspec% /c %command%,, hide										            	// For Multiple add after ';' Example - s/JAM/BUTTER/g;s/BREAD/CRACKER/g
+
 
 Run, cscript.exe ImportRT.js,, hide
 

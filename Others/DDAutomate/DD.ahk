@@ -33,6 +33,12 @@ fetchData()
 FileDelete, Data\*.csv
 FileMove, ..\*.csv, Data, 1
 
+// Replace old name with new
+// For Multiple add after ';' Example - s/JAM/BUTTER/g;s/BREAD/CRACKER/g
+
+command := "sed.exe -i ""s/NIFTY,/NIFTY50,/g;s/15:30:00,/15:29:59,/g;"" Data/*.csv"
+RunWait %comspec% /c %command%,, hide										            	
+
 Run, cscript.exe ImportRT.js,, hide
 
 return

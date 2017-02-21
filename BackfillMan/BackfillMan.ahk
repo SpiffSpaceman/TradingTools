@@ -50,8 +50,8 @@ installHotKeys(){
 	}
 	
 	Hotkey, %HKBackfill%,  hkBackfill
-	
-	Hotkey, IfWinActive, ahk_class AmiBrokerMainFrameClass					// Context sensitive HK - only active if window is active	
+
+	Hotkey, IfWinActive, ahk_exe Broker.exe									// Context sensitive HK - only active if window is active	
 	if( HKFlattenTL != "" && HKFlattenTL != "ERROR")
 		Hotkey, %HKFlattenTL%, hkFlatTrendLine	
 		
@@ -83,7 +83,7 @@ hkBackfill(){
 hkWatchList(){
 	try{
 		//ControlClick, SysTreeView321, ahk_class AmiBrokerMainFrameClass,, LEFT,,NA
-		Click 75,405
+		Click 75,395
 	} catch e {
 		handleException(e)
 	}
@@ -101,12 +101,16 @@ hk3min(){
 	try{		
 		Click 1600,300
 		Send ^3	
+		Click 1600,300			// Needs two clicks with floating windows
+		Send ^3	
 	} catch e {
 		handleException(e)
 	}
 }
 hk5min(){
 	try{		
+		Click 1600,300
+		Send ^5	
 		Click 1600,300
 		Send ^5	
 	} catch e {
@@ -117,12 +121,16 @@ hkDaily(){
 	try{		
 		Click 1600,300
 		Send ^d
+		Click 1600,300
+		Send ^d
 	} catch e {
 		handleException(e)
 	}
 }
 hkWeekly(){
 	try{		
+		Click 1600,300
+		Send ^w
 		Click 1600,300
 		Send ^w
 	} catch e {

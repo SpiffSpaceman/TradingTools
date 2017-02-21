@@ -124,6 +124,8 @@ openDataTable( inTradingSymbol, retryCount ){
 	return isDataLoaded
 }
 
+/* Index Dialog must be docked, Headers should not be visible and height should be adjusted to best fit data
+*/
 openIndexDataTable( inIndexSymbol ){
 
 	global  NowWindowTitle, DTWindowTitle
@@ -211,9 +213,9 @@ waitForDTData( symbol  ){
 
 		if( rowCount > 20  ){
 			Sleep 3000														// MCX - just sleep for 3 seconds once some data is loaded, just in case
-			return true
-		}
-		Sleep 1000
+			return true														// Index - This may not be enough for lot of data
+		}																		// Can look for loading signs in Nest Plus Chart and wait before opening DT
+		Sleep 1000																// Or just backfill again and data should be loaded by now
 	}
 	return false
 }

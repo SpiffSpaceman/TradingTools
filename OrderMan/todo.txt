@@ -1,15 +1,17 @@
 
 
-Use Entry average price for Target
-FT, 50% size changes on price change
-	Use some button to toggle full and half risk
-    Also separate default target size
-Price Status flickers empty sometimes, but sometimes stays steady
-    priceUpdateCallback() - setPriceStatus()
-    Maybe also call from updateStatus ? 
- 
 
-
+Bug
+    - Update Target updated stop instead with bad qty
+    - Add logs if not clear
+    - check trackerCallback() -> this.target.isPartiallyFilled() 
+        // commented - test
+        // update flow conflicts with tracker thread ? 
+        // if confirmed, change logic - just set position size and then update stop if needed
+Bug, SH
+    Limit order, Only entry order made, stop target not made
+    Maybe if price close, perhaps Tracker does not catch it ? 
+Bug, SH - Multiple 'Trade Closed Verify', triggered when exit order takes multiple partial fills ? 
 
 
  
@@ -25,17 +27,14 @@ Price Status flickers empty sometimes, but sometimes stays steady
 
 
 
-Bug
-    Entry done, FT at 50 % size(13) and inital target 50% (7) of that
-    Now update target price close to entry looking for exit
-    This updated Target price but also updated stop size from 13 to 7 -> Bug
-        => Stop size set to target size on target update, there was no Target/Stop fill and no cancel 
-    target updated to 13 - But Stop size remains same at 7
-    => Not sure when this happens, could not repeat
-Support Lot size
-GUI calls from trade with GUI in different context can overwrite current context
-    // Look if any calls left
-    // for all, check how loadTradeToContext() loads data 
+
+
+
+
+
+
+
+
 
 
 
@@ -49,13 +48,16 @@ GUI calls from trade with GUI in different context can overwrite current context
 
 
 
+Use Entry average price for Target
+FT, 50% size changes on price change
+	Use some button to toggle full and half risk
+    Also separate default target size
+Support Lot size
+GUI calls from trade with GUI in different context can overwrite current context
+    // Look if any calls left
+    // for all, check how loadTradeToContext() loads data 
 
-
-
-
-
-
-
+ 
 
 Order - Verify all fields after setting and before submit
     Maybe also verify after order creation
