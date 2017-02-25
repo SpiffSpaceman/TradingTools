@@ -262,9 +262,12 @@ void Worker::amibrokerPoller(){
                 continue;                                                  //   skip to avoid overwrite with same timestamp.
             }                                                              // This can happen if we have more than 1 update in a second 
                                                                            //   and poller took data in between.
-            if( bar_ltt == "15:29:59" && Util::getTime("%H") != "15"  ){   // Skip 15:29:59 if current hour is not 15 
-                _current->reset();                                         //   to avoid yesterdays quote on open in NOW.
-                _prev->reset();                                            // Reset Bars to avoid yesterday data in open bar 
+
+			std::vector<std::string>  split;							   // Skip 15:29:XX if current hour is not 15 	
+			Util::splitString( bar_ltt, ':', split ) ;					   //   to avoid yesterdays quote on open in NOW.
+            if( split[0] == "15" && split[1] == "29" && Util::getTime("%H") != "15"  ){   
+                _current->reset();										   // Reset Bars to avoid yesterday data in open bar 
+                _prev->reset();                                            
                 continue;                                                  
             }
             // Skip quotes outside market hours

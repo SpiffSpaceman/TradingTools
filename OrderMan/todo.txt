@@ -1,16 +1,19 @@
 
 
+Bug, SH
+    Limit order, Only entry order made, stop target not made
+    Maybe if price close, perhaps Tracker does not catch it ? 
+    => Fast execution, straight to Completed => New order not found => Gives Error too - status empty
+    
+
 
 Bug
-    - Update Target updated stop instead with bad qty
+    - Update Target sometimes updates stop instead with bad qty
     - Add logs if not clear
     - check trackerCallback() -> this.target.isPartiallyFilled() 
         // commented - test
         // update flow conflicts with tracker thread ? 
         // if confirmed, change logic - just set position size and then update stop if needed
-Bug, SH
-    Limit order, Only entry order made, stop target not made
-    Maybe if price close, perhaps Tracker does not catch it ? 
 Bug, SH - Multiple 'Trade Closed Verify', triggered when exit order takes multiple partial fills ? 
 
 

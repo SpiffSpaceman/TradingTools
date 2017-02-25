@@ -1,11 +1,4 @@
 // TODO
-	// Bug - Sometimes Open = yesterday close is still sent at 09:15 - becomes part of 1st second bar's open
-		// Maybe if started before 0900
-		// 15:29:58 => dont check for seconds
-
-
-
-
 	// Start AB + start RTDMan without NOW - Ab thread seems to disturb AB - Busy cursor every second
 	// Once - RTDMan crashes on starting OrderMan
 		// Maybe something related to csv

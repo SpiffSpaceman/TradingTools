@@ -172,6 +172,7 @@ class TradeClass{
 				return
 			}
 		}
+		// TODO 
 		// Target update price/qty sometimes triggers stop order update with incorrect size
 		// commenting to check if this causes it
 		/*
