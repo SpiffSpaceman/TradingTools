@@ -32,6 +32,9 @@ try{
 	VWAPColumnIndex := ""													// Initialize some variables to avoid harmless warn errors
 
 	loadSettings()															// Load settings for Timer before hotkey install
+
+	controlObj := isServerNOW ? new NowControlsClass : new NestControlsClass // Contains  control ids, window titles for Now/Nest 
+	
 	SetTimer, PingNOW, %PingerPeriod% 										// Install Keep Alive Timer
 	installEOD()															// Install Timer for EOD backfill once
 	installHotkeys()														// Setup Hotkey for Backfill
@@ -63,10 +66,6 @@ installHotKeys(){
 	
 	Hotkey, Numpad9, hkWatchList											// Numpad9 to activate Watchlist and Numpad3 for symbols
 	Hotkey, Numpad3, hkSymbols
-	Hotkey, ^3, hk3min														// Redirect AB Timeframe change shortcuts to only 1 tab
-	Hotkey, ^5, hk5min
-	Hotkey, ^d, hkDaily
-	Hotkey, ^w, hkWeekly
 }
 
 hkBackfill(){
@@ -82,8 +81,10 @@ hkBackfill(){
 // Control Ids change on layout selection, So instead click on hardcoded coordinates
 hkWatchList(){
 	try{
-		//ControlClick, SysTreeView321, ahk_class AmiBrokerMainFrameClass,, LEFT,,NA
-		Click 75,395
+		// ControlClick, SysTreeView321, ahk_class AmiBrokerMainFrameClass,, LEFT,,NA
+		
+		WinActivate, ahk_class AmiBrokerMainFrameClass
+		Click 75,368
 	} catch e {
 		handleException(e)
 	}
@@ -91,52 +92,14 @@ hkWatchList(){
 hkSymbols(){
 	try{
 		//ControlClick, SysListView323, ahk_class AmiBrokerMainFrameClass,, LEFT,,NA
+		
+		WinActivate, ahk_class AmiBrokerMainFrameClass
 		Click 75,605
 	} catch e {
 		handleException(e)
 	}
 }
 
-hk3min(){
-	try{		
-		Click 1600,300
-		Send ^3	
-		Click 1600,300			// Needs two clicks with floating windows
-		Send ^3	
-	} catch e {
-		handleException(e)
-	}
-}
-hk5min(){
-	try{		
-		Click 1600,300
-		Send ^5	
-		Click 1600,300
-		Send ^5	
-	} catch e {
-		handleException(e)
-	}
-}
-hkDaily(){
-	try{		
-		Click 1600,300
-		Send ^d
-		Click 1600,300
-		Send ^d
-	} catch e {
-		handleException(e)
-	}
-}
-hkWeekly(){
-	try{		
-		Click 1600,300
-		Send ^w
-		Click 1600,300
-		Send ^w
-	} catch e {
-		handleException(e)
-	}
-}
 
 openDrawProperties(){	
 	Click 2																// Double click at mouse position
@@ -175,6 +138,7 @@ closeDrawProperties(){
 		ControlSend, Edit2, {Enter}, Properties, Start Y:
 	IfWinExist, Text box properties, Start Y:
 		ControlSend, Edit2, {Enter}, Text box properties, Start Y:
+	Click 1															// Select chart again for floating windows
 }
 
 /* Find Interval control, Id is dynamic - RichEdit20A*
@@ -394,6 +358,37 @@ convert24HHMM( time ){
 	return timeSplit[1] . ":" . timeSplit[2]
 }
 
+convert24HHMMSS( time ){
+
+	timeSplit := StrSplit( time, ":") 
+	secSplit  := StrSplit( timeSplit[3], " ") 
+	
+	if( secSplit[2] == "PM" && timeSplit[1] < 12 ){							// Add 12 to Hours if PM. But not for 12
+		timeSplit[1] := timeSplit[1] + 12
+	}
+	
+	return timeSplit[1] . ":" . timeSplit[2] . ":" . secSplit[1] 
+}
+
+convert12HHMMSS( time ){
+
+	timeSplit := StrSplit( time, ":") 	
+	
+	if( timeSplit[1] >= 12 ){
+		timeSplit[3] := timeSplit[3] . " PM"
+	}
+	else{
+		timeSplit[3] := timeSplit[3] . " AM"
+	}
+	
+	if( timeSplit[1] > 12 ){											   // Sub 12 from Hours if PM
+		timeSplit[1] := timeSplit[1] - 12
+		if(timeSplit[1] < 10)
+			timeSplit[1] := "0" . timeSplit[1]
+	}	
+	
+	return timeSplit[1] . ":" . timeSplit[2] . ":" . timeSplit[3]
+}
 
 /*
   VWAP for stocks in NOW has 09:14:XX as first row. Change it to 09:15
@@ -427,10 +422,20 @@ addMinute( HH, MM ){
 }
 
 subMinute( HH, MM ){
-	if( MM == 00 )
-		return % (HH-1) . ":59"
-	else
-		return % HH . ":" . (MM-1)
+	if( MM == 00 ){
+		HH := HH -1
+		if( HH < 10 )
+			HH := "0" . HH
+		
+		return % HH . ":59"
+	}
+	else{
+		MM := MM -1
+		if( MM < 10 )
+			MM := "0" . MM
+		
+		return % HH . ":" . MM
+	}
 }
  
 
@@ -453,6 +458,8 @@ handleException(e){
 #Include Settings.ahk
 #Include DataTable.ahk
 #Include Vwap.ahk
+#include GUIControls/Now.ahk
+#include GUIControls/Nest.ahk
 
 #CommentFlag ;
 #include Lib/__ExternalHeaderLib.ahk										; External Library to read Column Headers

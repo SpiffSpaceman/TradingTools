@@ -36,8 +36,9 @@ loadSettings(){
 	IniRead, HKSetLayer, 			 BackfillMan.ini, BackfillMan, HKSetLayer
 	IniRead, HKDelStudies, 		 	 BackfillMan.ini, BackfillMan, HKDelStudies
 	
-	
-	
+	IniRead, Server, BackfillMan.ini, BackfillMan, Server
+    isServerNOW := (Server == "Now")
+
 	IniRead, value, BackfillMan.ini, BackfillMan, PingerPeriod	
 	PingerPeriod  :=  value * 60 * 1000										// Mins to ms	
 

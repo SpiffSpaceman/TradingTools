@@ -52,36 +52,41 @@ vwapBackFill()
 // ------- Private --------
 
 getVWAPColumnIndex(){														// Gets Position of Start time, O, H, L, C, V columns
-	global VWAPWindowTitle, VWAPColumnIndex
+	global controlObj, VWAPWindowTitle, VWAPColumnIndex
 
-	VWAPHeaders := GetExternalHeaderText( VWAPWindowTitle, "SysHeader321")
+	VWAPHeaders := GetExternalHeaderText( VWAPWindowTitle, controlObj.VWAP_LIST )
 
 	VWAPColumnIndex := {}													// Creates object
 
 	for index, headertext in VWAPHeaders{
-		if( headertext == "Start Time" )
+		if( headertext == controlObj.VWAP_HEADER_START_TIME )
 			VWAPColumnIndex.start := index
-		if( headertext == "End Time" )
+		if( headertext == controlObj.VWAP_HEADER_END_TIME )
 			VWAPColumnIndex.end := index
-		else if( headertext == "Open Rate" )
+		else if( headertext == controlObj.VWAP_HEADER_OPEN  )
 			VWAPColumnIndex.open  := index
-		else if( headertext == "High Rate" )
+		else if( headertext == controlObj.VWAP_HEADER_HIGH  )
 			VWAPColumnIndex.high  := index
-		else if( headertext == "Low Rate" )
+		else if( headertext == controlObj.VWAP_HEADER_LOW )
 			VWAPColumnIndex.low   := index
-		else if( headertext == "Close Rate" )
+		else if( headertext == controlObj.VWAP_HEADER_CLOSE  )
 			VWAPColumnIndex.close := index
-		else if( headertext == "Differential Vol" )
+		else if( headertext == controlObj.VWAP_HEADER_DIFF_VOL )
 			VWAPColumnIndex.vol   := index
 	}
 
-	checkEmpty( VWAPColumnIndex.start, "Start Time"  )
-	checkEmpty( VWAPColumnIndex.start, "End Time"  )
-	checkEmpty( VWAPColumnIndex.open,  "Open Rate"  )
-	checkEmpty( VWAPColumnIndex.high,  "High Rate"  )
-	checkEmpty( VWAPColumnIndex.low,   "Low Rate"  )
-	checkEmpty( VWAPColumnIndex.close, "Close Rate"  )
-	checkEmpty( VWAPColumnIndex.vol,   "Differential Vol"  )
+	if( controlObj.VWAP_HEADER_START_TIME == "" ){
+		VWAPColumnIndex.start := -1 										// Use end time if start time not available
+	}
+	else
+		checkEmpty( VWAPColumnIndex.start, controlObj.VWAP_HEADER_START_TIME )
+	
+	checkEmpty( VWAPColumnIndex.end,   controlObj.VWAP_HEADER_END_TIME  )
+	checkEmpty( VWAPColumnIndex.open,  controlObj.VWAP_HEADER_OPEN   )
+	checkEmpty( VWAPColumnIndex.high,  controlObj.VWAP_HEADER_HIGH )
+	checkEmpty( VWAPColumnIndex.low,   controlObj.VWAP_HEADER_LOW  )
+	checkEmpty( VWAPColumnIndex.close, controlObj.VWAP_HEADER_CLOSE  )
+	checkEmpty( VWAPColumnIndex.vol,   controlObj.VWAP_HEADER_DIFF_VOL  )
 }
 
 checkEmpty( value, field ){
@@ -95,10 +100,19 @@ checkEmpty( value, field ){
 }
 
 openVwap( inParam1,inParam2,inParam3,inParam4,inParam5,inParam6 ){
-	global NowWindowTitle, VWAPWindowTitle
-
-	WinMenuSelectItem, %NowWindowTitle%,, Market, Hourly Statistics			// Open HS using NOW Menu
+	global controlObj, NowWindowTitle, VWAPWindowTitle
+	
+	menus := StrSplit( controlObj.VWAP_MENU , ",")	
+	WinMenuSelectItem, %NowWindowTitle%,, % menus[1], % menus[2]			// Open HS using NOW Menu
+	
 	WinWait, %VWAPWindowTitle%,,10											// Wait for HS to open
+	
+	if ErrorLevel
+	{
+		MsgBox, Failed to open VWAP stats
+		return
+	}
+	
 	WinMinimize, %VWAPWindowTitle%
 
 	Control, ChooseString , %inParam1%, ComboBox1, %VWAPWindowTitle%		// Set Params - Exchg-Seg	
@@ -151,11 +165,22 @@ waitForDataLoad( alias ){													// Wait for all data to load. Verifies tha
 
 	Loop {																	// Count matched, but there can be duplicates in VWAP stats
 		rowCount := 0														// So confirm after removing duplicates. And Count Only quotes within market hours
-		ControlGet, vwapTime, List, % "Col" . VWAPColumnIndex.start, SysListView321, %VWAPWindowTitle%				// Start Time Column only
+		
+		if( VWAPColumnIndex.start != -1 )
+			ControlGet, vwapTime, List, % "Col" . VWAPColumnIndex.start, SysListView321, %VWAPWindowTitle%			// Start Time Column only
+		else
+			ControlGet, vwapTime, List, % "Col" . VWAPColumnIndex.end, SysListView321, %VWAPWindowTitle%			// Use end time if no start time column
+		
 		Sort, vwapTime, U 																							// Sort, Remove duplicates
 		Loop, Parse, vwapTime, `n  																					// Get Number of rows
-		{
-			time := convert24HHMM( A_LoopField )
+		{	
+			time := convert24HHMM( A_LoopField	 )
+			
+			if( VWAPColumnIndex.start == -1 ){								// Convert end time to start time
+				timeSplit := StrSplit( time, ":") 
+				time 	  := subMinute(  timeSplit[1], timeSplit[2] )
+			}
+			
 			if( isVWAPStartTimeFixNeeded( time ) )
 				time := fixStartTime( time )
 
@@ -227,8 +252,20 @@ writeVwapData( alias ){
 			if( A_Index ==  VWAPColumnIndex.vol )
 				vol   = %A_LoopField%
 		}
-
-		time := convert24HHMM( start )
+		
+		if( VWAPColumnIndex.start == -1  ){									// Convert end time to start time
+			
+			time 	  := convert24HHMMSS( end )								// Should work for both 24H and 12H inputs
+			timeSplit := StrSplit( time, ":") 
+			time 	  := subMinute(  timeSplit[1], timeSplit[2] )
+			
+			start	  := time . ":" . timeSplit[3] 			
+			start 	  := convert12HHMMSS( start )
+		}
+		else{
+			time := convert24HHMM( start )
+		}
+		
 
 		if( isVWAPStartTimeFixNeeded( time ) ){		 						// Workaround fix - 1st Bar for Stocks is from 09:14:XX to 09:15:XX
 																			// Set this bar's time as 09:15:00

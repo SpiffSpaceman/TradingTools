@@ -128,7 +128,7 @@ openDataTable( inTradingSymbol, retryCount ){
 */
 openIndexDataTable( inIndexSymbol ){
 
-	global  NowWindowTitle, DTWindowTitle
+	global  controlObj, NowWindowTitle, DTWindowTitle
 	RowSymbol := ""
 
 	WinClose, %DTWindowTitle%	 											// Close DT If already Opened
@@ -159,6 +159,14 @@ openIndexDataTable( inIndexSymbol ){
 
 	WinWait, %NowWindowTitle%, IntraDay Chart, 30							// Wait for Chart Control to load - Waiting for Text 'IntraDay Chart'
 
+	// TODO - check if below control can be used to detect loading screen
+		// check when loading vs when not loading
+	/*
+	ClassNN:	Static5
+	Text:	GIF HOLDER
+	Color:	FFFFFF (Red=FF Green=FF Blue=FF)
+	*/
+
 	if( ErrorLevel ){ 														// Chart open timeout
 		MsgBox, Nest Plus Chart Open Timed Out.
 		Exit
@@ -166,10 +174,10 @@ openIndexDataTable( inIndexSymbol ){
 
 	Loop{																	// Wait for DataTable to open and load
 		WinClose, %DTWindowTitle%
-		ControlClick, Static7, 		%NowWindowTitle%,, RIGHT,,NA			// Open Datatable
-		ControlSend,  Static7, {D}, %NowWindowTitle%
+		ControlClick, % controlObj.DT_INDEX_CHART_ID , %NowWindowTitle%,, RIGHT,,NA			// Open Datatable
+		ControlSend,  % controlObj.DT_INDEX_CHART_ID , {D}, %NowWindowTitle%
 	}
-	Until waitforDTOpen( inIndexSymbol, A_Index, 1, 30 )					// Check upto 1 times. Check every 30 seconds
+	Until waitforDTOpen( inIndexSymbol, A_Index, 5, 4 )						// Check upto 5 times. Check every 4 seconds
 
 	isDataLoaded := waitForDTData( inIndexSymbol )
 	WinMinimize, %DTWindowTitle%
@@ -211,7 +219,7 @@ waitForDTData( symbol  ){
 	Loop, 30 {																// Wait for upto 30 seconds
 		ControlGet, rowCount, List, Count, SysListView321, %DTWindowTitle%
 
-		if( rowCount > 20  ){
+		if( rowCount > 1  ){
 			Sleep 3000														// MCX - just sleep for 3 seconds once some data is loaded, just in case
 			return true														// Index - This may not be enough for lot of data
 		}																		// Can look for loading signs in Nest Plus Chart and wait before opening DT

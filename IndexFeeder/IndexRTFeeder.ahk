@@ -183,7 +183,7 @@ isPreMarketOpen( time ){
 isPostMarketClose( time  ){
 	global END_TIME	
 
-	return time > END_TIME	
+	return time >= END_TIME													// 15:30 = end time. No quotes from 15:30:XX
 }
 
 createFileDirectory( file_path ){											// Create File directory path if it does not exist
