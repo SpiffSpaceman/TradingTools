@@ -392,6 +392,16 @@ class OrderClass{
 		
 		if( AutoSubmit ){		
 			ControlClick, % controlObj.ORDER_ENTRY_SUBMIT, %winTitle%,,,, NA								// Submit Order
+			
+			Sleep, 100
+			IfWinExist, % controlObj.ORDER_ENTRY_CONFIRMATION_TITLE											// Zt - confirm and close order
+			{
+				ControlClick, % controlObj.ORDER_ENTRY_SUBMIT, % controlObj.ORDER_ENTRY_CONFIRMATION_TITLE,,,, NA	 
+				WinWait,  % controlObj.ORDER_ENTRY_SUBMITTED_TITLE,,2
+				WinClose, % controlObj.ORDER_ENTRY_SUBMITTED_TITLE
+				WinWaitClose, % controlObj.ORDER_ENTRY_SUBMITTED_TITLE, 2	
+			}
+			
 			WinWaitClose, %winTitle%, 2																		// Wait for order window to close. If password needed, notify
 			IfWinExist, % controlObj.ORDER_ENTRY_TITLE_TRANSACTION_PASSWORD
 				MsgBox, 262144,, Enter Transaction password in NOW and then click ok

@@ -42,4 +42,9 @@ class NestControlsClass extends NowControlsClass{
 	// NestOrderNo and Nest UpdateTime
 	static ORDER_BOOK_OPEN_HEADERS_TEXT				:= ["Order Type", "Buy/Sell", "Trading Symbol", "Total Qty", "Traded Qty", "Price", "TriggerPrice", "Average Price", "Status", "NestOrderNo", "Nest UpdateTime"]
 	static ORDER_BOOK_COMPLETED_HEADERS_TEXT		:= ["Order Type", "Buy/Sell", "Trading Symbol", "Total Qty", "Traded Qty", "Price", "TriggerPrice", "Average Price", "Status", "NestOrderNo", "Nest UpdateTime", "Rejection Reason"]
+	
+	// ZT - gives confirmation screen after submit, does not close after confirmation
+	static ORDER_ENTRY_CONFIRMATION_TITLE			:= "Press 'Enter' to confirm Order placement"
+	static ORDER_ENTRY_SUBMITTED_TITLE				:= "Order Submitted -"
+	
 }

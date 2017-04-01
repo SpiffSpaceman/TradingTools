@@ -78,4 +78,9 @@ class NowControlsClass{
 // OrderBook -> Buy/Sell Column
 	static ORDER_DIRECTION_BUY    					:= "BUY"
 	static ORDER_DIRECTION_SELL  					:= "SELL"
+	
+// ZT specific
+	static ORDER_ENTRY_CONFIRMATION_TITLE			:= "NA 99999"
+	static ORDER_ENTRY_SUBMITTED_TITLE				:= "NA 99999"
+
 }
