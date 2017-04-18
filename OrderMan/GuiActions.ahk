@@ -466,7 +466,7 @@ hasQtyChanged( order, qty ){
 /* Validations before trade orders creation/updation
 */
 validateInput(){
-	global contextObj, EntryPrice, StopPrice, TargetPrice, TargetQty, Direction, CurrentResult, MinTargetStopDiff, EntryOrderType, ORDER_TYPE_GUI_LIMIT, ORDER_TYPE_GUI_SL_LIMIT, ORDER_TYPE_GUI_SL_MARKET
+	global contextObj, EntryPrice, Qty, StopPrice, TargetPrice, TargetQty, Direction, CurrentResult, MinTargetStopDiff, EntryOrderType, ORDER_TYPE_GUI_LIMIT, ORDER_TYPE_GUI_SL_LIMIT, ORDER_TYPE_GUI_SL_MARKET
 	
 	trade 		:= contextObj.getCurrentTrade()
 	checkEntry  := trade.positionSize==0  ||  trade.isNewEntryLinked()		// Skip Entry Price Validations if Entry is Complete and No Add Orders created yet
@@ -521,7 +521,7 @@ validateInput(){
 	// Current Price based checks
 	currentPrice := getCurrentScripPrice()
 	
-	if( currentPrice != "" && currentPrice != 0  ){
+	if( currentPrice != "" && currentPrice != 0  && Qty > 0 ){
 		
 		if( EntryOrderType == ORDER_TYPE_GUI_LIMIT ){
 			if(  Direction == "B"  && EntryPrice >= currentPrice ){

@@ -149,6 +149,9 @@ export(){
 		nowAlias := IndexList[A_Index]
 		scrip 	 := Quotes[ nowAlias ]
 	
+		if( scrip.C == 0 )
+			continue
+	
 		// Ticker, Date_YMD, Time, Open, High, Low, Close, Volume, OpenInt
 		bar  := scrip.symbol . "," . (A_YYYY . A_MM . A_DD) . "," . (A_Hour . ":" . A_Min . ":" . A_Sec) . "," . scrip.O . "," . scrip.H . "," . scrip.L . "," . scrip.C . "`n"
 		data := data . bar
@@ -158,8 +161,10 @@ export(){
 		resetQuote( scrip )
 	}
 	
-	WriteData( QuotesFileName, "w", data )
-	Run, cscript.exe ImportRT.js,, hide
+	if( data != "" ){
+		WriteData( QuotesFileName, "w", data )
+		Run, cscript.exe ImportRT.js,, hide
+	}
 }
 
 WriteData( filename, mode, data ){

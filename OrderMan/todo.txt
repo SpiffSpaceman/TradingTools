@@ -1,9 +1,5 @@
 
 
-Bug
-    SLM/Limit order, Only entry order made, stop target not made - If Entry order gets immediately executed    
-    => Fast execution, straight to Completed => New order not found => Gives Error too - status empty
-    
 Use Entry average price for Target
 FT, 50% size changes on price change
 	Use some button to toggle full and half risk

@@ -319,7 +319,8 @@ EODBackfill(){
 	MsgBox, 4,, Do EOD Backfill ?, 10										// 10 second Timeout
 	IfMsgBox, No
 		Return	
-
+	
+	loadSettings()
 	DoBackfill( )
 }
 
