@@ -31,7 +31,9 @@ loadSettings(){
 	IniRead, DTBackfillFileName,     BackfillMan.ini, BackfillMan, DTBackfillFileName
 	IniRead, VWAPBackfillFileName,   BackfillMan.ini, BackfillMan, VWAPBackfillFileName
 	IniRead, EODBackfillTriggerTime, BackfillMan.ini, BackfillMan, EODBackfillTriggerTime
+	
 	IniRead, HKBackfill, 			 BackfillMan.ini, BackfillMan, HKBackfill
+	IniRead, HKBackfillAll,			 BackfillMan.ini, BackfillMan, HKBackfillAll
 	IniRead, HKFlattenTL, 			 BackfillMan.ini, BackfillMan, HKFlattenTL
 	IniRead, HKSetLayer, 			 BackfillMan.ini, BackfillMan, HKSetLayer
 	IniRead, HKDelStudies, 		 	 BackfillMan.ini, BackfillMan, HKDelStudies

@@ -60,14 +60,42 @@ indexBackFill(){															// NOTE - This wont work if Index has scroll bars
 		if( fields[3] == "EOD" && !isMarketClosed() )						// Skip EOD Scrips during the day
 			continue
 
-		if( openIndexDataTable( fields[1] ) )
-			writeDTData( fields[2] )
+		indexBackFillSingle_(fields)
 	}
 
 	closeNestPlusChart()													// Close Nest Plus chart when All done
 }
 
+indexBackFillSingle( alias ){
+	local index, fields
+	
+	index := getIndexScripIndex(alias)								// Index in Indices
+	
+	if( index > 0  ){
+		fields := StrSplit( Index%index% , ",")	
+		indexBackFillSingle_( fields )
+		closeNestPlusChart()
+		return true
+	}
+	return false
+}
 
+indexBackFillSingle_( fields ){
+	if( openIndexDataTable( fields[1] ) )
+		writeDTData( fields[2] )
+}
+
+getIndexScripIndex( alias ){
+	global 
+	
+	Loop, %IndexCount% {
+		local fields := StrSplit( Index%A_Index% , ",")  					// Format - IndexSymbol,Alias
+		if( fields[2] == alias)
+			return %A_Index%
+	}
+	
+	return -1
+}
 
 
 // ------- Private --------
@@ -161,6 +189,7 @@ openIndexDataTable( inIndexSymbol ){
 
 	// TODO - check if below control can be used to detect loading screen
 		// check when loading vs when not loading
+	Sleep 10000
 	/*
 	ClassNN:	Static5
 	Text:	GIF HOLDER
@@ -220,7 +249,7 @@ waitForDTData( symbol  ){
 		ControlGet, rowCount, List, Count, SysListView321, %DTWindowTitle%
 
 		if( rowCount > 1  ){
-			Sleep 3000														// MCX - just sleep for 3 seconds once some data is loaded, just in case
+			Sleep 5000														// MCX - just sleep for 3 seconds once some data is loaded, just in case
 			return true														// Index - This may not be enough for lot of data
 		}																		// Can look for loading signs in Nest Plus Chart and wait before opening DT
 		Sleep 1000																// Or just backfill again and data should be loaded by now

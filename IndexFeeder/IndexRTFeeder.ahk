@@ -30,6 +30,8 @@ SetControlDelay, -1 														// Without this ControlClick fails sometimes. 
 #Persistent																	// Keep script running untill manual close or on ExitApp
 
 try{
+	IdleCount := 0 
+	
 	loadSettings()
 	SetTimer, readIndices, %RTInterval% 									// Read Index Data
 	SetTimer, export, %ABInterval% 											// Export Bars to AB
@@ -41,10 +43,9 @@ return
 
 
 loadSettings(){
-	global NowWindowTitle, DTWindowTitle, IndexTableID, RTInterval, ABInterval, START_TIME, END_TIME, QuotesFileName, IndexList, IndexCount, Quotes, TickPath
+	global NowWindowTitle, IndexTableID, RTInterval, ABInterval, START_TIME, END_TIME, QuotesFileName, IndexList, IndexCount, Quotes, TickPath
 	
-	IniRead, NowWindowTitle,  IndexRTFeeder.ini, IndexRTFeeder, NowWindowTitle	
-	IniRead, DTWindowTitle,   IndexRTFeeder.ini, IndexRTFeeder, DTWindowTitle
+	IniRead, NowWindowTitle,  IndexRTFeeder.ini, IndexRTFeeder, NowWindowTitle		
 	IniRead, IndexTableID,    IndexRTFeeder.ini, IndexRTFeeder, IndexTableID	
 
 	IniRead, RTInterval,   	  IndexRTFeeder.ini, IndexRTFeeder, RTInterval
@@ -103,11 +104,11 @@ updateBar( ByRef scrip, price ){
 	scrip.C := price
 }
 
-/* Index Dialog must be docked, Headers should not be visible and height should be adjusted to best fit data
+/* Index Dialog must be docked
 */
 readIndices(){
 
-	global  NowWindowTitle, DTWindowTitle, IndexTableID, Quotes
+	global  NowWindowTitle, IndexTableID, Quotes
 	
 	time := A_Hour . ":" . A_Min
 	if( isPreMarketOpen( time ) )
@@ -137,7 +138,7 @@ readIndices(){
 }
 
 export(){
-	global Quotes, IndexCount, IndexList, QuotesFileName, TickPath
+	global Quotes, IndexCount, IndexList, QuotesFileName, TickPath, IdleCount
 	
 	time := A_Hour . ":" . A_Min
 	if( isPreMarketOpen( time ) || isPostMarketClose( time ) )
@@ -164,6 +165,24 @@ export(){
 	if( data != "" ){
 		WriteData( QuotesFileName, "w", data )
 		Run, cscript.exe ImportRT.js,, hide
+		IdleCount := 0
+	}
+	else{
+		IdleCount++
+	
+		if( IdleCount >= 2){
+			IfWinExist, NEST Trader, Do you want to Reconcile							// TODO NOW
+			{
+				ControlClick, Button1, NEST Trader, Do you want to Reconcile
+			}
+			
+			IfWinExist, NEST Trader, Parameter is Incorrect
+			{
+				ControlClick, Button1, NEST Trader, Parameter is Incorrect
+			}
+			
+			IdleCount := 0
+		}
 	}
 }
 

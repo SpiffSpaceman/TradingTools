@@ -1,11 +1,11 @@
 
 
-Use Entry average price for Target
 FT, 50% size changes on price change
 	Use some button to toggle full and half risk
-    Also separate default target size    
+    Also separate default target size  
+    // Till fixed, Just use two OMs, one with 50% Default Target size 
 Option for default target distance  // 1x 2x 3x etc 
-
+Support Lot size
 
 
     
@@ -54,19 +54,13 @@ Option for default target distance  // 1x 2x 3x etc
 
 
 Bug
-    - Update Target sometimes updates stop instead with bad qty
-    - Add logs if not clear
-    - check trackerCallback() -> this.target.isPartiallyFilled() 
-        // commented - test
-        // update flow conflicts with tracker thread ? 
-        // if confirmed, change logic - just set position size and then update stop if needed
-    - Code comment worked
-Bug, SH - Multiple 'Trade Closed Verify', triggered when exit order takes multiple partial fills ? 
- 
+    - Update Target sometimes updates stop instead with bad qty    
+    - trackerCallback() -> this.target.isPartiallyFilled()  commented        
+        update flow conflicts with tracker thread ?             
 
 Button to open new order with current price
     - Stop order type and trade size % set and then 1 click to order    
-Support Lot size
+
 GUI calls from trade with GUI in different context can overwrite current context
     // Look if any calls left
     // for all, check how loadTradeToContext() loads data 

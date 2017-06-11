@@ -30,6 +30,7 @@ SetControlDelay, -1 														// Without this ControlClick fails sometimes. 
 try{
 
 	VWAPColumnIndex := ""													// Initialize some variables to avoid harmless warn errors
+	scripControl	:= ""
 
 	loadSettings()															// Load settings for Timer before hotkey install
 
@@ -45,7 +46,7 @@ try{
 return
 
 installHotKeys(){
-	global HKFlattenTL, HKBackfill, HKSetLayer, HKDelStudies
+	global HKFlattenTL, HKBackfill, HKBackfillAll, HKSetLayer, HKDelStudies
 		
 	if( HKBackfill == "ERROR" ||  HKBackfill == "" ){
 		MsgBox, Set backfill Hotkey
@@ -53,6 +54,7 @@ installHotKeys(){
 	}
 	
 	Hotkey, %HKBackfill%,  hkBackfill
+	Hotkey, %HKBackfillAll%,  hkBackfillAll	
 
 	Hotkey, IfWinActive, ahk_exe Broker.exe									// Context sensitive HK - only active if window is active	
 	if( HKFlattenTL != "" && HKFlattenTL != "ERROR")
@@ -69,6 +71,16 @@ installHotKeys(){
 }
 
 hkBackfill(){
+	try{
+		loadSettings()
+		installEOD()
+		DoSingleBackfill()
+	} catch e {
+		handleException(e)
+	}
+}
+
+hkBackfillAll(){
 	try{
 		loadSettings()														// Reload settings
 		installEOD()														// Update EOD Timer
@@ -225,13 +237,13 @@ DoBackfill(){
 		
 		clearFiles()
 		
-		if( Mode = "DT" ){
+		if( Mode == "DT" ){
 			dtBackFill()		
 		}
-		else if( Mode = "VWAP" )  {	
+		else if( Mode == "VWAP" )  {	
 			vwapBackFill()
 		}	
-		if( DoIndex = "Y"){
+		if( DoIndex == "Y"){
 			indexBackFill()
 		}		
 		
@@ -240,6 +252,85 @@ DoBackfill(){
 	else{
 		MsgBox, NOW not found.
 	}
+}
+
+/*
+ Backfill currently selected scrip in AB
+*/
+DoSingleBackfill(){	
+	global NowWindowTitle, Mode, DoIndex
+	
+	IfWinExist, %NowWindowTitle%
+	{			
+		IfWinExist, Session Expired, E&xitNOW
+		{
+			MsgBox, NOW Locked.
+			Exit
+		}
+		
+		clearFiles()
+	
+		alias  := getScripFromAB()					// AB scrip				
+	
+		if( Mode == "VWAP" && vwapBackFillSingle(alias)  ) {
+			save()	
+			return
+		}
+		else if( DoIndex == "Y" && indexBackFillSingle(alias) ){
+			save()	
+			return
+		}
+	}
+	else{
+		MsgBox, NOW not found.
+	}
+}
+
+/* Is alias present in Backfill scrip list
+*/ 
+isValidScrip( alias ){
+	return getVWAPScripIndex(alias) > 0 || getIndexScripIndex(alias) > 0
+}
+
+/* Get scrip name from Ticker ToolBar
+*/
+getScripFromAB(){
+	global scripControl
+	
+	IfWinExist, ahk_class AmiBrokerMainFrameClass
+	{	
+		try{
+			if( scripControl != "" ){			
+				ControlGetText, scrip, %scripControl%, ahk_class AmiBrokerMainFrameClass
+				if( isValidScrip(scrip) ){
+					return scrip
+				}
+			}
+		}
+		catch exc {				// Control does not exist
+			scripControl := ""
+		}
+		
+		Loop, 20{															// Find Symbol Control
+			try{
+				controlName := "RichEdit20A" . A_Index
+				ControlGetText, scrip, %controlName%, ahk_class AmiBrokerMainFrameClass
+
+				if( isValidScrip(scrip) ){
+					scripControl := controlName
+					return scrip
+				}
+				else
+					continue		// Found Control can be Symbol dropdown or dropdowns from AA etc
+			} catch exc{				// Control does not exist
+				continue
+			}
+		}	
+	}
+	
+	MsgBox, AB scrip not found in settings
+	
+	return ""
 }
 
 getExpectedDataRowCount(){

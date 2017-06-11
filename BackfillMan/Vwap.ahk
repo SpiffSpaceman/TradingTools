@@ -24,6 +24,7 @@ vwapBackFill()
 	isQuickMode := false
 	Loop, %VWAPCount% {														// check for QuickMode, In QuickMode, only "NOW" scrips will be updated
 		local fields := StrSplit( VWAP%A_Index% , ",")
+	
 		if( fields[8] == "NOW" && !isMarketClosed() ){						// if atleast one scrip found then enable Quick Mode - intraday only
 			isQuickMode := True
 			break
@@ -39,15 +40,46 @@ vwapBackFill()
 		else if( fields[8] == "EOD" && !isMarketClosed() )					// Skip EOD Scrips during the day
 			continue
 
-		openVwap( fields[1], fields[2], fields[3], fields[4], fields[5], fields[6] )
-		if( !IsObject( VWAPColumnIndex ) ){
-			getVWAPColumnIndex()											// Check Required columns
-		}
-		if( waitForDataLoad( fields[7] ) )									// Wait for All data to load
-			writeVwapData( fields[7] )										// Write csv if data loaded
+		vwapBackFillSingle_( fields )
 	}
 }
 
+vwapBackFillSingle( alias ){
+	
+	local vindex, fields
+	
+	vindex := getVWAPScripIndex(alias)										// Index in VWAP
+	
+	if( vindex > 0  ){
+		fields := StrSplit( VWAP%vindex% , ",")	
+		vwapBackFillSingle_( fields )
+		return true
+	}
+	return false
+}
+
+vwapBackFillSingle_( fields ){
+	global
+	
+	openVwap( fields[1], fields[2], fields[3], fields[4], fields[5], fields[6] )
+	if( !IsObject( VWAPColumnIndex ) ){
+		getVWAPColumnIndex()											// Check Required columns
+	}
+	if( waitForDataLoad( fields[7] ) )									// Wait for All data to load
+		writeVwapData( fields[7] )										// Write csv if data loaded
+}
+
+getVWAPScripIndex( alias ){
+	global 
+	
+	Loop, %VWAPCount% {
+		local fields := StrSplit( VWAP%A_Index% , ",")  					// Format - HS parameters 1-6,Alias
+		if( fields[7] == alias)			
+			return %A_Index%
+	}
+	
+	return -1
+}
 
 // ------- Private --------
 
@@ -192,7 +224,7 @@ waitForDataLoad( alias ){													// Wait for all data to load. Verifies tha
 			return true
 		}
 
-		if( Mod(A_Index, 15 )==0  ){										// Ask Every 15 seconds if all data has not yet been received and no change in missing count
+		if( Mod(A_Index, 30 )==0  ){										// Ask Every 30 seconds if all data has not yet been received and no change in missing count
 			missingCount := ExpectedCount - rowCount
 
 			if( oldMissingCount == missingCount ){
