@@ -69,6 +69,21 @@ vwapBackFillSingle_( fields ){
 		writeVwapData( fields[7] )										// Write csv if data loaded
 }
 
+/* Load Index VWAP data (Nest)
+*/
+indexVwapBackFillSingle_( fields ){
+	global VWAPColumnIndex
+
+	openVwapIndex( fields[1])
+	
+	if( !IsObject( VWAPColumnIndex ) ){
+		getVWAPColumnIndex()											// Check Required columns
+	}
+	
+	if( waitForDataLoad( fields[2] ) )									// Wait for All data to load
+		writeVwapData( fields[2] )										// Write csv if data loaded
+}
+
 getVWAPScripIndex( alias ){
 	global 
 	
@@ -175,6 +190,53 @@ openVwap( inParam1,inParam2,inParam3,inParam4,inParam5,inParam6 ){
 		Control, ChooseString , %inParam5%, ComboBox5, %VWAPWindowTitle%	// Opt Type
 	if( inParam6 != "" )
 		Control, ChooseString , %inParam6%, ComboBox6, %VWAPWindowTitle%	// Strike Price
+
+	ControlSetText, Edit1, 1,       %VWAPWindowTitle%						// Set Interval as 1
+	ControlSend,    Edit1, {Enter}, %VWAPWindowTitle%						// Request Data
+}
+
+/* Index Dialog must be docked, Headers should not be visible and height should be adjusted to best fit data
+*/
+openVwapIndex( inIndexSymbol ){
+	global  controlObj, NowWindowTitle, VWAPWindowTitle
+	RowSymbol := ""
+
+	WinClose, %VWAPWindowTitle%	 											// Close VWAP If already Opened
+	ControlGet,  RowCount, List, Count, SysListView324, %NowWindowTitle%	// No of rows in Index Dialog
+	ControlSend, SysListView324, {HOME}, %NowWindowTitle%					// Start from top and search for Index
+
+	Loop, %RowCount%{
+		ControlGet, RowSymbol, List, Selected Col1, SysListView324, %NowWindowTitle%
+		if( RowSymbol = inIndexSymbol ){									// Assuming 1st column has Index names, compare with input
+			RowNumber = %A_Index%
+			break
+		}
+		ControlSend, SysListView324, {Down}, %NowWindowTitle%				// Move Down to next row if not found yet
+	}
+
+	if ( RowSymbol != inIndexSymbol ) {
+		MsgBox, %inIndexSymbol% Not Found.
+		Exit
+	}
+
+	ControlGetPos, IndexX, IndexY, IndexWidth, IndexHeight, SysListView324, %NowWindowTitle%
+	RowSize := IndexHeight/RowCount											// Get Position of Index Row
+	ClickX  := IndexX + IndexWidth/2										// Middle of Index box
+	ClickY  := IndexY + RowNumber*RowSize - RowSize/2						// Somewhere within the Row
+
+	ControlClick, X%ClickX% Y%ClickY%, %NowWindowTitle%,, RIGHT,,NA			// Right Click on Index Row
+	ControlSend,  SysListView324, {v}, %NowWindowTitle%		 				// Open VWAP stats	
+		
+	WinWait, %VWAPWindowTitle%,,10											// Wait for HS to open
+	
+	WinMinimize, %VWAPWindowTitle%
+	Sleep 3000																// Allow default load of 5min. Precaution to avoid possible mixing of data
+
+	if ErrorLevel
+	{
+		MsgBox, Failed to open VWAP stats for index %inIndexSymbol%
+		return
+	}
 
 	ControlSetText, Edit1, 1,       %VWAPWindowTitle%						// Set Interval as 1
 	ControlSend,    Edit1, {Enter}, %VWAPWindowTitle%						// Request Data

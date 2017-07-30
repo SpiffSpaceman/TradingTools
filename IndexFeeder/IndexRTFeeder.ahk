@@ -176,9 +176,9 @@ export(){
 				ControlClick, Button1, NEST Trader, Do you want to Reconcile
 			}
 			
-			IfWinExist, NEST Trader, Parameter is Incorrect
+			IfWinExist, NEST Trader, The parameter is incorrect
 			{
-				ControlClick, Button1, NEST Trader, Parameter is Incorrect
+				ControlClick, Button1, NEST Trader, The parameter is incorrect
 			}
 			
 			IdleCount := 0

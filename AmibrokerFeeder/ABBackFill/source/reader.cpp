@@ -166,7 +166,8 @@ void  Reader::postParse( const std::string &ticker, const std::string &date, con
 		return;
 
     // $FORMAT Ticker, Date_YMD, Time, Open, High, Low, Close, Volume
-    std::string output_line = ticker + ',' + date + ',' + time + ',' + open + ',' + high + ',' + low + ','  + close  + ',' + volume; 
+	// Save 15:30:00 as 15:29:59 to avoid extra bar in AB
+    std::string output_line = ticker + ',' + date + ',' + (time==settings.close_minute ? Util::subSecond(time) : time  ) + ',' + open + ',' + high + ',' + low + ','  + close  + ',' + volume; 
 
     if( settings.is_no_tick_mode ){                                                            // Send in sorted ascending order for tickmode for each ticker
 		fout << output_line  << std::endl ;

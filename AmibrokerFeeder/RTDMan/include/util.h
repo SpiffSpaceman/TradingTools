@@ -21,6 +21,7 @@ public:
 
     static std::string     getTime(   const char *format = "%H:%M:%S"  );    
 	static std::string	   addMinute( const std::string &time );
+	static std::string	   subSecond( const std::string &time );
 	static std::string	   addLeadingZero( long long no );
 
     static void            trimString          ( std::string & string  );

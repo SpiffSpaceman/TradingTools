@@ -144,6 +144,32 @@ std::string Util::addMinute( const std::string &time ){
 	return addLeadingZero(HH) + ":" + addLeadingZero(MM) + ":" + split[2] ;
 }
 
+/* Input HH:MM:SS	
+   Not handling 00:00:00  ( HH change )
+*/
+std::string Util::subSecond( const std::string &time ){
+	
+	std::vector<std::string>  split;
+	Util::splitString( time, ':', split ) ;
+	
+	long long HH = std::stoi( split[0] );						// long long needed for std::stoi  - VS 2010
+	long long MM = std::stoi( split[1] );
+	long long SS = std::stoi( split[2] );
+
+	// 12:00:00	12:01:00
+	
+	if( SS == 0 ){
+		SS = 59;
+		HH = MM==0 ? HH-1 : HH ;
+		MM = MM==0 ? 59 : MM-1 ;
+	}
+	else{
+		SS--;
+	}
+
+	return addLeadingZero(HH) + ":" + addLeadingZero(MM) + ":" + addLeadingZero(SS) ;
+}
+
 /*	Add leading 0 for single digit numbers
 */
 std::string	Util::addLeadingZero( long long no ){

@@ -56,7 +56,9 @@ installHotKeys(){
 	Hotkey, %HKBackfill%,  hkBackfill
 	Hotkey, %HKBackfillAll%,  hkBackfillAll	
 
-	Hotkey, IfWinActive, ahk_exe Broker.exe									// Context sensitive HK - only active if window is active	
+
+	// Context sensitive HK - only active if window is active	
+	Hotkey, IfWinActive, ahk_exe Broker.exe
 	if( HKFlattenTL != "" && HKFlattenTL != "ERROR")
 		Hotkey, %HKFlattenTL%, hkFlatTrendLine	
 		
@@ -66,9 +68,107 @@ installHotKeys(){
 	if( HKDelStudies != "" && HKDelStudies != "ERROR")
 		Hotkey, %HKDelStudies%, hkDelStudies
 	
-	Hotkey, Numpad9, hkWatchList											// Numpad9 to activate Watchlist and Numpad3 for symbols
-	Hotkey, Numpad3, hkSymbols
+	// Numpad9 to activate Watchlist and Numpad3 for symbols
+	Hotkey, Numpad9, hkWatchList
+	Hotkey, Numpad3, hkSymbols		
+	Hotkey, F5, hkRefresh					// Send refresh to AB main window. useful in AA
+	Hotkey, NumpadDot, SwitchExplore		// Switch between FT and Momentum	
+	
+	// Simulator Hotkeys
+	#If WinExist("Bar Replay") && WinActive("ahk_exe Broker.exe")	
+	Hotkey, Numpad0, hkSim5				// Move forward 5mins and refesh exploration	
+	Hotkey, Right, hkSimNext			// Next/Previous bar
+	Hotkey, Left, hkSimPrev	
+	#If
+	
 }
+
+hkRefresh(){
+	try{		
+		ControlSend, , {F5}, ahk_class XTPDockingPaneMiniWnd ahk_exe Broker.exe
+	} catch e {
+		handleException(e)
+	}
+}
+
+// Move forward 1 min	
+hkSimNext(){
+
+	try{
+		WinActivate, Bar Replay
+		ControlClick, Button5, Bar Replay,, LEFT,1,NA
+	}
+	catch e {
+		handleException(e)
+	}
+}
+
+// Move back 1 min
+hkSimPrev(){
+
+	try{		
+		WinActivate, Bar Replay
+		ControlClick, Button2, Bar Replay,, LEFT,1,NA
+	} 
+	catch e {
+		handleException(e)
+	}
+}
+
+
+explore(){	
+		// refesh exploration
+		CoordMode, Mouse, Screen
+
+		Click 1000,300									// click on center chart
+		Click 175, 115									// Click Explore
+		Sleep, 200
+		Click 175,185									// Click first result
+
+		CoordMode, Mouse, Window 
+}
+
+// Move forward 5mins and refesh exploration
+hkSim5(){
+	try{		
+		WinActivate, Bar Replay		
+
+		ControlClick, Button5, Bar Replay,, LEFT,5,NA	// Forward 5 mins
+		Sleep 2500										// Give time to read current chart
+		
+		explore()
+		
+	} catch e {
+		handleException(e)
+	}
+}
+
+SwitchExplore(){
+	static state = 0									// Current Tab 
+	
+	try{		
+		if( state == 0 ){								// FT to Momentum
+			CoordMode, Mouse, Screen
+			Click 300,85								// Select Momentum Tab
+			CoordMode, Mouse, Window
+			
+			explore()
+			state = 1
+		}
+		else{											// Momentum to FT			
+			CoordMode, Mouse, Screen
+			Click 175,85								// Select FT Tab
+			CoordMode, Mouse, Window
+			
+			explore()
+			state = 0
+		}
+	} catch e {
+		handleException(e)
+	}
+}
+
+
 
 hkBackfill(){
 	try{
@@ -91,22 +191,25 @@ hkBackfillAll(){
 }
 
 // Control Ids change on layout selection, So instead click on hardcoded coordinates
+// ControlClick, SysTreeView321, ahk_class AmiBrokerMainFrameClass,, LEFT,,NA		
 hkWatchList(){
-	try{
-		// ControlClick, SysTreeView321, ahk_class AmiBrokerMainFrameClass,, LEFT,,NA
+	try{		
+		WinActivate, ahk_class AmiBrokerMainFrameClass		
 		
-		WinActivate, ahk_class AmiBrokerMainFrameClass
-		Click 75,368
+		Click 1000,500														// click on chart to make sure floating window is in focus
+		Click 75,315
+
 	} catch e {
 		handleException(e)
 	}
 }
 hkSymbols(){
 	try{
-		//ControlClick, SysListView323, ahk_class AmiBrokerMainFrameClass,, LEFT,,NA
-		
 		WinActivate, ahk_class AmiBrokerMainFrameClass
-		Click 75,605
+		
+		Click 1000,500														// click on chart to make sure floating window is in focus
+		Click 75,605														// Select symbol		
+		Send Nifty															// Select Nifty
 	} catch e {
 		handleException(e)
 	}
@@ -243,7 +346,7 @@ DoBackfill(){
 		else if( Mode == "VWAP" )  {	
 			vwapBackFill()
 		}	
-		if( DoIndex == "Y"){
+		if( DoIndex == "VWAP" || DoIndex == "DT" ){
 			indexBackFill()
 		}		
 		
@@ -276,7 +379,7 @@ DoSingleBackfill(){
 			save()	
 			return
 		}
-		else if( DoIndex == "Y" && indexBackFillSingle(alias) ){
+		else if( (DoIndex == "VWAP" || DoIndex == "DT") && indexBackFillSingle(alias) ){
 			save()	
 			return
 		}
@@ -397,7 +500,7 @@ installEOD(){
 	targetTime  := StrSplit( EODBackfillTriggerTime, ":")
 	timeLeft	:= (targetTime[1] - A_Hour)*60 + ( targetTime[2] - A_Min )	// Time left to Trigger EOD Backfill in mins
 
-	if( timeLeft > 0 ){
+	if( timeLeft >= 0 ){
 		SetTimer, EODBackfill, % (timeLeft * 60 * -1000 )					// -ve Period => Run only once
 	}
 	else{

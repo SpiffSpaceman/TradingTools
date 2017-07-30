@@ -63,7 +63,9 @@ indexBackFill(){															// NOTE - This wont work if Index has scroll bars
 		indexBackFillSingle_(fields)
 	}
 
-	closeNestPlusChart()													// Close Nest Plus chart when All done
+	if(  DoIndex == "DT"){
+		closeNestPlusChart()												// Close Nest Plus chart when All done
+	}
 }
 
 indexBackFillSingle( alias ){
@@ -72,17 +74,28 @@ indexBackFillSingle( alias ){
 	index := getIndexScripIndex(alias)								// Index in Indices
 	
 	if( index > 0  ){
-		fields := StrSplit( Index%index% , ",")	
+		fields := StrSplit( Index%index% , ",")					
 		indexBackFillSingle_( fields )
-		closeNestPlusChart()
+		if( DoIndex == "DT"){
+			closeNestPlusChart()
+		}		
 		return true
 	}
 	return false
 }
 
+/* Read DT/VWAP index data
+*/
 indexBackFillSingle_( fields ){
-	if( openIndexDataTable( fields[1] ) )
-		writeDTData( fields[2] )
+	global DoIndex
+	
+	if( DoIndex == "DT"){
+		if( openIndexDataTable( fields[1] ) )
+			writeDTData( fields[2] )
+	}
+	else{		
+		indexVwapBackFillSingle_( fields )
+	}
 }
 
 getIndexScripIndex( alias ){

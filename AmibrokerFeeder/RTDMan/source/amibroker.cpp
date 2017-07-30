@@ -60,7 +60,8 @@ Amibroker::Amibroker( const std::string &in_ab_db_path,  const std::string &in_q
 Amibroker::~Amibroker(){
     
     try{
-        saveDB();                                                           // Save AB db before quit
+        //saveDB();                                                           // Save AB db before quit
+		;
     }
     catch( const std::string msg ){    
         Util::printExceptionSilent(msg);
