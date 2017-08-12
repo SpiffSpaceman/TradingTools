@@ -39,6 +39,13 @@ try{
 	SetTimer, PingNOW, %PingerPeriod% 										// Install Keep Alive Timer
 	installEOD()															// Install Timer for EOD backfill once
 	installHotkeys()														// Setup Hotkey for Backfill
+	
+	// Simulator Hotkeys
+	#If WinExist("Bar Replay") && WinActive("ahk_exe Broker.exe")	
+	Numpad0::hkSim5()
+	Right::hkSimNext()
+	Left::hkSimPrev()
+	#If
 
 } catch ex {
 	handleException(ex)
@@ -73,14 +80,10 @@ installHotKeys(){
 	Hotkey, Numpad3, hkSymbols		
 	Hotkey, F5, hkRefresh					// Send refresh to AB main window. useful in AA
 	Hotkey, NumpadDot, SwitchExplore		// Switch between FT and Momentum	
-	
-	// Simulator Hotkeys
-	#If WinExist("Bar Replay") && WinActive("ahk_exe Broker.exe")	
-	Hotkey, Numpad0, hkSim5				// Move forward 5mins and refesh exploration	
-	Hotkey, Right, hkSimNext			// Next/Previous bar
-	Hotkey, Left, hkSimPrev	
-	#If
-	
+}
+
+isBarReplay(){
+	return WinExist("Bar Replay") && WinActive("ahk_exe Broker.exe")
 }
 
 hkRefresh(){

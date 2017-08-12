@@ -347,8 +347,9 @@ writeVwapData( alias ){
 				vol   = %A_LoopField%
 		}
 		
-		if( VWAPColumnIndex.start == -1  ){									// Convert end time to start time
-			
+		if( VWAPColumnIndex.start == -1  ){									// Convert end time to start time 
+																				// ZT has only Time column with End Time. 09:15:00-09:15:59? is shown as 09:16
+																				// Reduce minute by 1 to align it with AB bars using Start Time
 			time 	  := convert24HHMMSS( end )								// Should work for both 24H and 12H inputs
 			timeSplit := StrSplit( time, ":") 
 			time 	  := subMinute(  timeSplit[1], timeSplit[2] )

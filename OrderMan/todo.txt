@@ -1,14 +1,20 @@
 
-
-FT, 50% size changes on price change
-	Use some button to toggle full and half risk
-    Also separate default target size  
-    // Till fixed, Just use two OMs, one with 50% Default Target size 
-Option for default target distance  // 1x 2x 3x etc 
-Support Lot size
+OM - 1 click FT B/S
+    - Use H/L as stop and LTP as limit entry + some slippage
+    - Take H/L and LTP from Marketwatch + take current symbol from AB
 
 
-    
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -56,53 +62,82 @@ Support Lot size
 Bug
     - Update Target sometimes updates stop instead with bad qty    
     - trackerCallback() -> this.target.isPartiallyFilled()  commented        
-        update flow conflicts with tracker thread ?             
-
-Button to open new order with current price
-    - Stop order type and trade size % set and then 1 click to order    
-
+        update flow conflicts with tracker thread ? 
 GUI calls from trade with GUI in different context can overwrite current context
     // Look if any calls left
     // for all, check how loadTradeToContext() loads data 
-
-
 Order - Verify all fields after setting and before submit
     Maybe also verify after order creation
 Current Status (Partial/Stop X) after Add ? What should it show ? 
+
+
+
+
+
+
+
 -----------------------------------------------------------------------------------------
-Port to c++/qt
-	commit to different git project
-    Separate AHK specific code - create/update/read etc, IPC
-        Keep Tracker and OM code separate
-    Simulator from start
-    Logging from start
-    Db from start
+AB + IB 
+    - commit to different git project
+    - AB has IBcontroller integrated. 
+        - Can call IB through its simple interface including bracket orders
+        - partial target
+            - Bracket order & OCO does not directly support it
+            - Can add multiple stop orders with target-bracketed and standalone parts but it will increase brokerage
+            - Workaround is to use **scale entry** for Target order
+                - When initial part gets filled, stop size reduces accordingly
+                - If no target active then keep the pending Target size far away
+                - For T2, Modify existing target order
+                    - Set starting price as Target 2 price
+                    - Set large increment again for dummy target (trailing position)
+                    - set Initial  component size = T1(filled) + T2
+                    - set Subsequent Component size to Total size - Initial Component size
+                - Do not cancel Target order as it has OCA with Stop order and could not delete OCA group from gui
+            - Also check Presets in File > Global configuration
+            - api seems to be there but maybe not in AB IB Controller
+                https://interactivebrokers.github.io/tws-api/classIBApi_1_1Order.html#gsc.tab=0
+            - IB controller is open source
+                http://www.amibroker.com/devlog/2013/06/03/ibcontroller-1-3-8-source-codes-released/
+        - Can test with demo acocunt / paper account
+        - Integrate with AB price pickup afl 
+            - Add some gui to show prices and to change manually as before        
+            - 1 click orders for FT using HOD/LOD as stop and LTP as entry price            
+    - AB afl to draw order lines via gfx + link with OM
+    - 1 click orders for FT using HOD/LOD as stop + separate default FT target order size    
+    - Draw lines via gfx for buy/sell and trigger into IB calls
+        - Have some handle area over line and mouse even to capture price update
+            See http://www.amibroker.org/userkb/category/afl-programming/gfx-programming/
+            "Moving Low Level Graphics (GFX) Objects on your Charts"
+        - Need to translate gfx x,y to price                
+            See http://www.amibroker.org/userkb/category/afl-programming/gfx-programming/
+            Finding Pixel Boundaries : 
+                see Status("pxchartleft") etc. can get width height
+                Status( "lastvisiblebar" )      to get no of bars within the chart
+                Status( "firstvisiblebar" );
+                Status( "axisminy" )            to get price range
+                Status( "axismaxy" )
+            Using a GFX Include file : Price to pixel, inverse it   
+    ---------- 
+    Log to sqlilte Db
         Save everything in sqlite DB, can be used as Trade log
-    Misc new 
-        Separate class for Entry, Stop Orders similar to Target
-        Multiple Trades, Calculate Open Risk including partial targets
-        Verify Values in Buy/Sell Order window
-        Current Price validations, % diff between Entry price and current price etc
-        partial fills? 1) Target-Stop 2) Entry/Add, Option to cancel pending and manage filled part
-        Swing Trades, derivatives through admin position or can save internally
-        One click Entry after setting stop
-        Square Off
-    Replace TradeLog + more
-		Per Part  Stats - Targets vs Trail
-        Setup specific Stats
-        Slippage ?
-       	More stats
-			Grimes - page 254, 388
-			Max Drawdown, Highest  win / loss streaks
-			Average drawdown size, hit rate, Sharpe ratio, average daily P/L volatility, etc
-    excel/csv import to fill missing trades
-    Reconcile with contract notes, show review page
-    Import from gmail 
+        Also use it load orders on restart
+        Maybe through AB plugin, so can directly call from afl
+        Also check how to export trades from IB
+        Replace TradeLog + stats + slippage etc
+            More stats
+                Grimes - page 254, 388
+                Max Drawdown, Highest  win / loss streaks
+                Average drawdown size, hit rate, Sharpe ratio, average daily P/L volatility, etc
+    Logging
+    Handle Multiple trades
+    Current Price vs order Validations  // ex buy stop should be above current price etc
+    Reconcile with contract notes + expenses    
+    check - Import from gmail 
         can forward contract notes to dummy email address 
         read from inbox and move to folder
         save all contract logs
  -----------------------------------------------------------------------------------------
-  
+
 
 
 

@@ -164,10 +164,14 @@ void  Reader::postParse( const std::string &ticker, const std::string &date, con
     
 	if( settings.is_singleday_mode && !isToday(date)  )
 		return;
+	
+
 
     // $FORMAT Ticker, Date_YMD, Time, Open, High, Low, Close, Volume
 	// Save 15:30:00 as 15:29:59 to avoid extra bar in AB
-    std::string output_line = ticker + ',' + date + ',' + (time==settings.close_minute ? Util::subSecond(time) : time  ) + ',' + open + ',' + high + ',' + low + ','  + close  + ',' + volume; 
+    //std::string output_line = ticker + ',' + date + ',' + (time==settings.close_minute ? Util::subSecond(time) : time  ) + ',' + open + ',' + high + ',' + low + ','  + close  + ',' + volume; 
+
+	std::string output_line = getOutputLine(ticker, date, time, open, high, low, close, volume); 
 
     if( settings.is_no_tick_mode ){                                                            // Send in sorted ascending order for tickmode for each ticker
 		fout << output_line  << std::endl ;
@@ -178,6 +182,40 @@ void  Reader::postParse( const std::string &ticker, const std::string &date, con
 		if(date == today_date && time > scrip_end_time[ticker] )							   // Save Today's latest quote's timestamp for each Scrip. We need to send all ticks after this from RTDMan
 			scrip_end_time[ticker] = time;
     }
+}
+
+/* Print output string for quote.
+   Move last last few ticks outside market hours to within market hours. They contain the final close price
+*/
+std::string Reader::getOutputLine( const std::string &ticker, const std::string &date, const std::string &time,  const std::string &open,
+						   		   const std::string &high,   const std::string &low,  const std::string &close,       std::string &volume ){
+
+	std::string output_line;
+
+	// Hardcoding some substitutions for now to get close price 	
+	
+	if( time == "15:30:00" ){
+		if( volume == "0" )
+			output_line = ticker + ',' + date + ',' + "15:29:57" + ',' + close + ',' + close + ',' + close + ','  + close  + ',' + volume; 
+		else
+			output_line = ticker + ',' + date + ',' + "15:29:57" + ',' + open + ',' + high + ',' + low + ','  + close  + ',' + volume; 
+	}
+	else if( time == "15:31:00" ){
+		if( volume == "0" )
+			output_line = ticker + ',' + date + ',' + "15:29:58" + ',' + close + ',' + close + ',' + close + ','  + close  + ',' + volume; 
+		else
+			output_line = ticker + ',' + date + ',' + "15:29:58" + ',' + open + ',' + high + ',' + low + ','  + close  + ',' + volume; 
+	}
+	else if( time == "15:32:00" ){
+		if( volume == "0" )
+			output_line = ticker + ',' + date + ',' + "15:29:59" + ',' + close + ',' + close + ',' + close + ','  + close  + ',' + volume; 
+		else
+			output_line = ticker + ',' + date + ',' + "15:29:59" + ',' + open + ',' + high + ',' + low + ','  + close  + ',' + volume; 
+	}   
+	else{
+		output_line = ticker + ',' + date + ',' + time + ',' + open + ',' + high + ',' + low + ','  + close  + ',' + volume; 
+	}
+	return output_line;
 }
 
 // Write out data in sorted_data. Only used with $tickmode 1
