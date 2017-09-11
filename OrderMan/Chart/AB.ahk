@@ -61,10 +61,10 @@ setScrip(){
 getEntryPriceFromAB(){
 	global EntryPriceActual, StopPrice, isABPick
 	
-	price := getPriceFromAB()											// Get price 1st to avoid delay, else mouse movement can cause wrong price to be picked up
-	
 	if( !setScrip() )													// For trades with open orders, Only update prices if scrip matches
 		return
+	
+	price := getPriceFromAB()											// Get price 1st to avoid delay, else mouse movement can cause wrong price to be picked up
 
 	if( price > 0 ){		
 		EntryPriceActual := price
@@ -77,10 +77,10 @@ getEntryPriceFromAB(){
 getStopPriceFromAB(){
 	global EntryPrice, StopPriceActual, isABPick
 	
-	price := getPriceFromAB()
-	
 	if( !setScrip() )														// For trades with open orders, Only update prices if scrip matches
 		return
+	
+	price := getPriceFromAB()
 	
 	if( price > 0 ){		
 		StopPriceActual := price
@@ -92,10 +92,10 @@ getStopPriceFromAB(){
 
 getTargetPriceFromAB(){
 	
-	price := getPriceFromAB()
-	
 	if( !setScrip() )														// For trades with open orders, Only update prices if scrip matches
 		return
+	
+	price := getPriceFromAB()
 
 	if( price > 0 ){		
 		setTargetPrice( UtilClass.roundToTickSize(price) )
@@ -210,7 +210,7 @@ getPriceFromAB(){
 }
 
 /*	If Price/Y Axis Tooltip is enabled - pick price from it
-	This is fastest way to pick price
+	This is fastest way to pick price but can be unreliable if cursor is not kept stable
 */
 getPriceAtCursor(){
 	
@@ -225,12 +225,33 @@ getPriceAtCursor(){
 	return ""
 }
 
+getPriceFromLine(){
+	global contextObj
+	
+	price := _getPriceFromLine()
+	
+	if( price == -1 && contextObj.getCurrentTrade().positionSize == 0 ){		// Only for create order, create TL if not found
+		
+		Send {Control down}t{Control up}										// Create TL - Custom shortcut
+		MouseMove, -20, 0,, R
+		Click 1	
+		MouseMove, 40, 0, 25, R
+		Click 1	
+		MouseMove, -20, 0,, R
+		
+		price := _getPriceFromLine()
+	}
+
+	return price
+}
+
 /*  Selects line and opens properties. Price copied from start price
 */
-getPriceFromLine(){
+_getPriceFromLine(){
 	
 	Click 1																// Open trendline / HL properties. Click to Select + Alt-Enter
-	Send {Alt down}{Enter}{Alt up}	
+	//Send {Alt down}{Enter}{Alt up}										// alt-Enter conflicts with AA window. Use Custom SK instead	
+	Send {Alt down}g{Alt up}												// Shortcut Customize->Keyboard->Edit->Properties 
 	
 	Loop, 8{															// Try to hide window as soon as possible. WinWait seems to take too long
 		Sleep 25

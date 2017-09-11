@@ -21,27 +21,36 @@ vwapBackFill()
 {
 	global
 	
-	isQuickMode := false
-	Loop, %VWAPCount% {														// check for QuickMode, In QuickMode, only "NOW" scrips will be updated
-		local fields := StrSplit( VWAP%A_Index% , ",")
-	
-		if( fields[8] == "NOW" && !isMarketClosed() ){						// if atleast one scrip found then enable Quick Mode - intraday only
-			isQuickMode := True
-			break
+	if( isMarketClosed() ){
+		Loop, %VWAPCount% {
+			local fields := StrSplit( VWAP%A_Index% , ",")  				// Format - HS parameters 1-6,Alias
+			vwapBackFillSingle_( fields )
 		}
 	}
-
-	Loop, %VWAPCount% {
-
-		local fields := StrSplit( VWAP%A_Index% , ",")  					// Format - HS parameters 1-6,Alias
-
-		if( isQuickMode && fields[8] != "NOW")
-			continue
-		else if( fields[8] == "EOD" && !isMarketClosed() )					// Skip EOD Scrips during the day
-			continue
-
-		vwapBackFillSingle_( fields )
+	else{
+		vwapBackfillTDOnly()		
 	}
+}
+
+vwapBackfillTDOnly(){
+	global ABActiveWatchListPath
+
+	try{
+		
+		RunWait, cscript.exe SaveAB.js,, hide
+		
+		Loop, Read, %ABActiveWatchListPath%
+		{		
+			scrip := A_LoopReadLine	
+
+			if( scrip != "NIFTY50" && scrip != "" ){
+				vwapBackFillSingle( scrip )
+			}
+		}
+	} catch e {
+		handleException(e)
+	}	
+	
 }
 
 vwapBackFillSingle( alias ){
@@ -347,9 +356,8 @@ writeVwapData( alias ){
 				vol   = %A_LoopField%
 		}
 		
-		if( VWAPColumnIndex.start == -1  ){									// Convert end time to start time 
-																				// ZT has only Time column with End Time. 09:15:00-09:15:59? is shown as 09:16
-																				// Reduce minute by 1 to align it with AB bars using Start Time
+		if( VWAPColumnIndex.start == -1  ){									// Convert end time to start time
+			
 			time 	  := convert24HHMMSS( end )								// Should work for both 24H and 12H inputs
 			timeSplit := StrSplit( time, ":") 
 			time 	  := subMinute(  timeSplit[1], timeSplit[2] )

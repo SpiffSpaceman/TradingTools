@@ -45,4 +45,5 @@ OrderMan/config/scrips/*
 # Ignore generated ini
 OrderMan/config/save.ini
 
+OrderMan/config/quotes.csv
 

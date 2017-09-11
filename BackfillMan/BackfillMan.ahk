@@ -79,8 +79,11 @@ installHotKeys(){
 	Hotkey, Numpad9, hkWatchList
 	Hotkey, Numpad3, hkSymbols		
 	Hotkey, F5, hkRefresh					// Send refresh to AB main window. useful in AA
-	Hotkey, NumpadDot, SwitchExplore		// Switch between FT and Momentum	
+	Hotkey, NumpadDot, hkSwitchExplore		// Switch between FT and Momentum	
+	Hotkey, NumpadDiv, hkUpdateScrips		// Update RTDMan with scrips from TD watchlist. Also setup Nest Marketwatch
 }
+
+// --------------------------------
 
 isBarReplay(){
 	return WinExist("Bar Replay") && WinActive("ahk_exe Broker.exe")
@@ -124,7 +127,8 @@ explore(){
 		CoordMode, Mouse, Screen
 
 		Click 1000,300									// click on center chart
-		Click 175, 115									// Click Explore
+		Sleep, 100
+		Click 225, 115									// Click Explore
 		Sleep, 200
 		Click 175,185									// Click first result
 
@@ -146,7 +150,7 @@ hkSim5(){
 	}
 }
 
-SwitchExplore(){
+hkSwitchExplore(){
 	static state = 0									// Current Tab 
 	
 	try{		
@@ -171,7 +175,66 @@ SwitchExplore(){
 	}
 }
 
+eraseMW(){
+	global NowWindowTitle
+	
+	ControlGet,  RowCount, List, Count, SysListView323, %NowWindowTitle%
+	
+	if( RowCount > 0 ){
+		ControlSend, SysListView323, {Control Down}a{Control Up}, %NowWindowTitle%
+		ControlSend, SysListView323, {Delete}, %NowWindowTitle%
+	}
+}
 
+addScriptoMW( scrip ){
+	global NowWindowTitle
+	
+	Control, ChooseString, NSE, ComboBox1, %NowWindowTitle%
+	Control, ChooseString, %scrip%, ComboBox3, %NowWindowTitle%
+	ControlSend, Edit3, {Enter}, %NowWindowTitle%
+}
+
+hkUpdateScrips(){	
+	global ABActiveWatchListPath, RTDManPath
+	
+	try{
+		ini      := RTDManPath . "\RTDMan.ini"
+		rtdman   := RTDManPath . "\RTDMan.exe"
+
+		RunWait, cscript.exe SaveAB.js,, hide
+		
+		eraseMW()		
+		
+		i := 0
+		Loop, Read, %ABActiveWatchListPath%
+		{		
+			scrip := A_LoopReadLine	
+
+			if( scrip != "NIFTY50" && scrip != "" ){
+				i++
+				rtdString := "nse_cm|" . scrip . "-EQ;" . scrip . ";LTP;LTT;Volume Traded Today;;"
+				IniWrite, %rtdString%, %ini%, RTDMan, Scrip%i%
+				
+				addScriptoMW( scrip )
+			}
+		}
+		// Erase rest from ini if they exist
+		if( i > 0 ){
+			Loop, 20
+			{
+				i++	
+				IniDelete, %ini%, RTDMan, Scrip%i%
+			}
+		}
+
+		RunWait, %rtdman%, %RTDManPath%
+
+	} catch e {
+		handleException(e)
+	}
+}
+
+// --------------------------------
 
 hkBackfill(){
 	try{
@@ -200,7 +263,7 @@ hkWatchList(){
 		WinActivate, ahk_class AmiBrokerMainFrameClass		
 		
 		Click 1000,500														// click on chart to make sure floating window is in focus
-		Click 75,315
+		Click 75,395
 
 	} catch e {
 		handleException(e)
@@ -212,7 +275,9 @@ hkSymbols(){
 		
 		Click 1000,500														// click on chart to make sure floating window is in focus
 		Click 75,605														// Select symbol		
-		Send Nifty															// Select Nifty
+
+		alias  := getScripFromAB()											// Select AB scrip in watchlist
+		Send %alias%
 	} catch e {
 		handleException(e)
 	}
@@ -346,7 +411,7 @@ DoBackfill(){
 		if( Mode == "DT" ){
 			dtBackFill()		
 		}
-		else if( Mode == "VWAP" )  {	
+		else if( Mode == "VWAP" )  {			
 			vwapBackFill()
 		}	
 		if( DoIndex == "VWAP" || DoIndex == "DT" ){

@@ -1,0 +1,1 @@
+START ./../AHK/AutoHotkey.exe ScripsImporter.ahk

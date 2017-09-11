@@ -1,9 +1,6 @@
 
-OM - 1 click FT B/S
-    - Use H/L as stop and LTP as limit entry + some slippage
-    - Take H/L and LTP from Marketwatch + take current symbol from AB
 
-
+Target Orders - Allow stop orders for partial exit
 
 
 
@@ -56,9 +53,9 @@ OM - 1 click FT B/S
 	
 
  
-    
-
-
+OM - 1 click FT B/S
+    - Use H/L as stop and LTP as limit entry + some slippage
+    - Take H/L and LTP from Marketwatch + take current symbol from AB
 Bug
     - Update Target sometimes updates stop instead with bad qty    
     - trackerCallback() -> this.target.isPartiallyFilled()  commented        
@@ -101,14 +98,14 @@ AB + IB
         - Can test with demo acocunt / paper account
         - Integrate with AB price pickup afl 
             - Add some gui to show prices and to change manually as before        
-            - 1 click orders for FT using HOD/LOD as stop and LTP as entry price            
+            - 1 click orders for FT using HOD/LOD as stop and LTP as entry price 
     - AB afl to draw order lines via gfx + link with OM
     - 1 click orders for FT using HOD/LOD as stop + separate default FT target order size    
     - Draw lines via gfx for buy/sell and trigger into IB calls
         - Have some handle area over line and mouse even to capture price update
             See http://www.amibroker.org/userkb/category/afl-programming/gfx-programming/
             "Moving Low Level Graphics (GFX) Objects on your Charts"
-        - Need to translate gfx x,y to price                
+        - Need to translate gfx x,y to price
             See http://www.amibroker.org/userkb/category/afl-programming/gfx-programming/
             Finding Pixel Boundaries : 
                 see Status("pxchartleft") etc. can get width height
@@ -116,7 +113,7 @@ AB + IB
                 Status( "firstvisiblebar" );
                 Status( "axisminy" )            to get price range
                 Status( "axismaxy" )
-            Using a GFX Include file : Price to pixel, inverse it   
+            Using a GFX Include file : Price to pixel, inverse it  
     ---------- 
     Log to sqlilte Db
         Save everything in sqlite DB, can be used as Trade log

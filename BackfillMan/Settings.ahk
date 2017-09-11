@@ -38,6 +38,10 @@ loadSettings(){
 	IniRead, HKSetLayer, 			 BackfillMan.ini, BackfillMan, HKSetLayer
 	IniRead, HKDelStudies, 		 	 BackfillMan.ini, BackfillMan, HKDelStudies
 	
+	IniRead, ABActiveWatchListPath,  BackfillMan.ini, BackfillMan, ABActiveWatchListPath
+	IniRead, RTDManPath,  			 BackfillMan.ini, BackfillMan, RTDManPath
+	
+	
 	IniRead, Server, BackfillMan.ini, BackfillMan, Server
     isServerNOW := (Server == "Now")
 
