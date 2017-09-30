@@ -1,0 +1,4 @@
+Setup,Date,Market,InitStop,PriceIn,Trail,T1,T2,QtyMult,Qty,T1Qty,T2Qty,ExpenseAmt,Comment
+PB,03/06/2013,AXISBANK,1423,1414.65,1423,0,0,1,29,0,0,0,5m PB. Daily Drive within Weekly FT.Failed imm
+PB,03/06/2013,HCLTECH,742,738.5,742,0,0,1,71,0,0,0,Touched entry and Stop within 1 bar ..
+HT,04/06/2013,DRREDDY,2120,2130.5,2149,2140.95,2151.45,1,23,0,0,0,"HT above PDH, in a daily Bull flag. Holding Far Stop - Exit at 2164.95 using LIMIT near EOD."
