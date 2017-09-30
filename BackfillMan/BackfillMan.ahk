@@ -77,8 +77,10 @@ installHotKeys(){
 	
 	// Numpad9 to activate Watchlist and Numpad3 for symbols
 	Hotkey, Numpad9, hkWatchList
-	Hotkey, Numpad3, hkSymbols		
+	Hotkey, Numpad3, hkSymbols
 	Hotkey, F5, hkRefresh					// Send refresh to AB main window. useful in AA
+	Hotkey, Numpad5, hkNum5					// Send Numpad key to AB main window. useful in AA
+	Hotkey, Numpad6, hkNum6					// Send Numpad key to AB main window. useful in AA
 	Hotkey, NumpadDot, hkSwitchExplore		// Switch between FT and Momentum	
 	Hotkey, NumpadDiv, hkUpdateScrips		// Update RTDMan with scrips from TD watchlist. Also setup Nest Marketwatch
 }
@@ -92,6 +94,28 @@ isBarReplay(){
 hkRefresh(){
 	try{		
 		ControlSend, , {F5}, ahk_class XTPDockingPaneMiniWnd ahk_exe Broker.exe
+	} catch e {
+		handleException(e)
+	}
+}
+
+// Erase from AA results and rerun AA
+hkNum5(){
+	try{
+		Click 1000,300									// click on center chart
+		Send, {Numpad5}
+		hkSwitchExplore()
+	} catch e {
+		handleException(e)
+	}
+}
+
+// Erase from AA results and rerun AA
+hkNum6(){
+	try{
+		Click 1000,300									// click on center chart
+		Send, {Numpad6}
+		hkSwitchExplore()
 	} catch e {
 		handleException(e)
 	}
@@ -129,7 +153,7 @@ explore(){
 		Click 1000,300									// click on center chart
 		Sleep, 100
 		Click 225, 115									// Click Explore
-		Sleep, 200
+		Sleep, 250
 		Click 175,185									// Click first result
 
 		CoordMode, Mouse, Window 
@@ -199,10 +223,10 @@ hkUpdateScrips(){
 	
 	try{
 		ini      := RTDManPath . "\RTDMan.ini"
-		rtdman   := RTDManPath . "\RTDMan.exe"
+		rtdman   := RTDManPath . "\RTDManStartHighPriority.bat"
 
 		RunWait, cscript.exe SaveAB.js,, hide
-		
+
 		eraseMW()		
 		
 		i := 0
@@ -444,6 +468,10 @@ DoSingleBackfill(){
 		alias  := getScripFromAB()					// AB scrip				
 	
 		if( Mode == "VWAP" && vwapBackFillSingle(alias)  ) {
+			save()	
+			return
+		}
+		else if( Mode == "DT" && dtBackFillSingle(alias)  ) {
 			save()	
 			return
 		}

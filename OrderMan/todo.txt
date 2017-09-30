@@ -1,6 +1,6 @@
 
+Save to log csv after trade closed - Will need to input actual expense later - Add some interface for it too
 
-Target Orders - Allow stop orders for partial exit
 
 
 
@@ -52,7 +52,7 @@ Target Orders - Allow stop orders for partial exit
 
 	
 
- 
+Target Orders - Allow stop orders for partial exit
 OM - 1 click FT B/S
     - Use H/L as stop and LTP as limit entry + some slippage
     - Take H/L and LTP from Marketwatch + take current symbol from AB

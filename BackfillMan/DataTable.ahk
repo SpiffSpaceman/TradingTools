@@ -27,28 +27,75 @@ dtBackFill(){
 		Exit
 	}
 	
-	isQuickMode := false
-	Loop, %DTCount% {
-		local fields := StrSplit( DT%A_Index% , ",")
-		if( fields[3] == "NOW" && !isMarketClosed() ){						// if atleast one scrip found then enable Quick Mode - intraday only
-			isQuickMode := True
-			break
+	if( isMarketClosed() ){
+		Loop, %DTCount% {
+			local fields := StrSplit( DT%A_Index% , ",")  						// Format - TradingSymbol,Alias		
+			dtBackFillSingle_(fields)
 		}
 	}
-
-	Loop, %DTCount% {
-
-		local fields := StrSplit( DT%A_Index% , ",")  						// Format - TradingSymbol,Alias
-
-		if( isQuickMode && fields[3] != "NOW")
-			continue
-		else if( fields[3] == "EOD" && !isMarketClosed() )					// Skip EOD Scrips during the day
-			continue
-
-		if( openDataTable( fields[1], 0 ) )									// Write Scrip data if loaded
-			writeDTData( fields[2] )
+	else{
+		dtBackfillTDOnly()		
 	}
 }
+
+dtBackfillTDOnly(){
+	global ABActiveWatchListPath
+
+	try{
+		
+		RunWait, cscript.exe SaveAB.js,, hide
+		
+		Loop, Read, %ABActiveWatchListPath%
+		{		
+			scrip := A_LoopReadLine	
+
+			if( scrip != "NIFTY50" && scrip != "" ){
+				dtBackFillSingle( scrip )
+			}
+		}
+	} catch e {
+		handleException(e)
+	}	
+	
+}
+
+dtBackFillSingle(alias){
+	local index, fields
+	
+	TradingSymbolColIndex := getColumnIndex( "Trading Symbol" )				// Get Position of Trading Symbol Column in Market Watch
+	if( TradingSymbolColIndex == -1) {
+		MsgBox, Trading Symbol not found in Market Watch
+		Exit
+	}
+	
+	index := getDTScripIndex(alias)											// Index in DT
+	
+	if( index > 0  ){
+		local fields := StrSplit( DT%index% , ",")  						// Format - TradingSymbol,Alias		
+		dtBackFillSingle_( fields )	
+		return true
+	}
+	return false
+}
+
+dtBackFillSingle_( fields ){
+	if( openDataTable( fields[1], 0 ) )										// Write Scrip data if loaded
+		writeDTData( fields[2] )
+}
+
+getDTScripIndex( alias ){
+	global 
+	
+	Loop, %DTCount% {
+		local fields := StrSplit( DT%A_Index% , ",")  						// Format - TradingSymbol,Alias	
+		if( fields[2] == alias)
+			return %A_Index%
+	}
+	
+	return -1
+}
+
+
 
 indexBackFill(){															// NOTE - This wont work if Index has scroll bars
 	global
