@@ -71,29 +71,31 @@ onUpdate(){
 	orderbookObj.read()
 	trade.reload()
 
-	entry 		 := ""														// Update if order linked and status is open/trigger pending and price/qty has changed
-	stop  		 := ""
-	target		 := ""
+	flags 		 := {}														// Update if order linked and status is open/trigger pending and price/qty has changed
+	flags.entry  := false
+	flags.stop   := false
+	flags.target := false
+
 	positionSize := trade.positionSize
 	
 	if( trade.isEntryOpen() && hasOrderChanged( trade.newEntryOrder, EntryPrice, Qty)  )
 	{	 																	// Entry Order is open and Entry order has changed
-		entry := EntryPrice													// If entry is empty, trade.update() will skip changing Entry Order
+		flags.entry := true													// If not changed, trade.update() will skip changing Entry Order
 	}																		// Stop Order - check if Entry Order qty has changed, stop qty may be different and is handled later
 	if( hasPriceChanged( trade.stopOrder, StopPrice) || hasQtyChanged( trade.newEntryOrder, Qty) )
 	{
-		stop := StopPrice
+		flags.stop := true
 	}
 																			// If Target order is linked, check if something changed
 																			// If Target order is not linked, then always create target order if price is filled
 																			// Target Order size is always = completed Entry orders' size
 	if( trade.isTargetLinked() )
-		target := hasOrderChanged( trade.target.getOpenOrder(), TargetPrice, TargetQty ) ? TargetPrice : -1
+		flags.target := hasOrderChanged( trade.target.getOpenOrder(), TargetPrice, TargetQty )
 	else
-		target := TargetPrice
+		flags.target := true
 
-	if( entry != ""  ||  stop != "" || target != -1 ){		
-		trade.update( selectedScrip, EntryOrderType, STOP_ORDER_TYPE, Qty, ProdType, entry, stop, target, TargetQty  )
+	if( flags.entry  ||  flags.stop || flags.target ){		
+		trade.update( flags, selectedScrip, EntryOrderType, STOP_ORDER_TYPE, Qty, ProdType, EntryPrice, StopPrice, TargetPrice, TargetQty  )
 	}
 	else{
 		MsgBox, 262144,, Nothing to update or Order status is not open
@@ -425,6 +427,11 @@ contextSwitch2(){
 contextSwitch3(){
 	global contextObj
 	contextObj.switchContext(3)
+}
+
+contextSwitch4(){
+	global contextObj
+	contextObj.switchContext(4)
 }
 
 // -- Helpers ---

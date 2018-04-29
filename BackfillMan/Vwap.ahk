@@ -17,40 +17,13 @@
 
 // NOW - Hourly Stats Backfill
 
-vwapBackFill()
-{
+vwapBackFill(){
 	global
-	
-	if( isMarketClosed() ){
-		Loop, %VWAPCount% {
-			local fields := StrSplit( VWAP%A_Index% , ",")  				// Format - HS parameters 1-6,Alias
-			vwapBackFillSingle_( fields )
-		}
+
+	Loop, %VWAPCount% {
+		local fields := StrSplit( VWAP%A_Index% , ",")  				// Format - HS parameters 1-6,Alias
+		vwapBackFillSingle_( fields )
 	}
-	else{
-		vwapBackfillTDOnly()		
-	}
-}
-
-vwapBackfillTDOnly(){
-	global ABActiveWatchListPath
-
-	try{
-		
-		RunWait, cscript.exe SaveAB.js,, hide
-		
-		Loop, Read, %ABActiveWatchListPath%
-		{		
-			scrip := A_LoopReadLine	
-
-			if( scrip != "NIFTY50" && scrip != "" ){
-				vwapBackFillSingle( scrip )
-			}
-		}
-	} catch e {
-		handleException(e)
-	}	
-	
 }
 
 vwapBackFillSingle( alias ){
@@ -256,6 +229,7 @@ waitForDataLoad( alias ){													// Wait for all data to load. Verifies tha
 	global VWAPWindowTitle, VWAPColumnIndex									//     gets spilled	to Next Scrip's VWAP data in NOW
 
 	ExpectedCount := getExpectedDataRowCount()
+	lenientCount  := ExpectedCount - 5										// After Market : Allow missing bars for inactive scrips. But only after waiting for some time
 
 	Loop, 10 {																// Initial Simple Wait without checking for contents. Wait Max 5 seconds
 		ControlGet, rowCount, List, Count, SysListView321, %VWAPWindowTitle%
@@ -294,12 +268,16 @@ waitForDataLoad( alias ){													// Wait for all data to load. Verifies tha
 		if( rowCount >= ExpectedCount ){									// All data loaded
 			return true
 		}
+		
+		if( Mod(A_Index, 29 )==0  && isMarketClosed() ){
+			ExpectedCount := lenientCount
+		}
 
 		if( Mod(A_Index, 30 )==0  ){										// Ask Every 30 seconds if all data has not yet been received and no change in missing count
 			missingCount := ExpectedCount - rowCount
 
 			if( oldMissingCount == missingCount ){
-				MsgBox, 4, %alias% - Waiting, VWAP data for %alias% has %missingCount% minutes missing. Is Data still loading?
+				MsgBox, 4, %alias% - Waiting, VWAP data for %alias% has %missingCount% minutes missing. Is Data still loading?, 60		// Timeout 60 seconds
 				IfMsgBox No
 				{
 					MsgBox, 4,  %alias% - Waiting, Do you still want to Backfill %alias% with this data ?

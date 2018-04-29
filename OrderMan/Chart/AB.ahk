@@ -27,6 +27,9 @@ installHotkeys(){
 	if( HKTargetPrice != "" && HKTargetPrice != "ERROR")
 		installHotKey( HKTargetPrice, "getTargetPriceFromAB" )
 	
+	installHotKey( "Numpad9", "hkBuy" )
+	installHotKey( "Numpad6", "hkSell" )
+	
 	scripControl := "RichEdit20A3"			// Symbol control with one Analysis window open
 }
 
@@ -39,6 +42,30 @@ installHotKey( key, function ){
 	
 	Hotkey, IfWinActive, ahk_class XTPDockingPaneMiniWnd					// Floating Window
 	Hotkey, %key%, %function%
+}
+
+abCreateLine(){
+	Click 1	
+	Send {Control down}t{Control up}										// Create TL - Custom shortcut
+	MouseMove, -20, 0, 0, R
+	Click 1	
+	MouseMove, 40, 0, 0, R
+	Click 1	
+	MouseMove, -20, 0, 0, R	
+	
+	setLayer()																// Trigger Set Layer as well
+}
+
+// Erase from AA results and rerun AA
+hkBuy(){	
+	abCreateLine()	
+	getEntryPriceFromAB()
+}
+
+// Erase from AA results and rerun AA
+hkSell(){
+	abCreateLine()	
+	getStopPriceFromAB()
 }
 
 setScrip(){
@@ -56,6 +83,90 @@ setScrip(){
 
 	setSelectedScrip( scrip ) 
 	return true
+}
+
+openDrawProperties(){	
+	Click 2																// Double click at mouse position
+	Loop, 20{															// Try to hide window as soon as possible. WinWait seems to take too long
+		Sleep 25
+		try{															// Ignore Error and keep trying until it opens
+			WinSet,Transparent, 1, Properties, Start Y:					// Line Properties
+			WinSet,Transparent, 1, Text box properties, Start Y:		// text properties
+		}
+		catch e{
+		}
+		IfWinExist, Properties, Start Y:
+			break
+		IfWinExist, Text box properties, Start Y:
+			break
+	}	
+		
+	IfWinExist, Properties, Start Y:									// Line Properties window opened?
+	{
+		WinWait, Properties, Start Y:, 1
+		WinSet,Transparent, 1, Properties, Start Y:
+		return true
+	}
+	IfWinExist, Text box properties, Start Y:
+	{
+		WinWait, Text box properties, Start Y:, 1
+		WinSet,Transparent, 1, Text box properties, Start Y:
+		return true
+	}
+
+	return false
+}
+
+closeDrawProperties(){
+	IfWinExist, Properties, Start Y:
+		ControlSend, Edit2, {Enter}, Properties, Start Y:
+	IfWinExist, Text box properties, Start Y:
+		ControlSend, Edit2, {Enter}, Text box properties, Start Y:
+	Click 1															// Select chart again for floating windows
+}
+
+/* AB - Set Layer Name = Interval
+*/
+setLayer(){
+	try{
+		if( !openDrawProperties() )
+			return
+		
+		interval := getIntervalLayerName()
+		if( interval == "" )
+			return
+
+		IfWinExist, Properties, Start Y:
+			Control, ChooseString, %interval%, ComboBox3, Properties, Start Y:
+		IfWinExist, Text box properties, Start Y:
+			Control, ChooseString, %interval%, ComboBox1, Text box properties, Start Y:
+		closeDrawProperties()
+	} catch e {
+		handleException(e)
+	}
+}
+
+/* Find Interval control, Id is dynamic - RichEdit20A*
+   Map Interval value to Layer Name
+*/
+getIntervalLayerName(){
+	
+	Loop, 20{															// check if control exists, if found map value
+		try{
+			controlName := "RichEdit20A" . A_Index
+			ControlGetText, interval, %controlName%, ahk_class AmiBrokerMainFrameClass
+
+			if( interval == "5m" || interval == "25m" || interval == "75m" || interval == "D" || interval == "W" )
+				return interval
+			else if( interval == "1m" )
+				return "5m"
+			else
+				continue		// Found Control can be Symbol dropdown or dropdowns from AA etc
+		} catch e{				// Control does not exist
+			continue
+		}
+	}
+	return ""
 }
 
 getEntryPriceFromAB(){
@@ -202,6 +313,9 @@ getPriceFromAB(){
 		if( price <= 0 )
 			price := getPriceAtCursorTooltip()
 		BlockInput, MouseMoveOff
+		
+		Suspend 		// BlockInput, MouseMove turns on mouse hook which is slowing down mouse movement in clicks
+		Suspend 		// Calling Suspend removes mouse hook
 
 		return price
 	}
@@ -230,6 +344,7 @@ getPriceFromLine(){
 	
 	price := _getPriceFromLine()
 	
+	/*
 	if( price == -1 && contextObj.getCurrentTrade().positionSize == 0 ){		// Only for create order, create TL if not found
 		
 		Send {Control down}t{Control up}										// Create TL - Custom shortcut
@@ -241,6 +356,7 @@ getPriceFromLine(){
 		
 		price := _getPriceFromLine()
 	}
+	*/
 
 	return price
 }

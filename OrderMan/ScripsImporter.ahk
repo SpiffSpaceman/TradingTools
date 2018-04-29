@@ -27,7 +27,7 @@ SetTitleMatchMode, 2 														// A window's title can contain the text anyw
 SetControlDelay, -1 														// Without this ControlClick fails sometimes
 
 
-SCRIPS_FILE := "config\quotes.csv"
+SCRIPS_FILE := "config\quotes.csv"                                          // Export using AB Exploration
 
 try{
 	
@@ -61,13 +61,12 @@ writeConfig( scrip, price ){
 	IniWrite, %scripValue%, %ini%, OrderMan, Scrip
 	IniWrite, MIS,  %ini%, OrderMan, ProdType
 	IniWrite, 0.05, %ini%, OrderMan, TickSize
-		
-	IniWrite, %slippage%, %ini%, OrderMan, MaxSlippage
 	IniWrite, %targetStopDiff%, %ini%, OrderMan, MinTargetStopDiff
 }
 
 /* Set some rough price based limits. TODO update
 */
+
 setSlippage( price ){
 	global slippage, targetStopDiff
 	

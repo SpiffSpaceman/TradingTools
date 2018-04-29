@@ -1,0 +1,1 @@
+TradeLog.py data/tradelog.csv

@@ -34,7 +34,7 @@ initGUI(){
 }
 
 createGUI(){
-	global Qty, QtyPerc, TargetQtyPerc, EntryPrice, StopPrice, TargetPrice, Direction, CurrentResult, TargetResult, BtnOrder, BtnUpdate, BtnLink, BtnUnlink, BtnCancel, EntryStatus, StopStatus, TargetStatus, LastWindowPosition, EntryOrderType, EntryUpDown, StopUpDown, TargetUpDown, EntryText, AddText, BtnAdd, SelectedScripText, ScripList, PriceStatus, Button1, Button2, Button3
+	global Qty, QtyPerc, TargetQtyPerc, EntryPrice, StopPrice, TargetPrice, Direction, CurrentResult, TargetResult, BtnOrder, BtnUpdate, BtnLink, BtnUnlink, BtnCancel, EntryStatus, StopStatus, TargetStatus, LastWindowPosition, EntryOrderType, EntryUpDown, StopUpDown, TargetUpDown, EntryText, AddText, BtnAdd, SelectedScripText, ScripList, PriceStatus, Button1, Button2, Button3, Button4
 	
 	SetFormat, FloatFast, 0.2
 
@@ -48,6 +48,7 @@ createGUI(){
 	Gui, 1:Add, Button, vButton1 gcontextSwitch1 x+m, 1
 	Gui, 1:Add, Button, vButton2 gcontextSwitch2 x+m, 2
 	Gui, 1:Add, Button, vButton3 gcontextSwitch3 x+m, 3
+	Gui, 1:Add, Button, vButton4 gcontextSwitch4 x+m, 4
 	Gui, 1:Add, Text, vPriceStatus w125 x+m	
 
 // Column 1 
@@ -588,10 +589,11 @@ markTradeButtons(){
 	markTrade(1)
 	markTrade(2)
 	markTrade(3)
+	markTrade(4)
 }
 
 markTrade( index ){
-	global contextObj, Button1, Button2, Button3
+	global contextObj, Button1, Button2, Button3, Button4
 	
 	trade		 := contextObj.getTradeAt( index)	
 	currentIndex := contextObj.getCurrentIndex()

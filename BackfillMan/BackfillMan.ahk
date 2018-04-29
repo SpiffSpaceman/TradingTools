@@ -62,6 +62,7 @@ installHotKeys(){
 	
 	Hotkey, %HKBackfill%,  hkBackfill
 	Hotkey, %HKBackfillAll%,  hkBackfillAll	
+	Hotkey, #I,  hkBackfillAllIndices	
 
 
 	// Context sensitive HK - only active if window is active	
@@ -75,17 +76,20 @@ installHotKeys(){
 	if( HKDelStudies != "" && HKDelStudies != "ERROR")
 		Hotkey, %HKDelStudies%, hkDelStudies
 	
-	// Numpad9 to activate Watchlist and Numpad3 for symbols
-	Hotkey, Numpad9, hkWatchList
 	Hotkey, Numpad3, hkSymbols
 	Hotkey, F5, hkRefresh					// Send refresh to AB main window. useful in AA
-	Hotkey, Numpad5, hkNum5					// Send Numpad key to AB main window. useful in AA
-	Hotkey, Numpad6, hkNum6					// Send Numpad key to AB main window. useful in AA
+	Hotkey, NumpadEnter, hkRefresh
+	
 	Hotkey, NumpadDot, hkSwitchExplore		// Switch between FT and Momentum	
 	Hotkey, NumpadDiv, hkUpdateScrips		// Update RTDMan with scrips from TD watchlist. Also setup Nest Marketwatch
+	
+	Hotkey, Numpad4, hkMarkSymbol			// Select chart and passthrough HK back to AB
 }
 
+
 // --------------------------------
+
+
 
 isBarReplay(){
 	return WinExist("Bar Replay") && WinActive("ahk_exe Broker.exe")
@@ -94,28 +98,6 @@ isBarReplay(){
 hkRefresh(){
 	try{		
 		ControlSend, , {F5}, ahk_class XTPDockingPaneMiniWnd ahk_exe Broker.exe
-	} catch e {
-		handleException(e)
-	}
-}
-
-// Erase from AA results and rerun AA
-hkNum5(){
-	try{
-		Click 1000,300									// click on center chart
-		Send, {Numpad5}
-		hkSwitchExplore()
-	} catch e {
-		handleException(e)
-	}
-}
-
-// Erase from AA results and rerun AA
-hkNum6(){
-	try{
-		Click 1000,300									// click on center chart
-		Send, {Numpad6}
-		hkSwitchExplore()
 	} catch e {
 		handleException(e)
 	}
@@ -145,30 +127,35 @@ hkSimPrev(){
 	}
 }
 
-
 explore(){	
 		// refesh exploration
 		CoordMode, Mouse, Screen
 
 		Click 1000,300									// click on center chart
 		Sleep, 100
-		Click 225, 115									// Click Explore
-		Sleep, 250
-		Click 175,185									// Click first result
+		Click 225, 140									// Click Explore
+		Sleep, 500
+		Click 175,210									// Click first result
 
 		CoordMode, Mouse, Window 
 }
 
 // Move forward 5mins and refesh exploration
 hkSim5(){
+	static state = 0
+	
 	try{		
-		WinActivate, Bar Replay		
-
-		ControlClick, Button5, Bar Replay,, LEFT,5,NA	// Forward 5 mins
-		Sleep 2500										// Give time to read current chart
-		
-		explore()
-		
+		if( state = 0 ){
+			WinActivate, Bar Replay		
+			ControlClick, Button5, Bar Replay,, LEFT,5,NA	// Forward 5 mins
+			
+			selectLastSymbol()
+			state = 1
+		}
+		else{
+			explore()
+			state = 0
+		}
 	} catch e {
 		handleException(e)
 	}
@@ -178,18 +165,22 @@ hkSwitchExplore(){
 	static state = 0									// Current Tab 
 	
 	try{		
-		if( state == 0 ){								// FT to Momentum
+		if( state == 0 ){
+			/*
 			CoordMode, Mouse, Screen
-			Click 300,85								// Select Momentum Tab
+			Click 300,85								// Select Tab
 			CoordMode, Mouse, Window
+			*/
 			
 			explore()
 			state = 1
 		}
-		else{											// Momentum to FT			
+		else{
+			/*
 			CoordMode, Mouse, Screen
-			Click 175,85								// Select FT Tab
+			Click 175,85
 			CoordMode, Mouse, Window
+			*/
 			
 			explore()
 			state = 0
@@ -214,20 +205,27 @@ addScriptoMW( scrip ){
 	global NowWindowTitle
 	
 	Control, ChooseString, NSE, ComboBox1, %NowWindowTitle%
+	Sleep, 100
 	Control, ChooseString, %scrip%, ComboBox3, %NowWindowTitle%
 	ControlSend, Edit3, {Enter}, %NowWindowTitle%
 }
 
+// Setup rtdman and backfillman using stocks in watchlist
 hkUpdateScrips(){	
-	global ABActiveWatchListPath, RTDManPath
+	global ABActiveWatchListPath, RTDManPath, isServerNOW
 	
 	try{
 		ini      := RTDManPath . "\RTDMan.ini"
 		rtdman   := RTDManPath . "\RTDManStartHighPriority.bat"
 
+        if(  isServerNOW )
+			fieldsString := ";Last Traded Price;Last Trade Time;Volume Traded Today;;"
+		else
+			fieldsString := ";LTP;LTT;Volume Traded Today;;"
+        
 		RunWait, cscript.exe SaveAB.js,, hide
 
-		eraseMW()		
+		eraseMW()
 		
 		i := 0
 		Loop, Read, %ABActiveWatchListPath%
@@ -236,69 +234,46 @@ hkUpdateScrips(){
 
 			if( scrip != "NIFTY50" && scrip != "" ){
 				i++
-				rtdString := "nse_cm|" . scrip . "-EQ;" . scrip . ";LTP;LTT;Volume Traded Today;;"
+				rtdString := "nse_cm|" . scrip . "-EQ;" . scrip . fieldsString
+                
 				IniWrite, %rtdString%, %ini%, RTDMan, Scrip%i%
 				
-				addScriptoMW( scrip )
+				vwapString := "NSE,EQ," . scrip . ",,,," . scrip . ","
+				IniWrite, %vwapString%, BackfillMan.ini, BackfillMan, VWAP%i%
+				
+				dtString := scrip . "-EQ," . scrip . ","
+				IniWrite, %dtString%, BackfillMan.ini, BackfillMan, DataTable%i%
+				
+				addScriptoMW( scrip )				
 			}
 		}
+		
 		// Erase rest from ini if they exist
 		if( i > 0 ){
 			Loop, 20
 			{
 				i++	
-				IniDelete, %ini%, RTDMan, Scrip%i%
+				IniDelete, %ini%, RTDMan, Scrip%i%				
+				IniDelete, BackfillMan.ini, BackfillMan, VWAP%i%
+				IniDelete, BackfillMan.ini, BackfillMan, DataTable%i%
 			}
 		}
 
-		RunWait, %rtdman%, %RTDManPath%
 
+		RunWait, %rtdman%, %RTDManPath%		
 	} catch e {
 		handleException(e)
 	}
 }
 
-// --------------------------------
-
-hkBackfill(){
-	try{
-		loadSettings()
-		installEOD()
-		DoSingleBackfill()
-	} catch e {
-		handleException(e)
-	}
-}
-
-hkBackfillAll(){
-	try{
-		loadSettings()														// Reload settings
-		installEOD()														// Update EOD Timer
-		DoBackfill()	
-	} catch e {
-		handleException(e)
-	}
-}
-
-// Control Ids change on layout selection, So instead click on hardcoded coordinates
-// ControlClick, SysTreeView321, ahk_class AmiBrokerMainFrameClass,, LEFT,,NA		
-hkWatchList(){
-	try{		
-		WinActivate, ahk_class AmiBrokerMainFrameClass		
-		
-		Click 1000,500														// click on chart to make sure floating window is in focus
-		Click 75,395
-
-	} catch e {
-		handleException(e)
-	}
-}
 hkSymbols(){
 	try{
 		WinActivate, ahk_class AmiBrokerMainFrameClass
 		
+		CoordMode, Mouse, Screen		
 		Click 1000,500														// click on chart to make sure floating window is in focus
-		Click 75,605														// Select symbol		
+		Click 75,595														// Select symbol
+		CoordMode, Mouse, Window
 
 		alias  := getScripFromAB()											// Select AB scrip in watchlist
 		Send %alias%
@@ -307,6 +282,40 @@ hkSymbols(){
 	}
 }
 
+// Mark stock from Exploration
+hkMarkSymbol(){
+	try{
+		WinActivate, ahk_class AmiBrokerMainFrameClass
+
+		Click 1000,500														// click on chart to make sure floating window is in focus		
+		Send, {Numpad4}														// Mark Stock
+		Send, {F5}															// Refresh
+		
+		Sleep, 100
+		
+		CoordMode, Mouse, Screen
+		Click 500,500														// Select Exploration again
+		CoordMode, Mouse, Window
+		
+		Send, {Down}														// Select Next Stock
+
+	} catch e {
+		handleException(e)
+	}
+}
+
+selectLastSymbol(){
+	try{
+		WinActivate, ahk_class AmiBrokerMainFrameClass
+		
+		Click 1000,500														// click on chart to make sure floating window is in focus
+		Click 75,605														// Select symbol	
+		
+		Send, {End}
+	} catch e {
+		handleException(e)
+	}
+}
 
 openDrawProperties(){	
 	Click 2																// Double click at mouse position
@@ -358,10 +367,12 @@ getIntervalLayerName(){
 			controlName := "RichEdit20A" . A_Index
 			ControlGetText, interval, %controlName%, ahk_class AmiBrokerMainFrameClass
 
-			if( interval == "3m" || interval == "15m" || interval == "75m" || interval == "78m" || interval == "D" || interval == "W" )
+			if( interval == "5m" || interval == "25m" || interval == "75m" || interval == "D" || interval == "W" || interval == "1m")
 				return interval
-			else if( interval == "5m" || interval == "1m" )
-				return "3m"
+			/*
+			else if( interval == "1m" )
+				return "5m"
+			*/
 			else
 				continue		// Found Control can be Symbol dropdown or dropdowns from AA etc
 		} catch e{				// Control does not exist
@@ -381,7 +392,7 @@ hkSetLayer(){
 		interval := getIntervalLayerName()
 		if( interval == "" )
 			return
-		
+
 		IfWinExist, Properties, Start Y:
 			Control, ChooseString, %interval%, ComboBox3, Properties, Start Y:
 		IfWinExist, Text box properties, Start Y:
@@ -418,6 +429,41 @@ hkFlatTrendLine(){															// Sets End price = Start price for trend line 
 }
 
 
+
+// --------------------------------
+
+
+
+hkBackfill(){
+	try{
+		loadSettings()
+		installEOD()
+		DoSingleBackfill()
+	} catch e {
+		handleException(e)
+	}
+}
+
+hkBackfillAll(){
+	try{
+		loadSettings()														// Reload settings
+		installEOD()														// Update EOD Timer
+		DoBackfill()	
+	} catch e {
+		handleException(e)
+	}
+}
+
+hkBackfillAllIndices(){
+	try{
+		loadSettings()														// Reload settings
+		installEOD()														// Update EOD Timer
+		DoBackfillIndex()	
+	} catch e {
+		handleException(e)
+	}
+}
+
 DoBackfill(){
 	
 	global NowWindowTitle, Mode, DoIndex
@@ -438,9 +484,36 @@ DoBackfill(){
 		else if( Mode == "VWAP" )  {			
 			vwapBackFill()
 		}	
+		save()
+
+		/*
 		if( DoIndex == "VWAP" || DoIndex == "DT" ){
 			indexBackFill()
 		}		
+		save()
+		*/
+	}
+	else{
+		MsgBox, NOW not found.
+	}
+}
+
+DoBackfillIndex(){
+	global NowWindowTitle, Mode, DoIndex
+	
+	IfWinExist, %NowWindowTitle%
+	{			
+		IfWinExist, Session Expired, E&xitNOW
+		{
+			MsgBox, NOW Locked.
+			Exit
+		}
+		
+		clearFiles()		
+	
+		if( DoIndex == "VWAP" || DoIndex == "DT" ){
+			indexBackFill()
+		}
 		
 		save()
 	}
@@ -472,7 +545,7 @@ DoSingleBackfill(){
 			return
 		}
 		else if( Mode == "DT" && dtBackFillSingle(alias)  ) {
-			save()	
+			save()
 			return
 		}
 		else if( (DoIndex == "VWAP" || DoIndex == "DT") && indexBackFillSingle(alias) ){
@@ -537,11 +610,17 @@ getExpectedDataRowCount(){
 
 	hour 		  := A_Hour>END_HOUR ? END_HOUR : A_Hour
 	min  		  := (A_Hour>END_HOUR || (A_Hour==END_HOUR && A_Min>END_MIN) ) ? END_MIN : A_Min
+	
+	if( A_Hour < 3  ){														// Allow previous day data after 0000
+		hour := END_HOUR
+		min  := END_MIN
+	}
+	
 	ExpectedCount := (hour - START_HOUR)*60 + (min - START_MIN)								
 
 	if( !isMarketClosed() && ExpectedCount > 1 )
-		ExpectedCount := ExpectedCount-1									// Allow 1 less minute for border case - 
-																			// Minute changes between data fetch and call to getExpectedDataRowCount() 
+		ExpectedCount := ExpectedCount-2									// Allow 1 less minute for border case - Minute changes between data fetch and call to getExpectedDataRowCount() 
+																			// Allow additional 1 minute for inactive scrips
 	return ExpectedCount
 }
 
@@ -611,7 +690,8 @@ EODBackfill(){
 		Return	
 	
 	loadSettings()
-	DoBackfill( )
+	DoBackfill()
+	DoBackfillIndex()
 }
 
 isMarketClosed(){	

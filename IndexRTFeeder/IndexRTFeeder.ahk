@@ -157,9 +157,9 @@ export(){
 		bar  := scrip.symbol . "," . (A_YYYY . A_MM . A_DD) . "," . (A_Hour . ":" . A_Min . ":" . A_Sec) . "," . scrip.O . "," . scrip.H . "," . scrip.L . "," . scrip.C . "`n"
 		data := data . bar
 		
-		tickFile := TickPath . scrip.symbol . ".csv"
-		WriteData( tickFile, "a", bar )
-		resetQuote( scrip )
+		tickFile := TickPath . scrip.symbol . ".csv"		
+		WriteData( tickFile, "a", bar )	
+		resetQuote( scrip )	// TODO Move up + use Critical 
 	}
 	
 	if( data != "" ){

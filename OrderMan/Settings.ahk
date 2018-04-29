@@ -27,6 +27,7 @@ loadSettings(){
     IniRead, SavedOrders1,       %config_gen%, OrderMan, SavedOrders1
     IniRead, SavedOrders2,       %config_gen%, OrderMan, SavedOrders2
     IniRead, SavedOrders3,       %config_gen%, OrderMan, SavedOrders3
+    IniRead, SavedOrders4,       %config_gen%, OrderMan, SavedOrders4
     IniRead, LastWindowPosition,%config_gen%, OrderMan, LastWindowPosition
 
     IniRead, ScripList,         %config%, OrderMan, ScripList
@@ -35,16 +36,21 @@ loadSettings(){
     IniRead, HKTargetPrice,   	%config%, OrderMan, HKTargetPrice
     IniRead, TITLE_NOW,         %config%, OrderMan, WindowTitle
     IniRead, TickPath,          %config%, OrderMan, TickPath
+    IniRead, LogFilePath,       %config%, OrderMan, LogFilePath
 
     IniRead, Capital,           %config%, OrderMan, Capital
     IniRead, TradeRisk,         %config%, OrderMan, TradeRisk
-    IniRead, DefaultTargetSize, %config%, OrderMan, DefaultTargetSize    
+    IniRead, DefaultTargetSize, %config%, OrderMan, DefaultTargetSize 
+    IniRead, MaxSlippageRisk,   %config%, OrderMan, MaxSlippageRisk
     
     IniRead, value,     %config%, OrderMan, AlertsEnabled
     AlertsEnabled := value=="true"
   
     IniRead, value, %config%, OrderMan, AutoSubmit
     AutoSubmit := value=="true"
+    
+    IniRead, value, %config%, OrderMan, TradeLoggingEnabled
+    TradeLoggingEnabled := value=="true"
     
     IniRead, DefaultEntryOrderType, %config%, OrderMan, EntryOrderType
     EntryOrderType := DefaultEntryOrderType
@@ -93,8 +99,7 @@ loadScrip( alias ){
     selectedScrip := new ScripClass
     selectedScrip.setInput( fields[1], fields[2], fields[3], fields[4], fields[5], fields[6], alias )  
 
-    IniRead, ProdType, 	        %ini%, OrderMan, ProdType    
-    IniRead, MaxSlippage,       %ini%, OrderMan, MaxSlippage        
+    IniRead, ProdType, 	        %ini%, OrderMan, ProdType        
     IniRead, MinTargetStopDiff,	%ini%, OrderMan, MinTargetStopDiff
     IniRead, TickSize,      	%ini%, OrderMan, TickSize
 }
@@ -112,7 +117,7 @@ saveLastPosition(){
 
 /*
   Save orders. Used to load open trade on startup
-    Trades are saved under SavedOrders1, SavedOrders2 & SavedOrders3
+    Trades are saved under SavedOrders1, SavedOrders2, SavedOrders3 & SavedOrders4
 */
 saveOrders( index, savestring ){
     global config_gen    

@@ -57,6 +57,7 @@ checkForOpenOrders(){
   
 	if( orderbookObj.doOpenOrdersExist() ) {        // Try to load from saved orders
         
+        isLoaded4 := loadTradeAt(4)
         isLoaded3 := loadTradeAt(3)
         isLoaded2 := loadTradeAt(2)
         isLoaded1 := loadTradeAt(1)
@@ -70,8 +71,11 @@ checkForOpenOrders(){
         else if( isLoaded3 ){
             contextObj.switchContext(3)
         }
+        else if( isLoaded4 ){
+            contextObj.switchContext(4)
+        }
         
-        if( isLoaded1 || isLoaded2 || isLoaded3 )
+        if( isLoaded1 || isLoaded2 || isLoaded3 || isLoaded4)
             toggleStatusTracker("on")
 	}
 }
@@ -91,6 +95,9 @@ loadTradeAt( i ){
     return false
 }
 
+handleException(e){
+	MsgBox % "Error in " . e.What . ", Location " . e.File . ":" . e.Line . " Message:" . e.Message . " Extra:" . e.Extra
+}
 
 #include Settings.ahk
 #include Alerts.ahk

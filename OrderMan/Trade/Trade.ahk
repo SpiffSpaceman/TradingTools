@@ -48,7 +48,7 @@ class TradeClass{
 		this.direction	:= direction
 		
 		this.newEntryOrder := new OrderClass
-		this._setupEntryOrderInput( entryOrderType, qty, prodType, entryPrice, direction, inScrip )
+		this._setupEntryOrderInput( entryOrderType, qty, prodType, entryPrice, stopPrice, direction, inScrip )
 		this.newEntryOrder.create()											// Create Entry Order and update Details from Orderbook
 		
 		if( ! this.newEntryOrder.isCreated  )
@@ -85,19 +85,19 @@ class TradeClass{
 	
 	/*	Update Trade - Update Entry/Stop/Target orders			
 	*/
-	update( inScrip, entryOrderType, stopOrderType, qty, prodType, entryPrice, stopPrice, targetPrice, targetQty  ){
+	update( flags, inScrip, entryOrderType, stopOrderType, qty, prodType, entryPrice, stopPrice, targetPrice, targetQty  ){
 		global contextObj
 		
-		if( this.isNewEntryLinked() && entryPrice != "" ){		
+		if( this.isNewEntryLinked() && entryPrice != "" && flags.entry ){		
 			
 			orderDirection  := this.newEntryOrder.getGUIDirection()				// same direction as linked order			
-			this._setupEntryOrderInput( entryOrderType, qty, prodType, entryPrice, orderDirection, inScrip )
+			this._setupEntryOrderInput( entryOrderType, qty, prodType, entryPrice, stopPrice, orderDirection, inScrip )
 			this.newEntryOrder.update()
 		}
+		if( flags.stop )
+			this._updateStop( inScrip, stopOrderType, qty, prodType, stopPrice )
 		
-		this._updateStop( inScrip, stopOrderType, qty, prodType, stopPrice )
-		
-		if( targetPrice !=-1 )													// -1 indicates no change. Else create/delete target order
+		if( flags.target )														// flag false indicates no change. Else create/delete target order
 			this.target.handleTargetOrder( targetPrice, targetQty, this.stopOrder, this.positionSize )
 
 		this.save()	
@@ -190,6 +190,7 @@ class TradeClass{
 	/* Close orders if open and unlink
 	*/
 	onTradeClose(){																// OCO Stop, Target Order
+		global TradeLoggingEnabled
 	
 		entry  := this.isNewEntryLinked() ? this.newEntryOrder.cancel() : true	// If position closed, then cancel Add order if open
 		stop   := this.stopOrder.cancel()
@@ -199,7 +200,76 @@ class TradeClass{
 			MsgBox, 262144,, % "Trade " . this.index . " Closed - OCO Failed"
 		else
 			MsgBox, 262144,, % "Trade " . this.index . " Closed - Verify"
+		
+		if( TradeLoggingEnabled )
+			this.logTradeOnClose()
+
 		this.unlinkOrders()														// Unlink After close
+	}
+	
+	/*
+		Export Trade Data to Trade Log csv
+		Fields - "Setup,isNested,TD,SW,Date,Time,Market,InitStop,PriceIn,Trail,T1,T2,QtyMult,Qty,T1Qty,T2Qty,ExpenseAmt,Mistakes,Comment,TrailTrigger,PriceInTrigger,StopTime,T1Time,T2Time"
+	*/
+	logTradeOnClose(){
+		global LogFilePath
+		
+		line  := ",,," 		
+		entry := this.executedEntryOrderList[1].getOrderDetails()
+		stop  := this.stopOrder.getOrderDetails()
+		
+		initStop := this.isLong()  ? this.InitialEntry - this.InitialStopDistance : this.InitialEntry + this.InitialStopDistance
+		
+		t1    := -1
+		t2	  := -1		
+		if( IsObject( this.target.executedOrderList ) )
+			targetQty := this.target.executedOrderList.Length()
+			if( targetQty > 0 )
+				t1	  := this.target.executedOrderList[1].getOrderDetails()
+			if( targetQty > 1 )
+				t2	  := this.target.executedOrderList[2].getOrderDetails()
+			
+		isT1  		:= IsObject(t1) && (t1.tradedQty > 0 )
+		isT2  		:= IsObject(t2) && (t2.tradedQty > 0 )
+		isLIMITExit := isT1 && (stop.tradedQty == 0) && (entry.tradedQty == t1.tradedQty)	// Stop Order was not used and T1 size = Trade size
+		
+		if( isLIMITExit ){
+			stop 	 := t1
+			t1	 	 := -1
+			isT1 	 := false
+			
+			stop.triggerPrice := stop.averagePrice							// No slippage in Limit exits
+		}			
+
+		this.appendCsvLine( line,  A_YYYY . "-" . A_MM  . "-" .  A_DD )		// Date
+		this.appendCsvLine( line, entry.getUpdateTime() )					// Time
+		this.appendCsvLine( line, entry.tradingSymbol ) 					// Market
+		this.appendCsvLine( line, initStop )								// Init Stop Price
+		this.appendCsvLine( line, entry.averagePrice )						// Entry Filled Price				
+		this.appendCsvLine( line, stop.averagePrice )						// Trailing Stop Filled Price
+		this.appendCsvLine( line, isT1 ? t1.averagePrice : "0" )			// T1 Filled Price
+		this.appendCsvLine( line, isT2 ? t2.averagePrice : "0" )			// T2 Filled Price
+		//this.appendCsvLine( line, "1" )										// Qty Multiplier = 1 For Stocks
+		this.appendCsvLine( line, entry.tradedQty )							// Entry Size (Without Adds )		
+		this.appendCsvLine( line, isT1 ? t1.tradedQty : "0" )				// T1 Filled Qty
+		this.appendCsvLine( line, isT2 ? t2.tradedQty : "0" )				// T2 Filled Qty
+		
+		line := line . ",,,"
+		
+		this.appendCsvLine( line, stop.triggerPrice )						// Trailing Stop Trigger Price
+		this.appendCsvLine( line, entry.triggerPrice )						// Entry Trigger Price		
+		this.appendCsvLine( line, stop.getUpdateTime() )					// Stop last update time		
+		this.appendCsvLine( line, isT1 ? t1.getUpdateTime() : "" )			// T1 last update time
+		this.appendCsvLine( line, isT2 ? t2.getUpdateTime() : "" )			// T2 last update time
+		
+		line := line . "`n"
+
+		// append write to csv
+		FileAppend, %line% , %LogFilePath% 
+	}
+	
+	appendCsvLine( ByRef line, string ){
+		line := line . "," . string
 	}
 	
 	/*	cancel open orders - Entry/Stop/Pending Stop
@@ -284,7 +354,7 @@ class TradeClass{
 	/* Format:		Alias:EntryOpenOrderNo:StopOrderNo,isPending,PendingPrice:ExecutedEntryList:TargetOrderNo,TargetPrice:ExecutedTargetList:InitialStopDistance,InitialEntry
 	*/
 	loadOrders(){
-		global orderbookObj, contextObj, SavedOrders1, SavedOrders2, SavedOrders3
+		global orderbookObj, contextObj, SavedOrders1, SavedOrders2, SavedOrders3, SavedOrders4
 		
 		index := contextObj.getCurrentIndex()
 		
@@ -603,8 +673,10 @@ class TradeClass{
 
 	/*	Set Entry Order Input details based on Order Type
 	*/
-	_setupEntryOrderInput( entryOrderType, qty, prodType, entryPrice, direction, scrip ){
-		global MaxSlippage, ORDER_TYPE_GUI_LIMIT, ORDER_TYPE_GUI_MARKET, ORDER_TYPE_GUI_SL_MARKET, ORDER_TYPE_GUI_SL_LIMIT
+	_setupEntryOrderInput( entryOrderType, qty, prodType, entryPrice, stopPrice, direction, scrip ){
+		global MaxSlippageRisk, ORDER_TYPE_GUI_LIMIT, ORDER_TYPE_GUI_MARKET, ORDER_TYPE_GUI_SL_MARKET, ORDER_TYPE_GUI_SL_LIMIT
+		
+		MaxSlippage := UtilClass.ceilToTickSize(   MaxSlippageRisk * abs( entryPrice-stopPrice )   ) 
 		
 		if( !IsObject( this.newEntryOrder ) )
 			this.newEntryOrder := new OrderClass

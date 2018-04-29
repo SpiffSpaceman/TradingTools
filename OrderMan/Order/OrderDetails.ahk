@@ -46,4 +46,10 @@ class OrderDetailsClass{
 		global
 		return this.status == controlObj.ORDER_STATUS_COMPLETE
 	}
+	
+	// Extract Time from Date Time String. Example - '05Mar2018 12:04:16'
+	getUpdateTime(){
+		fields := StrSplit( this.nowUpdateTime , A_Space )
+		return fields[2]
+	}
 }

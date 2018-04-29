@@ -27,6 +27,7 @@ class ContextClass{
         this.resetContext(1)
         this.resetContext(2)
         this.resetContext(3)
+        this.resetContext(4)
         
         this.currentIndex := 1
     }

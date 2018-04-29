@@ -100,6 +100,7 @@ class OrderClass{
 	getOpenQty(){
 		return this._orderDetails.totalQty - this.getFilledQty()
 	}
+	
 	getTotalQty(){
 		return this._orderDetails.totalQty
 	}
