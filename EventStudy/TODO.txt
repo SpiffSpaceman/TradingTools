@@ -1,0 +1,113 @@
+
+Trend following
+    SBIN, Yesbank. DLF, TCS
+    Commodity stocks - VEDL,TS,COALINDIA,HINDALCO, NMDC, SAIL
+    check - need more data - BAJFINANCE
+
+
+
+---------------------------------------------------------------------------------------------------------------
+- Histograms
+    - https://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.hist.html
+      https://stackoverflow.com/questions/42496508/histogram-on-pandas-column
+    - By year/Month- Also by Time
+    - option to compile stats for each stock
+    - get outlier stocks. So best stocks and stocks that have reverse tendency
+- Setting to change Returns logic - Ex use open price ( signals on open ), on BO.
+    - vol adjusted SS returns ?
+    - To compare results of different signals. Ex High SS gives Higher MR in % but that is due to higher vol
+    - But what about Baseline? - Adding up all days SS / # ?
+    - alternate - maybe just do mean/stddev to get similar idea
+- Plot candlestick chart
+    Can also dump charts with recent signals as scanner. Or just open up with option to move between trades
+    Use exported data
+    https://matplotlib.org/api/finance_api.html
+        from mpl_finance import candlestick_ohlc
+    https://plot.ly/python/candlestick-charts/
+    https://stackoverflow.com/questions/9136938/matplotlib-interactive-graphing-manually-drawing-lines-on-a-graph
+---------------------------------------------------------------------------------------------------------------
+- FT + combinations - spike / momentum / nbar approach
+     sig.trendUp() & sig.FTShort()
+- Trend + out of character move against - macd / Highest SS in recent history. Check returns
+    - Reluctant bounce - how ? - Do bar by bar checks
+    - climax ?
+- Strong trends ? High band close ratio
+- Donchian - try PDH-PDL filters
+- Donchian on BO
+    - use H/L instead of C as trigger
+    - Need to set Entry price as BO price + handle gaps beyond entry price
+- ind - PDH,PDL, KPOS, NR7, ID5
+---------------------------------------------------------------------------------------------------------------
+- Gap fade + check gap after n day run vs gap after consolidation
+    # Bar open is lower than previous bar close by x%
+    # TODO - returns from open
+    def largeGapDown( scrip, bars ):
+        signal = ( bars['O'] / bars['C'].shift(1) )  <= 0.97
+        return  signal
+
+    def largeGapUp( scrip, bars ):
+        signal = ( bars['O'] / bars['C'].shift(1) )  >= 1.03
+        return  signal
+- Daily - Large Move MR
+    check - v sharp move leads to some followthrough next day before mean reversion sets in ( Day 1 continuation and later some revesal ? )
+    Large Moves vs moderate moves
+    Trend Day vs less decisive days
+---------------------------------------------------------------------------------------------------------------
+- Pullback
+    Verify PB with ema close
+    Momentum filter in KB PB
+    MACD - New momentum H/L + MACD Hook - Momentum change - in Pullbacks
+        say Highest 5 bar momentum + say prev bar high broken
+    Try to filter out breaks from low volatility conditions or include for momentum
+        check long vs short term vol say 60/10 etc
+        Inside bars, ID5, NR7
+- Price consolidating at KB say - KPOS of prev 5 bars > 0.85
+     check long vs short term vol say 60/10 etc
+     Inside bars, ID5, NR7
+     check with SS filter
+     Extended trend + KB touch - check PBs here
+- Volatility - T vs CT
+    NR7, ID5
+    Can also look at say 2bar/3bar overall range against say around 10 bar
+    Daily TD yesterday
+---------------------------------------------------------------------------------------------------------------
+
+
+
+
+---------------------------------------------------------------------------------------------------------------
+DATA
+    Daily
+        - Use Futures nac. + can merge Nifty using intraday + can add missing F2 by usiny Daily F2 from bhavcopy
+            - Nifty/BNF _F2 intraday missing - 2016-08/09/10    
+            - handle rollover using gap + F2 volume drop
+            - https://www.quantstart.com/articles/Continuous-Futures-Contracts-for-Backtesting-Purposes
+        - Dividend adjustment
+            http://www.bseindia.com/corporates/corporate_act.aspx?expandable=3
+Other Data
+    NSE - Splits/Bonus/Dividends + Apply over bhavcopy/intraday
+    Try quantopian as reference and compare with quantquote/alphavantage
+    Futures - Quandl
+    Weekly TF tests
+---------------------------------------------------------------------------------------------------------------
+Windows - 1) Multiple tests with Multiprocessing does not work. 2) DB creation also has problem as not run under main
+    - may need to remove global variables and pass settings as an arg to pool.map
+    - Another workaround can be to run script multiple times from outside
+    - https://docs.python.org/2/library/multiprocessing.html#windows
+      https://docs.python.org/3/library/multiprocessing.html#programming-guidelines
+Multi threaded debug writes
+    https://pymotw.com/3/concurrency.html
+    https://pymotw.com/3/queue/index.html
+    or just maintain 4 diffferent log files
+    https://stackoverflow.com/questions/641420/how-should-i-log-while-using-multiprocessing-in-python
+Profile : line_profiler
+Profile
+	import cProfile
+	cProfile.run('main()')
+---------------------------------------------------------------------------------------------------------------
+scanner + reduce data window
+if Signal.rolling(window=20).sum()[-1] > 0 :  # scrips with Signal in last 20 bars
+if Signal[-1:-20].sum()>0 :                   # check
+if Signal[-1] == True :                       # Signal in current bar
+   print( scrip )
+---------------------------------------------------------------------------------------------------------------
