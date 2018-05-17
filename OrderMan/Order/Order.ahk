@@ -270,7 +270,15 @@ class OrderClass{
 	*/
 	reloadDetails(){		
 		global orderbookObj
-		this._orderDetails := orderbookObj.getOrderDetails( this._orderDetails.nowOrderNo )	// Get updated order details from orderbook
+		
+		newDetails := orderbookObj.getOrderDetails( this._orderDetails.nowOrderNo )		// Get updated order details from orderbook
+
+		if( IsObject(newDetails)  ){													// Sometimes orderbook goes blank. Dont overwrite with empty data
+			this._orderDetails := newDetails
+			return true
+		}
+		
+		return false
 	}
 
 	/*  Reads Data from input orderDetails (ie Orderbook) and sets up OrderClass._orderDetails and OrderClass._input (GUI input)

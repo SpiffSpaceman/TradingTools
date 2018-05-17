@@ -555,13 +555,17 @@ class TradeClass{
 	/* Reload order details from orderbook
 		call orderbookObj.read() before reload()
 	*/
-	reload(){		
+	reload(){
+		found := true
+
 		if( this.isNewEntryLinked() )
-			this.newEntryOrder.reloadDetails()
+			found := this.newEntryOrder.reloadDetails()
 		if( this.isStopLinked() )
-			this.stopOrder.reloadDetails()
+			found := found && this.stopOrder.reloadDetails()
 		if( this.isTargetLinked() )
-			this.target.getOpenOrder().reloadDetails()
+			found := found && this.target.getOpenOrder().reloadDetails()
+		
+		return found
 	}
 
 

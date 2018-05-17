@@ -207,7 +207,7 @@ class OrderbookClass{
 		}
 		if( openOrdersOld.size >= this.OpenOrders.size  && completedOrdersOld.size >= this.CompletedOrders.size )
 			return -1
-			
+
 		foundOrder := this._getNewOrder( openOrdersOld, this.OpenOrders )		// Find order that doesnt exist in openOrdersOld / completedOrdersOld
 		if( !IsObject(foundOrder) )
 			foundOrder := this._getNewOrder( completedOrdersOld, this.CompletedOrders )	
@@ -365,7 +365,7 @@ class OrderbookClass{
 		}
 	}
 
-	/*	Search order with input numbet in order array
+	/*	Search order with input number in order array
 	*/
 	_getOrderDetails( list, orderno){
 		Loop, % list.size {

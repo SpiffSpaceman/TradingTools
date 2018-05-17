@@ -56,10 +56,16 @@ orderStatusTracker(){
 	
 	Critical 														// Mark Timer thread Data fetch as Critical to avoid any possible Mixup with main thread 
 	for index, trade in trades {									// Marking it as critical should avoid Main thread from running. Otherwise can get problem with entryOrder / stopOrder in unlink()
-	if( trade.isEntryOpen() || trade.isEntrySuccessful() || trade.isEntryOrderExecuted() ){ 
-			trade.reload()												
-			trade.trackerCallback()	
+		if( trade.isEntryOpen() || trade.isEntrySuccessful() || trade.isEntryOrderExecuted() ){ 
+			
 			noOpenTrade := false
+			
+			if( trade.reload() ){
+				trade.trackerCallback()
+			}
+			else{
+				MsgBox, 262144,, % "Order not found in OrderBook for scrip: " . trade.scrip . ". Problem may be temporary."
+			}
 		}
 	}
 	if( noOpenTrade  ){
