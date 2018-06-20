@@ -111,7 +111,7 @@ class TradeClass{
 		Handle Stop update after Target partial fill
 	*/
 	trackerCallback(){
-		global contextObj
+		global contextObj, INPUT_PATH
 		
 		if( this.newEntryOrder.isClosed() ){									// Entry Finished
 
@@ -127,6 +127,8 @@ class TradeClass{
 				this.target.onEntrySuccessful( this.stopOrder, this.positionSize )
 																				// If Entry successful, update target order - Increase target order size
 				contextObj.clearQtyFromContext( this.index  )					// Reset Qty to 0 after Entry/Add
+				
+				updateOrderStatusForAB( this.scrip.alias, "FILLED" )
 			}
 			else{																// Entry Order Failed
 				if( this.isStopPending  ){
@@ -152,15 +154,21 @@ class TradeClass{
 			this.newEntryOrder := -1 											// Unlink Entry Order to allow adds
 			this.save()
 		}
-
+ 
+ 
 		if( this.stopOrder.isClosed() ){										// Stop hit/cancelled, close all open orders
 			this.onTradeClose()
 			return
 		}
-		
+
+
 		targetOrder := this.target.getOpenOrder()
 		if( targetOrder.isClosed() ){
-			this.positionSize -= targetOrder.getFilledQty()						// Target Executed, Reduce position size
+						
+			filledQty 	:= targetOrder.getFilledQty()
+			oldopenSize := this.positionSize			
+
+			this.positionSize -= filledQty										// Target Executed, Reduce position size
 			this._updateStopSize()												// Update Stop size. If position closed, stop size will be 0 which will cancel the order in update()
 			this.stopOrder.update()
 			
@@ -170,6 +178,15 @@ class TradeClass{
 			if(this.positionSize <= 0 ){										// Position closed, cancel all open orders
 				this.onTradeClose()
 				return
+			}
+			else{
+				if( IsObject( this.target.executedOrderList ) ){				// Send status update to AB 
+					targetCount := this.target.executedOrderList.Length()
+					if( targetCount > 1 )										// This order was already added to list. If more than 1, then this is T2
+						updateOrderStatusForAB( this.scrip.alias, "T2FILLED" )	
+					else
+						updateOrderStatusForAB( this.scrip.alias, "T1FILLED" )
+				}
 			}
 		}
 		// TODO 
@@ -195,7 +212,9 @@ class TradeClass{
 		entry  := this.isNewEntryLinked() ? this.newEntryOrder.cancel() : true	// If position closed, then cancel Add order if open
 		stop   := this.stopOrder.cancel()
 		target := this.isTargetLinked()   ? this.target.cancel() : true
-		
+
+		updateOrderStatusForAB( this.scrip.alias, "CLOSED" )
+
 		if( !entry || !stop || !target )
 			MsgBox, 262144,, % "Trade " . this.index . " Closed - OCO Failed"
 		else
@@ -214,7 +233,7 @@ class TradeClass{
 	logTradeOnClose(){
 		global LogFilePath
 		
-		line  := ",,," 		
+		line  := ",," 		
 		entry := this.executedEntryOrderList[1].getOrderDetails()
 		stop  := this.stopOrder.getOrderDetails()
 		
@@ -222,12 +241,13 @@ class TradeClass{
 		
 		t1    := -1
 		t2	  := -1		
-		if( IsObject( this.target.executedOrderList ) )
-			targetQty := this.target.executedOrderList.Length()
-			if( targetQty > 0 )
+		if( IsObject( this.target.executedOrderList ) ){
+			targetCount := this.target.executedOrderList.Length()
+			if( targetCount > 0 )
 				t1	  := this.target.executedOrderList[1].getOrderDetails()
-			if( targetQty > 1 )
+			if( targetCount > 1 )
 				t2	  := this.target.executedOrderList[2].getOrderDetails()
+		}
 			
 		isT1  		:= IsObject(t1) && (t1.tradedQty > 0 )
 		isT2  		:= IsObject(t2) && (t2.tradedQty > 0 )

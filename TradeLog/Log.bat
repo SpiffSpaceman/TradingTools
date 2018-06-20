@@ -1,1 +1,1 @@
-TradeLog.py data/tradelog.csv
+TradeLog.py

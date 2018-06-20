@@ -58,6 +58,9 @@ loadSettings(){
     IniRead, Server, %config%, OrderMan, Server
     isServerNOW := (Server == "Now")
 
+    INPUT_PATH                    := "R:\OrderMan\"                             // Path for IO with AB
+    INPUT_POLL_TIME			      := 1000										// Time between checking for input Prices
+
     ORDERBOOK_POLL_TIME			  := 500										// Time between reading of OrderBook status by Tracker in order to trigger pending orders. In ms
     GUI_POLL_TIME_MULTIPLE        := 4                                          // Time between GUI refresh by tracker - as multiple of ORDERBOOK_POLL_TIME
     NEW_ORDER_WAIT_TIME			  := 5											// How many maximum seconds to wait for New Submitted Order to appear in orderbook. 

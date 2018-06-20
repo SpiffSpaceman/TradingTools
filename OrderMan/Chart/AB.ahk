@@ -15,6 +15,53 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
 
+#include Util.ahk
+
+initializeInputHandler(){
+	global INPUT_POLL_TIME, INPUT_PATH
+	
+	UtilClass.createFileDirectory(  INPUT_PATH )
+	SetTimer, inputHandler, % INPUT_POLL_TIME		
+}
+
+inputHandler(){
+	global INPUT_PATH
+	
+	inputFileName := INPUT_PATH . "input.csv"
+	
+	if FileExist( inputFileName ){
+		FileReadLine, line, %inputFileName%, 1				// 1 line file with text "SCRIP,ENTRYPRICE,STOPPRICE,TARGETPRICE"
+		inputSplit := StrSplit( line, ",")
+		FileDelete, %inputFileName%
+
+		scrip  := inputSplit[1]
+		entry  := inputSplit[2]
+		stop   := inputSplit[3]
+		target := inputSplit[4]
+		
+		Critical
+		if( setScrip( scrip ) ){
+			setEntryPriceFromAB( entry )
+			setStopPriceFromAB( stop )
+			if( target > 0 ){
+				setTargetPriceFromAB( target )
+			}
+		}
+		Critical , off
+	}
+}
+
+updateOrderStatusForAB( scrip, inStatus ){
+	global INPUT_PATH
+	
+	filename := INPUT_PATH . scrip . "\" . inStatus
+	FileAppend,, %filename%								// Create empty file with input filename to set status
+}
+
+
+// ---------------------------------------------------------------------------
+
+
 installHotkeys(){
 	global HKEntryPrice, HKStopPrice, HKTargetPrice, scripControl
 
@@ -59,19 +106,19 @@ abCreateLine(){
 // Erase from AA results and rerun AA
 hkBuy(){	
 	abCreateLine()	
-	getEntryPriceFromAB()
+	//getEntryPriceFromAB()
 }
 
 // Erase from AA results and rerun AA
 hkSell(){
 	abCreateLine()	
-	getStopPriceFromAB()
+	//getStopPriceFromAB()
 }
 
-setScrip(){
+setScrip( scrip ){
 	global contextObj
 	
-	scrip := getScripFromAB()
+	//scrip := getScripFromAB()
 	
 	if( scrip == "" )
 		return false
@@ -169,13 +216,14 @@ getIntervalLayerName(){
 	return ""
 }
 
-getEntryPriceFromAB(){
+setEntryPriceFromAB( price ){
 	global EntryPriceActual, StopPrice, isABPick
 	
+	/*
 	if( !setScrip() )													// For trades with open orders, Only update prices if scrip matches
 		return
-	
 	price := getPriceFromAB()											// Get price 1st to avoid delay, else mouse movement can cause wrong price to be picked up
+	*/
 
 	if( price > 0 ){		
 		EntryPriceActual := price
@@ -185,13 +233,14 @@ getEntryPriceFromAB(){
 	}
 }
 
-getStopPriceFromAB(){
+setStopPriceFromAB( price ){
 	global EntryPrice, StopPriceActual, isABPick
 	
+	/*
 	if( !setScrip() )														// For trades with open orders, Only update prices if scrip matches
 		return
-	
 	price := getPriceFromAB()
+	*/
 	
 	if( price > 0 ){		
 		StopPriceActual := price
@@ -201,12 +250,13 @@ getStopPriceFromAB(){
 	}
 }
 
-getTargetPriceFromAB(){
+setTargetPriceFromAB( price ){
 	
+	/*
 	if( !setScrip() )														// For trades with open orders, Only update prices if scrip matches
-		return
-	
+		return	
 	price := getPriceFromAB()
+	*/
 
 	if( price > 0 ){		
 		setTargetPrice( UtilClass.roundToTickSize(price) )

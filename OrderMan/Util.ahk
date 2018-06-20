@@ -87,4 +87,12 @@ class UtilClass{
 		 global Capital, TradeRisk
 		 return  Capital * TradeRisk/100	
 	}
+	
+	createFileDirectory( file_path ){											// Create File directory path if it does not exist	
+		
+		SplitPath, file_path,, directory
+
+		IfNotExist, %directory%
+			FileCreateDir, %directory%
+	}
 }

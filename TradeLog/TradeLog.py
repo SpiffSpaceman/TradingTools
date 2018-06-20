@@ -10,7 +10,7 @@ os.chdir(sys.path[0])                               # Set working dir
 
 
 LOG     =  "data/tradelog.csv"
-FIELDS  =  str("Setup,isNested,TD,Mode,Date,Time,Market,InitStop,PriceIn,Trail,T1,T2,Qty,T1Qty,T2Qty,ExpenseAmt,Mistakes,Comment,TrailTrigger,PriceInTrigger,StopTime,T1Time,T2Time")
+FIELDS  =  str("Setup,isNested,Tags,Date,Time,Market,InitStop,PriceIn,Trail,T1,T2,Qty,T1Qty,T2Qty,ExpenseAmt,Mistakes,Comment,TrailTrigger,PriceInTrigger,StopTime,T1Time,T2Time")
 
 #-----------------------------------------------------------------------------------
 
@@ -286,7 +286,7 @@ def printStats():
         #print( t )
         print( t[[ 'Setup','Date','Market','InitStop','PriceIn','Trail','T1','T2','Qty','InitRiskAmt', 'Risk/Ideal', \
                    'TrailX','T1X','T2X','GrossX','ExpenseX','NetX','Capital','SlipEntryX','SlipExitX']] )
-        print( "\nNote : PriceIn Includes Entry Slippage. InitRiskAmt can be more than ideal Risk due to Entry Slippage. All 'X' items are wrt PriceIn" )        
+        print( "\nNote : PriceIn Includes Entry Slippage. InitRiskAmt can be more than ideal Risk due to 1) Entry Slippage 2) Multiple open positions. All 'X' items are wrt PriceIn" )
         
 
         print( "\n", "------------------------------------", "\n" )
