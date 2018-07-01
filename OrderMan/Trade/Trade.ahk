@@ -128,6 +128,7 @@ class TradeClass{
 																				// If Entry successful, update target order - Increase target order size
 				contextObj.clearQtyFromContext( this.index  )					// Reset Qty to 0 after Entry/Add
 				
+				this.sendPricesToAB()
 				updateOrderStatusForAB( this.scrip.alias, "FILLED" )
 			}
 			else{																// Entry Order Failed
@@ -213,17 +214,45 @@ class TradeClass{
 		stop   := this.stopOrder.cancel()
 		target := this.isTargetLinked()   ? this.target.cancel() : true
 
+		if( TradeLoggingEnabled )
+			this.logTradeOnClose()												// Also sends filled prices to AB
+		
+		this.sendPricesToAB()
 		updateOrderStatusForAB( this.scrip.alias, "CLOSED" )
 
 		if( !entry || !stop || !target )
 			MsgBox, 262144,, % "Trade " . this.index . " Closed - OCO Failed"
 		else
 			MsgBox, 262144,, % "Trade " . this.index . " Closed - Verify"
-		
-		if( TradeLoggingEnabled )
-			this.logTradeOnClose()
 
 		this.unlinkOrders()														// Unlink After close
+	}
+	
+	/*
+		update order prices in AB Chart
+	*/
+	sendPricesToAB(){
+		entryFilledPrice := this.executedEntryOrderList[1].getOrderDetails().averagePrice
+		stopFilledPrice  := this.stopOrder.getOrderDetails().averagePrice
+		
+		t1    := -1
+		t2	  := -1
+		
+		if( IsObject( this.target.executedOrderList ) ){
+			targetCount := this.target.executedOrderList.Length()
+			if( targetCount > 0 )
+				t1	  := this.target.executedOrderList[1].getOrderDetails()
+			if( targetCount > 1 )
+				t2	  := this.target.executedOrderList[2].getOrderDetails()
+		}
+		
+		isT1      := IsObject(t1) && (t1.tradedQty > 0 )
+		isT2  	  := IsObject(t2) && (t2.tradedQty > 0 )
+
+		t1Price	  := isT1 ? t1.averagePrice : "0"
+		t2Price   := isT2 ? t2.averagePrice : "0"
+		
+		updatePricesForAB( this.scrip.alias, entryFilledPrice, stopFilledPrice, t1Price, t2Price )
 	}
 	
 	/*
@@ -232,13 +261,13 @@ class TradeClass{
 	*/
 	logTradeOnClose(){
 		global LogFilePath
-		
-		line  := ",," 		
+
+		line  := ",,"
 		entry := this.executedEntryOrderList[1].getOrderDetails()
 		stop  := this.stopOrder.getOrderDetails()
-		
+
 		initStop := this.isLong()  ? this.InitialEntry - this.InitialStopDistance : this.InitialEntry + this.InitialStopDistance
-		
+
 		t1    := -1
 		t2	  := -1		
 		if( IsObject( this.target.executedOrderList ) ){
@@ -252,20 +281,20 @@ class TradeClass{
 		isT1  		:= IsObject(t1) && (t1.tradedQty > 0 )
 		isT2  		:= IsObject(t2) && (t2.tradedQty > 0 )
 		isLIMITExit := isT1 && (stop.tradedQty == 0) && (entry.tradedQty == t1.tradedQty)	// Stop Order was not used and T1 size = Trade size
-		
-		if( isLIMITExit ){
+
+		if( isLIMITExit ){													// For trade log, for Limit exit, set Target order price as Trailing price and remove Target
 			stop 	 := t1
 			t1	 	 := -1
 			isT1 	 := false
 			
 			stop.triggerPrice := stop.averagePrice							// No slippage in Limit exits
-		}			
+		}
 
 		this.appendCsvLine( line,  A_YYYY . "-" . A_MM  . "-" .  A_DD )		// Date
 		this.appendCsvLine( line, entry.getUpdateTime() )					// Time
 		this.appendCsvLine( line, entry.tradingSymbol ) 					// Market
 		this.appendCsvLine( line, initStop )								// Init Stop Price
-		this.appendCsvLine( line, entry.averagePrice )						// Entry Filled Price				
+		this.appendCsvLine( line, entry.averagePrice )						// Entry Filled Price
 		this.appendCsvLine( line, stop.averagePrice )						// Trailing Stop Filled Price
 		this.appendCsvLine( line, isT1 ? t1.averagePrice : "0" )			// T1 Filled Price
 		this.appendCsvLine( line, isT2 ? t2.averagePrice : "0" )			// T2 Filled Price

@@ -58,6 +58,20 @@ updateOrderStatusForAB( scrip, inStatus ){
 	FileAppend,, %filename%								// Create empty file with input filename to set status
 }
 
+updatePricesForAB( scrip, entry, trail, t1, t2 ){
+	global INPUT_PATH
+	
+	filename := INPUT_PATH . scrip . "\FINALPRICES"
+	line     := entry . "," . trail . "," . t1 . "," . t2 
+	
+	file := FileOpen(filename, "w")
+	
+	if( IsObject(file) ){								// Create file with prices. AB will read and delete it
+		file.Write(line)
+		file.Close()
+	}
+}
+
 
 // ---------------------------------------------------------------------------
 
