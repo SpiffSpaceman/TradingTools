@@ -310,12 +310,27 @@ def printStats():
     sys.stdout = orig_stdout
     f.close()
 
+def updateCapital():
+    global t
+    capital = int( t['Capital'].iloc[-1] ) 
+    
+    if( capital > 0  ):
+        from configobj import ConfigObj        
+        config = ConfigObj('..\OrderMan\config\OrderMan.ini')
+        config['OrderMan']['Capital'] = capital
+        config.write()
+    
 #-----------------------------------------------------------------------------------
 
-init()
 
+
+init()
 processLog(0.4, 0.4)
 printStats()
+updateCapital()
+
+
+
 
 
 

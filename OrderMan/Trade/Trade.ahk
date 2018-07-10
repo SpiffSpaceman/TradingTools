@@ -311,15 +311,34 @@ class TradeClass{
 		this.appendCsvLine( line, isT1 ? t1.getUpdateTime() : "" )			// T1 last update time
 		this.appendCsvLine( line, isT2 ? t2.getUpdateTime() : "" )			// T2 last update time
 		
-		line := line . "`n"
+		
+		// Add Line to log, trim out whitespace and newlines
+		filetext := ""		
+		Loop{	
+			FileReadLine, _line, %LogFilePath%, %A_Index%		// Removes newline
+			if ErrorLevel
+				break
+			_line = %_line%										// Auto Trim removes whitespace
 
-		// append write to csv
-		FileAppend, %line% , %LogFilePath% 
+			if( _line != "" ){
+				filetext := filetext . _line . "`n"
+			}
+		}
+		filetext := filetext . line								// Add new Trade
+		
+		file 	 := FileOpen(LogFilePath, "w")
+		file.Write(filetext)
+		file.Close()
+				
+		cmd  := "CALL ../TradeLog/Log.bat"						// Call Tradelog batch file. This will also update Capital in settings
+		path := "../TradeLog/"
+		Run, %comspec% /C %cmd%, %path%
 	}
 	
 	appendCsvLine( ByRef line, string ){
 		line := line . "," . string
 	}
+	
 	
 	/*	cancel open orders - Entry/Stop/Pending Stop
 		Executed orders cannot be cancelled - so no change in TargetOrder
