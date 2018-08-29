@@ -84,6 +84,8 @@ def KBBottom( bars ):
     return KBot
     
 #def kpos( bars ) :
+    # KTop, ema, x = keltnerBands(bars, bottom=False  )    
+    # KPos = (bars['C']-ema) / ( KTop - ema )*100;	    
 
 
 # Slow = MA( Fast, 16 );	

@@ -27,6 +27,27 @@ SetWorkingDir %A_ScriptDir%  												// Ensures a consistent starting direct
 SetTitleMatchMode, 2 														// A window's title can contain the text anywhere
 SetControlDelay, -1 														// Without this ControlClick fails sometimes. Example - Index Right click fails if mouse is over NOW
 
+/*
+	Win-B  		   backfill current 
+	Win-Cntl-B     backfill all Active
+	Win-I		   Backfill All indices
+	
+	Mouse Middle   Delete All drawings
+	Mouse Back	   Straight line
+	Mouse Forward  Set Current TF as Layer
+	
+	Num3		   Select AB Symbol window
+	NumEnter/F5    Send Refresh to Main AB window
+	NumDot		   Run AA and select first row
+	NumDiv		   Update Marketwatch, RTDMan and BackfillMan with Active scrips. TODO also Orderman
+	Num4		   Add/Remove scrip to watchlist + Refresh + select next symbol
+	
+	Simulator
+		Right/Left 		Move ahead/behind 
+		Numpad0		 	Move ahead by 5mins. Next HK run refreshes marketwatch and repeat
+		
+*/
+
 try{
 
 	VWAPColumnIndex := ""													// Initialize some variables to avoid harmless warn errors
@@ -39,6 +60,8 @@ try{
 	SetTimer, PingNOW, %PingerPeriod% 										// Install Keep Alive Timer
 	installEOD()															// Install Timer for EOD backfill once
 	installHotkeys()														// Setup Hotkey for Backfill
+	
+	SetTimer, disableSnapQuote, 1000										// If SnapQuote window is open, close it
 	
 	// Simulator Hotkeys
 	#If WinExist("Bar Replay") && WinActive("ahk_exe Broker.exe")	
@@ -78,6 +101,7 @@ installHotKeys(){
 	
 	Hotkey, Numpad3, hkSymbols
 	Hotkey, F5, hkRefresh					// Send refresh to AB main window. useful in AA
+	Hotkey, NumpadSub, hkNumSub				// Click main chart and resend HK. useful in AA
 	Hotkey, NumpadEnter, hkRefresh
 	
 	Hotkey, NumpadDot, hkSwitchExplore		// Switch between FT and Momentum	
@@ -89,7 +113,10 @@ installHotKeys(){
 
 // --------------------------------
 
-
+disableSnapQuote(){
+	IfWinExist, Snap Quote of
+		WinClose, Snap Quote of
+}
 
 isBarReplay(){
 	return WinExist("Bar Replay") && WinActive("ahk_exe Broker.exe")
@@ -289,6 +316,27 @@ hkMarkSymbol(){
 
 		Click 1000,500														// click on chart to make sure floating window is in focus		
 		Send, {Numpad4}														// Mark Stock
+		Send, {F5}															// Refresh
+		
+		Sleep, 100
+		
+		CoordMode, Mouse, Screen
+		Click 500,500														// Select Exploration again
+		CoordMode, Mouse, Window
+		
+		Send, {Down}														// Select Next Stock
+
+	} catch e {
+		handleException(e)
+	}
+}
+
+hkNumSub(){
+	try{
+		WinActivate, ahk_class AmiBrokerMainFrameClass
+
+		Click 1000,500														// click on chart to make sure floating window is in focus		
+		Send {NumpadSub}
 		Send, {F5}															// Refresh
 		
 		Sleep, 100

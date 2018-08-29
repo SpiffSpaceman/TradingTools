@@ -18,8 +18,28 @@ def signal(scrip, bars):
     
     #signal = sig.trendUp() & sig.donchianLong()
 
-    #signal =  sig.trendUp() & sig.newHOD()
-    signal = sig.trendDown() & sig.newLOD()
+    #signal =  sig.trendUp() & sig.newHOD() 
+    #signal = sig.trendDown() & sig.newLOD()
+    
+    
+    #signal = sig.trendUp() & sig.spikeUp( 1 )  & ~sig.KBTopClose() & sig.emaCloseAbove();
+    #signal = sig.trendUp() & sig.spikeUp( 1 )  & sig.KBTopClose();
+   
+    
+    #signal = sig.trendDown() & sig.spikeDown( 1 ) & ~sig.KBBottomClose() & sig.emaCloseBelow();
+    #signal = sig.trendDown() & sig.spikeDown( 1 ) & sig.KBBottomClose();
+    
+    #signal = sig.trendDown() & sig.KBBottomClose();
+    #signal = sig.trendDown() & sig.newLOD() & sig.spikeDown( 1 )
+    
+    signal = sig.spikeDown( 5 )  
+    
+    #signal = sig.trendUp() & sig.spikeUp( 5 )    
+    #signal = sig.trendDown() & sig.spikeDown( 5 )
+    
+    #signal = sig.trendUp() & sig.nBarRunUp(3)  & sig.spikeUp( 2 )   
+    #signal = sig.trendDown() & sig.nBarRunDown(3)  & sig.spikeDown( 2 )   
+    
     
     return signal
 
@@ -35,7 +55,7 @@ def tests():
     
     s.FILTER_NEAR_SIGNALS = False
     #s.EXPORT_TRADES       = True    
-    #s.MULTIPROC           = False
+    s.MULTIPROC           = False
     
     s.useStocksDB()
     #s.useNiftyIndexDB()
@@ -47,6 +67,10 @@ def tests():
 
     s.setTimeFilter('1000', '1430')
     test('1000-1430')
+    
+    #s.setTimeFilter('1100', '1430')
+    #test('1100-1430')
+    
     #
     # s.setSignalFunction(signal2)
     # s.setTimeFilter('1000', '1430')
@@ -76,8 +100,8 @@ def testByTimeYearlySplit():
     testByTime()
 
 def testByTime():
-    s.setTimeFilter( '0915','1330' )
-    test('0915-1330')
+    s.setTimeFilter( '1000','1430' )
+    test('1000-1430')
 
     s.setTimeFilter('0915', '1000')
     test('0915-1000')

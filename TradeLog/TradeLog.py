@@ -258,6 +258,9 @@ def maxDrawdownX( returnsX ):
     
     #print( pd.concat( [ returnsX, r, r.cummax(), dd ], axis=1 ) ) 
     return mdd  
+
+def sma( bars_field, n=20 ):
+    return bars_field.rolling( n, min_periods=n ).mean()
     
 def printStats():
     global t, o, itr
@@ -301,9 +304,17 @@ def printStats():
         plt.plot( t['T2X'].cumsum(), label="T2"  )
 
         plt.legend()
-        plt.savefig( fn + '.png', bbox_inches='tight')
+        plt.savefig( fn + '-curve.png', bbox_inches='tight')
         #plt.show()     # open chart instead of saving to file
         
+        plt.clf()        
+        plt.close()
+
+        
+        t.plot.bar( y='NetX' )              # Histogram        
+        plt.plot( sma( t['NetX'], 10 ) )    # sma
+        plt.savefig( fn + '-hist.png', bbox_inches='tight')
+
     else:
         print( o[['Setup','Date','Market','InitStop','PriceIn','T1','T2','Qty','InitRiskAmt']] )
 
@@ -331,7 +342,7 @@ updateCapital()
 
 
 
-
+# Histogram of wins/losses - option for trailing 100 only
 
 
 # Import multiple csv
