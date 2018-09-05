@@ -45,11 +45,11 @@ def init():
     start = time.time()
 
     orig_stdout = sys.stdout
-    _file       = open(s.OUTPUT_FOLDER + 'output.txt', 'w')
+    _file       = open(s.OUTPUT_FOLDER + 'EventStudy-output.txt', 'w')
     sys.stdout  = _file
 
     if( s.EXPORT_TRADES ) :
-        tradelogFile = open(s.OUTPUT_FOLDER + 'trades.csv', 'w')
+        tradelogFile = open(s.OUTPUT_FOLDER + 'EventStudy-trades.csv', 'w')
 
 def finit():
     global orig_stdout, _file, start, tradelogFile
@@ -150,7 +150,7 @@ def doEventStudy():
     
     if s.EXPORT_TRADES:
         if( tradelogFile == None ) :                # s.EXPORT_TRADES set after init()
-            tradelogFile = open(s.OUTPUT_FOLDER + 'trades.csv', 'w')
+            tradelogFile = open(s.OUTPUT_FOLDER + 'EventStudy-trades.csv', 'w')
     
         #trades.sort_index(inplace=True)        
         trades = trades.sort_values('Scrip', ascending=True ).sort_index(level=0, sort_remaining=False, kind='mergesort')

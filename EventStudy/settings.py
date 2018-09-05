@@ -17,7 +17,7 @@ CSV_FIELDS - Array of Field names or position indices to pick columns in  csv. O
              If Position indices are used, csv will be assumed to have no header row
 DB_FIELDS  - Map CSV fields to dataframe fields.  S=Symbol, D=Date, T=Time + O/H/L/C/V      
              If Symbol(S) is not present, filename will be used as Symbol
-             If Time(T) is present, data is assumed to be intraday 
+             If Time(T) is present, data is assumed to be 1m intraday 
 DB_FROM_DATE - Filter out old data. Applied during DB creation
 DB_RESAMPLE_TF    - Change DB Timeframe. http://pandas.pydata.org/pandas-docs/stable/timeseries.html#offset-aliases
                     Right Extreme is included in bar and is used as label
@@ -84,6 +84,21 @@ class Settings:
         self.KB_BAND_WIDTH       = 2.25
         
         self.RANDOM_DBPATH       = '' 
+
+    def useStocksCurrentDB( self ):
+        if os.name == 'nt':
+            self.DBPATH              = 'E:/Data/Stats/DB/StocksCurrent5m/'
+            self.INPUT_CSV           = 'E:/Data/Stats/source/IntraDay/ABCurrent/Stocks/'
+        else:
+            self.DBPATH              = '/media/Temp/Data/Stats/DB/StocksCurrent5m/'
+            self.INPUT_CSV           = '/media/Temp/Data/Stats/source/IntraDay/ABCurrent/Stocks/'
+
+        self.CSV_FIELDS          = ['Ticker','Date','Time','Open','High','Low','Close']
+        self.DB_FIELDS           = ['S','D','T', 'O', 'H', 'L', 'C']         
+        self.DB_RESAMPLE_TF      = '5min'
+        self.DB_RESAMPLE_BASE    = 4
+        
+        self.__setDB()
     
     def useStocksDB( self ):
         if os.name == 'nt':

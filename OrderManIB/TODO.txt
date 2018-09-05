@@ -1,4 +1,7 @@
 
+Use common Tradelog. check settings 
+
+
 -----------------------------------------------------------------------------------------
 
 contract mapping + pick lot size from NSE file. separate script/bat to download it from NSE
