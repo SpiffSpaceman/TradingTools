@@ -28,14 +28,14 @@ def signalFilter(signal, bars, removeAdjacentCount=10):
     if( s.SKIP_INITIAL_BARS > 0  ):
         signal.iloc[0:s.SKIP_INITIAL_BARS] = False      # Remove initial signals for few bars to give time to indicators
 
-    if (s.SIGNAL_START_TIME != ""):                      # Filter out signals outside time range
+    if (s.SIGNAL_START_TIME != ""):                     # Filter out signals outside time range
         signal.iloc[signal.index.indexer_between_time(s.SIGNAL_END_TIME, s.SIGNAL_START_TIME, include_start=False,
                                                       include_end=False)] = False
 
     if (not s.FILTER_NEAR_SIGNALS):
         return signal
 
-    oldSignalCount = signal.sum()  # Remove signals too close to another signal
+    oldSignalCount = signal.sum()                       # Remove signals too close to another signal
     while True:
         freeSignal   = signal & ~ind.recent(removeAdjacentCount, signal)      # Signal with no signal behind it within range
         closeSignals = signal &  ind.recent(removeAdjacentCount, freeSignal)  # signals within range of a free signal - Remove them
@@ -247,6 +247,4 @@ def pbLongKB():
 
     return signal
 
-
-s.setSignalFunction(signal)
 

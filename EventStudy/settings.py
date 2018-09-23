@@ -1,6 +1,8 @@
 import os
 import multiprocessing
 
+from enum import Enum
+
 import util
 
 '''
@@ -48,8 +50,17 @@ EXPORT_TRADES_DAY   - How many days to hold in exported trades. Must be from DAY
 '''
 
 
-
 class Settings:    
+    
+    class DIRECTION(Enum):                              # For MECHTM_DIRECTION
+        BOTH        = 0
+        LONG_ONLY   = 1
+        SHORT_ONLY  = 2
+        
+    class OPERATOR(Enum):                               # For MECHTM_QUERY
+        EQUALS      = 0
+        CONTAINS    = 1
+
     def __init__(self):
         self.SIGNAL_FN           = None        
         self.DBPATH              = ''    
@@ -84,6 +95,53 @@ class Settings:
         self.KB_BAND_WIDTH       = 2.25
         
         self.RANDOM_DBPATH       = '' 
+        
+        # ------------ MechTM ------------
+        
+        self.MECHTM_INPUT_LOG           = "config/tradelog.csv"
+        
+        # Entry can be overrided to use Mech entry signals instead of input tradelog. Call settings.setSignalFunction(). Look at signals.py 
+            # This reuses SIGNAL_FN, SIGNAL_START_DATE, SIGNAL_END_DATE, SCRIPS/SCRIPS_LIST, PRICE_CUTOFF/FILTER_NEAR_SIGNALS/SKIP_INITIAL_BARS from above
+            # List of scrips can be set in config/scrips.txt. If not set, we will use all scrips in database
+            # Note - set MECHTM_DIRECTION as either LONG_ONLY or SHORT_ONLY. This will be taken as trade direction after mech signal
+            #        Stop will then be set using MECHTM_STOP_ATR_MULTIPLIER/MECHTM_STOP_ATR_LOOKBACK
+        
+        self.MECHTM_STOP_OVERRIDE       = False                         # Override InitStop, replacing tradelog data with atr based stops 
+        self.MECHTM_STOP_ATR_MULTIPLIER = 5
+        self.MECHTM_STOP_ATR_LOOKBACK   = 20
+        
+        self.MECHTM_TARGET_X            = 1                             # Target multiplier
+        
+        self.MECHTM_ISTRAIL_ENABLED      = False                        # Trail by x ATR after very bar. Will not exceed InitStop
+        self.MECHTM_TRAIL_MOVE_BACK_STOP = True                         # Allow moving stop back on volatility expansion ( But never more than initStop )
+        self.MECHTM_TRAIL_ATR_MULTIPLIER = 6
+        self.MECHTM_TRAIL_ATR_LOOKBACK   = 20
+
+        self.MECHTM_DIRECTION           = self.DIRECTION.BOTH           # Option to retrict to only long/short trades. For mech entry signals, this indicates whether we are testing Longs or Shorts
+        
+        self.MECHTM_START_TIME          = "09:20:00"                    # Filter out trades not within range
+        self.MECHTM_END_TIME            = "15:30:00"
+        
+        self.MECHTM_CLOSING_TIME        = ( 15, 19 )                    # when to close open position
+        
+        self.MECHTM_QUERY               = None                          # Allows selecting rows from input csv. Ex check if 'Setup' = 'Flag' or if tags contains 'Results'
+                                                                        # Tuple with 3 fields. [0] = csv field name.  [1] = operator ( use OPERATOR enum )   [2] = value to compare against
+        
+        #----
+        self.MECHTM_CALLBACK_SCRIP_CHANGE_FN = None                     # Callback function called once per scrip. Can be used to setup data for bar-by-bar callback functions. Input = Scrip bars 
+        self.MECHTM_CALLBACK_TRADE_CHANGE_FN = None                     # Callback function called once per trade. Input = Trade details, firstBar
+
+                                                                        # Callback functions for custom TM - called every bar
+        self.MECHTM_CALLBACK_EXIT_FN    = None                          # Trade Exit rules ( trade, bar, initStop  )
+        self.MECHTM_CALLBACK_STOP_FN    = None                          # Move Stop.  ( trade, bar, initStop, currentStop )
+        
+        #self.MECHTM_CALLBACK_TARGET_FN  = None
+        
+
+        # ------------ MechTM End ------------
+
+
+
 
     def useStocksCurrentDB( self ):
         if os.name == 'nt':
@@ -169,12 +227,12 @@ class Settings:
         if et and not st:
             self.SIGNAL_START_TIME = "00:00:00"         
     
-    def setDateFilter( self, startDate, endDate ):
+    def setDateFilter( self, startDate, endDate, isAddTime=True ):
     
         self.SIGNAL_START_DATE = startDate
         self.SIGNAL_END_DATE   = endDate
         
-        if self.IS_INTRADAY:
+        if self.IS_INTRADAY and isAddTime:
             if( self.SIGNAL_START_DATE != "" ):                            # Convert Date to DateTime
                 self.SIGNAL_START_DATE += " 00:00:00"
             if( self.SIGNAL_END_DATE != "" ):
@@ -203,7 +261,7 @@ class Settings:
         self.DB_SCRIPS  = util.filesInDir(self.DBPATH)                          # Set ScripList to query = Input config list if set Else take all scrips in Database
                                                                                  # Random DB will have same scrips as real DB, so no need to scan it
         if os.path.isfile(self.SCRIPS_LIST): 
-            self.SCRIPS = set(line.strip() for line in open(self.SCRIPS_LIST))        
+            self.SCRIPS = set(line.strip() for line in open(self.SCRIPS_LIST))
         if not self.SCRIPS and self.DB_SCRIPS:
             self.SCRIPS = set(self.DB_SCRIPS)
 

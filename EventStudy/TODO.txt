@@ -1,11 +1,50 @@
 
-Trend following
-    SBIN, Yesbank. DLF, TCS
-    Commodity stocks - VEDL,TS,COALINDIA,HINDALCO, NMDC, SAIL
-    check - need more data - BAJFINANCE
+---------------------------------------------MECHTM-----------------------------------------------------------------------------------------------------------------------------------------------------
+Mechanical - option to remove multiple simultaneous signals
+    - Quick fix 
+        - Set trade close time in output
+        - before exporting excel, loop row by row. For each trade look ahead and check if future trade is within current trades window. Skip future trade if within window
+        - maybe can do in array too, similar to signals.signalFilter
 
+Multiple tests in one go
+    - Pass array of setting as input. Can set up first + clone + change some (including output file)
+    - Extra loop in processScrips + output changes to tuple of arrays(or similar), one element for each setting
+    - Add up respective arrays from tuple and call tradelog for each - can maybe call tradelog multiple times in parallel
+    - Also, can maybe get Tradelog output as df and then do more stuff on top of it
+        - Show results by time of day. separate into shorts, longs. Diff between few settings .. 
 
+Tradelog - Set Qty to capital%
+    - Will probably need loop as qty and capital depend => should be configurable option
+    - Then can show capital in Equity curve instead of X returns - This will show big dips more clearly with compounding
+    - Can have separate helper main to set qty in log
 
+time stops    
+    Try cycle's methods
+        1. If price dips below the entry price,  use the distance between the low of the bar and the entry price to ‘pull down’ the limit
+        2. take the difference between today’s close and yesterday’s close as the basis for tightening the limit            
+            If today’s close is lower than yesterday’s, we subtract that difference from where the limit is, otherwise we leave the limit where it is
+            Unlike system 1 this can be cumulative, so if the next day price goes up but the day after that price drops again, we then subtract that second drop as well
+            In this way we gradually home in on price if it’s just chopping around
+            Don’t allow tightening beyond breakeven, this is positive if price has been chopping around or moving against our position
+         This system produces a win rate of something around 60-75% and a loss rate of 20-35% with the rest being breakeven 
+			- Losses average pretty much -1R and wins average 0.7R
+			- The system is profitable in most circumstances (over a large number of trades) due to the higher win rate
+MechSignals
+    - tune
+        - Filter out very extended ? 
+            + high SS BO close ? Seems to help for longs but not for shorts - check mech 5 year
+        - Look for good consolidation ? 
+        - Filter out if high SS against in say last 10 bars?    
+        - Aligned with index ? - Ex Afternoon short signal in Index
+    - better - try with entry on touch, ie entry at the level at BO price. Will reduce slippage
+    - profile - indicators.atr(ema/ewma) - takes up 40%. can try over numpy ( df.values ) but no ewma
+---------------------------------------------------------------------------------------------------------------
+    
+    
+    
+
+    
+    
 ---------------------------------------------------------------------------------------------------------------
 - Histograms
     - https://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.hist.html

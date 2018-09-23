@@ -1,112 +1,171 @@
+# Analyze Tradelog against Database. Can check how different stops/targets might have worked with set filters
+# Can also use Mech Entry signals instead of input tradelog
+
 import os
 import sys
 import time
 
-os.chdir(sys.path[0])                               # Set working dir
-
-import pandas as pd
-
-import database
+import signals as sig
+import mechTM
 from settings import s
+import plugins as p
 
-# Log Fields -  Setup,isNested,Tags,Date,Time,Market,InitStop,PriceIn,Trail,T1,T2,Qty,T1Qty,T2Qty,ExpenseAmt,Mistakes,Comment,TrailTrigger,PriceInTrigger,StopTime,T1Time,T2Time
-class MechTM:
-    def __init__(self):
-        file        = open( "config/tradelog.csv", 'r')
-        self.trades = pd.read_csv(file)        
-        file.close()
+os.chdir(sys.path[0])                               # Set working dir
+ 
+
+def setStopATR( atrDistance ):
+    s.MECHTM_STOP_OVERRIDE       = True
+    s.MECHTM_STOP_ATR_LOOKBACK   = 20
+
+    s.MECHTM_STOP_ATR_MULTIPLIER = atrDistance
+
+def setTargetX( distance ):
+    s.MECHTM_TARGET_X = distance
+
+def setTimeFilter( start, end ):
+    s.MECHTM_START_TIME = start
+    s.MECHTM_END_TIME   = end
+  
+def setTradeDirection( direction ):
+    if( direction == 'SHORT' ):    
+        s.MECHTM_DIRECTION  = s.DIRECTION.SHORT_ONLY
+    else:
+        s.MECHTM_DIRECTION  = s.DIRECTION.LONG_ONLY
+    
+# --------------------------------------------
+
+def signalShort(scrip, bars):
+    sig.scrip = scrip
+    sig.bars  = bars
+
+    signal = sig.trendDown() & sig.newLOD() #& ~sig.spikeDown(4)
+
+    return signal
+
+def signalLong(scrip, bars):
+    sig.scrip = scrip
+    sig.bars  = bars
+
+    signal =  sig.trendUp() & sig.newHOD()  & ~sig.spikeUp(4)
+
+    return signal
+
+def setMechEntry( function, direction, startTime, EndTime  ):
+    #s.FILTER_NEAR_SIGNALS = False
+    #s.PRICE_CUTOFF
+
+    s.setSignalFunction( function )    
+    setTradeDirection(direction )
+    setTimeFilter( startTime, EndTime  )    
+
+def setDateRange( start, end ):
+    s.setDateFilter( start, end, False ) 
+
+def setMonth( yearmonth ):
+    s.setDateFilter( yearmonth + '-01', yearmonth + '-31', False )
+
+def setYear( year):
+    s.setDateFilter( year + '-01-01', year + '-12-31', False )
+
+    
+def filterBySetup( setup ):
+    s.MECHTM_QUERY = ( "Setup", s.OPERATOR.EQUALS, setup  )
+
+def filterByTag( tag ):
+    s.MECHTM_QUERY = ( "Tags", s.OPERATOR.CONTAINS, tag )
+    
+# --------------------------------------------
+
+
+
+ 
+# --------------------------------------------
+
+def setConfig(): 
+    s.MULTIPROC = True
+    
+    setStopATR( 5 )
+    setTargetX( 10 )
+    
+    #'''
+    s.MECHTM_CALLBACK_SCRIP_CHANGE_FN = p.trailTimeStopOnScripChange
+    s.MECHTM_CALLBACK_TRADE_CHANGE_FN = p.trailTimeStopOnTradeChange  
+    s.MECHTM_CALLBACK_STOP_FN         = p.trailOnProfit
+    #'''
+    
+    '''
+    s.MECHTM_CALLBACK_SCRIP_CHANGE_FN = p.trailTimeStopOnScripChange
+    s.MECHTM_CALLBACK_TRADE_CHANGE_FN = p.trailTimeStopOnTradeChange    
+    s.MECHTM_CALLBACK_STOP_FN         = p.trailOnTimeStop
+    '''
+
+    #setYear('2017')
         
-        self.SCRIPS = pd.unique( self.trades['Market'] )                                # All unique markets traded
+    
+    '''
+    s.MECHTM_ISTRAIL_ENABLED = True
+    s.MECHTM_TRAIL_ATR_MULTIPLIER = 6    
+    #s.MECHTM_TRAIL_MOVE_BACK_STOP = False
+    '''
+
+    #setTradeDirection('SHORT')
+    #setTradeDirection('LONG')
+
+    #setTimeFilter( "10:00", "12:30"  )
+    #setTimeFilter( "12:30", "14:30"  )
+    #setDateRange( '2014-08-10', '2014-08-15')
+    #setMonth( '2014-08')
+    #setYear('2017')
+    #s.MECHTM_CLOSING_TIME = (15, 14)
+    #filterBySetup( 'BOBase' )
+    #filterByTag('Test')
+
+    #s.MECHTM_INPUT_LOG = "../TradeLog/data/tradelog.csv" 
+
+    #s.MECHTM_INPUT_LOG = "config/tradelogSim.csv" 
+    #s.useStocksDB()
+
+    #s.useNiftyIndexDB()
+    #s.useBankNiftyIndexDB()
+
+    #setMechEntry( signalShort, 'SHORT', "10:00", "14:30"  )
+    #setMechEntry( signalLong, 'LONG', "10:00", "14:30"  )
+  
+    #setMechEntry( signalLong, 'LONG', "10:00", "12:30"  )
+    #setMechEntry( signalLong, 'LONG', "12:30", "14:30"  )
+    
+    #setMechEntry( signalShort, 'SHORT', "10:00", "12:30"  )
+    #setMechEntry( signalShort, 'SHORT', "12:30", "14:30"  )
+
     
     
-    def markTargetHit( self, tradeIndex, targetPrice ):
-        
-        self.trades.loc[tradeIndex, 'T1']           = targetPrice
-        self.trades.loc[tradeIndex, 'T1Qty']        = self.trades.loc[tradeIndex, 'Qty']
-        
-        self.trades.loc[tradeIndex, 'Trail']        = targetPrice                       # For only 1 part test - Set all to same price
-        self.trades.loc[tradeIndex, 'TrailTrigger'] = targetPrice
-                
-        self.trades.loc[tradeIndex, 'T2']           = 0
-        self.trades.loc[tradeIndex, 'T2Qty']        = 0
-    
-    # For MultiProc - modify copied slice - df.copy() and return + pd.concat([df1, df2, df3])
-    # or some other data type
-    def markStopHit( self, tradeIndex, stopPrice   ):
-        
-        self.trades.loc[tradeIndex, 'Trail']        = stopPrice
-        self.trades.loc[tradeIndex, 'TrailTrigger'] = stopPrice
-        
-        self.trades.loc[tradeIndex, 'T1']       = 0
-        self.trades.loc[tradeIndex, 'T1Qty']    = 0
-        self.trades.loc[tradeIndex, 'T2']       = 0
-        self.trades.loc[tradeIndex, 'T2Qty']    = 0
+# --------------------------------------------
 
-    def processScrip( self, scrip ):
-        #pd.options.mode.chained_assignment = None                                       # Hide warning on sliced data update    
-        
-        try:
-            bars = database.loadScripDB( scrip ) 
-        except IOError:   
-            print( scrip, " Not Found" )
-            return None             
-        
-        t = self.trades
-        scripTrades = t[ t['Market'] == scrip ]                                         # Trades taken in this scrip
-        
-        for trade in scripTrades.itertuples():
-
-            entry   = trade.PriceIn 
-            stop    = trade.InitStop
-            isLong  = trade.PriceIn > trade.InitStop
-            
-            diff    = trade.PriceInTrigger - stop                                       # Projecting target from triggered price similar to Live.Else can use PriceIn to project from filled price (adjust to tick size)            
-            target  = trade.PriceInTrigger + 1 * diff                                   
-            
-            barsAfterEntry = bars[trade.Date ].between_time( trade.Time, '1530' )       # Select Day's data After Entry bar using datetimeindex
-                                                                                        # 5m bar is labeled on right. So 14:19 is 14:15-14:20 which should be good enough
-
-            for bar in barsAfterEntry.itertuples():                                           # Iterate bar by bar after entry and look for exit            
-
-                if ( isLong and bar.L <= stop) or ( not isLong and bar.H >= stop ):           # Stop hit ? 
-                    self.markStopHit( trade.Index, stop )                    
-                    break                
-                elif  (isLong and bar.H > target) or ( not isLong and bar.L < target ):       # Target hit ? 
-                    self.markTargetHit( trade.Index, target  )                    
-                    break                
-                elif bar.Index.hour == 15 and bar.Index.minute > 18 :                         # Exit before 15:20  
-                    self.markStopHit( trade.Index, bar.C  )                    
-                    break
-
-    def processLog( self ):
-        for scrip in self.SCRIPS:            
-            self.processScrip( scrip )
-        
-        self.trades.to_csv( 'output/tradelogMech.csv' )                                        # Generate newlog
-        
-        filePath = sys.path[0] + "\output\\tradelogMech.csv"                                   # Run Tradelog.py over generated log
-        os.system('python ../TradeLog/Tradelog.py ' + filePath   )
-
-        
-# Target distance setting
-# TODO - atr based stops
-# TODO - try mech - afternoon shorts
-        
-
-   
-start = time.time()   
+if __name__ == '__main__':      
+    start = time.time()   
 
 s.useStocksCurrentDB()
 s.MULTIPROC = False
 s.createDBIfNeeded()
 
-if __name__ == '__main__':   
-    mech = MechTM()
+setConfig()
+
+def run():
+    mech = mechTM.MechTM()     
+    #mech.SCRIPS = [ 'HINDALCO' ]
     mech.processLog()
-
-
-print( '\nTime Taken:', time.time() - start )
-
-
     
+    print( '\nTime Taken:', time.time() - start )
+
+if __name__ == '__main__':   
+    run()    
     
+    '''
+    import cProfile
+    cProfile.run('run()', filename='profile.txt')    
+    import pstats
+    p = pstats.Stats('profile.txt')
+    p.sort_stats('cumulative').print_stats(10)
+    # Run from cmd  'snakeviz  profile.txt'
+    '''
+
