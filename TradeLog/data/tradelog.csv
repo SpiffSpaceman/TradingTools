@@ -1,2 +1,2 @@
-Setup,isNested,Tags,Date,Time,Market,InitStop,PriceIn,Trail,T1,T2,Qty,T1Qty,T2Qty,ExpenseAmt,Mistakes,Comment,TrailTrigger,PriceInTrigger,StopTime,T1Time,T2Time
-Flag,Y,,2018-06-04,13:01:03,IBULHSGFIN-EQ,1227,1206.0448,1206.264,0,0,250,0,0,111.09,0,,1206,1206.95,13:43:09,,
+Index,O,H,L,C,PriceIn,PriceInTrigger,Date,Time,Market,isLong,Qty,ExpenseAmt,Setup,Trail,TrailTrigger,T1,T1Qty,T2,T2Qty,InitStop,BarsHeld
+2015-08-03 10:04:00,277.6,279.0,277.6,278.9,278.9,278.9,2015-08-03,10:04:00,SBIN,True,100,0,Mech,281.5,281.5,0,0,0,0,273.4939620507098,64

@@ -88,9 +88,11 @@ class TradeLog():
         t['GrossX']      = t['GrossAmt']   * InitRiskAmoutInv
         t['NetX']        = t['GrossX'] + t['ExpenseX']
 
-        t['SlipEntryX']  =  ( t["PriceIn"] - t["PriceInTrigger"]  ) * temp
-        t['SlipExitX']   =  ( t["TrailTrigger"] - t["Trail"]  )     * temp  * (t['TrailQty']/t['Qty'])
-            
+        t['SlipEntryX']  = ( t["PriceIn"] - t["PriceInTrigger"]  ) * temp
+        t['SlipExitX']   = ( t["TrailTrigger"] - t["Trail"]  )     * temp  * (t['TrailQty']/t['Qty'])
+        
+        t['StopHit']     = t['TrailX'] <= -0.95             # Mark as stop hit if exit price is within 5 % of Initial Stop, also allowing some positive slippage at exit
+        
         # For simulator
         self.openTrades = t[ t['Qty'] <= 0 ]
 
@@ -191,7 +193,7 @@ class TradeLog():
         t2['Smallest']       = t['T2X'].min()
 
         combined['HitRate']  = ''
-        trail['HitRate']     = ''
+        trail['HitRate']     = len(t['StopHit'][t['StopHit']>0]) / len(t['StopHit']) * 100          # Stop Hit Rate
         t1['HitRate']        = len(t['T1Hit'][t['T1Hit']>0]) / len(t['T1Hit']) * 100
         t2['HitRate']        = len(t['T2Hit'][t['T2Hit']>0]) / len(t['T2Hit']) * 100
         
@@ -231,19 +233,46 @@ class TradeLog():
         winloss["Loss"] = loss
         
         self.stats["WinLoss"] = winloss
-    
-    # TODO - if max DD includes 1st trade, 1st trade result is not counted - Add '0' row in returns at top
-    # TODO DD period + recovery period
+
     def _maxDrawdownX( self, returnsX ):
+
+        returnsX =  pd.concat( [pd.Series( 0.0 ), returnsX], ignore_index=True )            # if max DD includes 1st trade, 1st trade result is not counted below 
+                                                                                            # Workaround - Add '0' row in returns at top
         r   = returnsX.cumsum()         # cumulative X
         dd  = r.sub(r.cummax())         # Drawdown =  current level of the return - maximum return for all periods prior
-        mdd = dd.min()                  # max drawndown = minimum of all the calculated drawdowns
-        
+        mdd = dd.min()                  # max drawndown = biggest(minimum value) of all the calculated drawdowns 
+
         #print( pd.concat( [ returnsX, r, r.cummax(), dd ], axis=1 ) ) 
         return mdd  
+    
+    # Find max number of trades until a new High is made in Total Net returns
+    # Input should have NetX and Date columns
+    def  _maxTradesToRecover( self, returnsX  ):
+
+        netReturnsSum = returnsX['NetX'].cumsum()                                   # Overall returns upto this row
+        netReturnsMax = netReturnsSum.cummax()                                      # Maximum of overall returns till this row
         
+        totalReturnsNewHigh        = netReturnsMax != netReturnsMax.shift(1)        # True if Max Net returns till now is not same for previous row. ie if a new Max was made
+        totalReturnsGroupByMaxHigh = totalReturnsNewHigh.cumsum()                   # Consecutive rows that have same 'Maximum Returns so far' get grouped together. This is the key
+                                                                                    #   The first row of each group has made a new High in Total Returns. Rest of the group are in drawdown              
+        #print( pd.concat( [ netReturnsMax, totalReturnsNewHigh, totalReturnsGroupByMaxHigh], axis=1 ) )
+
+        ddGroups    = returnsX.groupby(  totalReturnsGroupByMaxHigh ).Date          # group by totalReturnsGroupByMaxHigh
+        agg         = ddGroups.agg( ['count','max'] )                               # Aggregate by group count, also show drawdown end date
+                                                                                    
+                                                                                    # Combine TradeCount and End date with Start Date
+                                                                                    # StartDate = 2nd row in Max Drawdown group ( 1st row made new High)
+                                                                                    # Keep only the Top 5 Drawdowns 
+        output           = pd.concat( [ agg[ agg['count']>2 ], ddGroups.nth(2) ],  axis=1  ).nlargest( 5, 'count' )
+        output.columns   = ['Trades','EndDate', 'StartDate']
+        output           = output[ ['Trades', 'StartDate', 'EndDate' ] ]
+        output['Trades'] = output['Trades'] - 1                                     # Subtract 1 to ignore the first trade of the group, which made a new High in overall returns    
+        output.index.name= None                                                     # Removes blank row from print output
+
+        return output
+
     def _sma( self, bars_field, n=20 ):
-        return bars_field.rolling( n, min_periods=n ).mean()
+        return bars_field.rolling( n, min_periods=n ).mean().dropna()
 
     def _printStats( self ):       
 
@@ -273,12 +302,28 @@ class TradeLog():
 
             print( "\n", "------------------------------------", "\n", file=f )
             
+            maxNetDrawdown = round(self._maxDrawdownX( t['NetX'] ), 2)
+            entrySlippageX = round(t['SlipEntryX'].sum(),2)
+            exitSlippageX  = round(t['SlipExitX'].sum(),2)            
+            maxRecovery    = self._maxTradesToRecover( t[['NetX','Date']] )
             
-            print( "Max Net Drawdown: ", round(self._maxDrawdownX( t['NetX'] ), 2), " -- Slippage Entry: ", round(t['SlipEntryX'].sum(),2), " -- Slippage Exit: ", round(t['SlipExitX'].sum(),2), file=f )
+            printMe = "Slippage Entry: " +  str(entrySlippageX) + " -- Slippage Exit: " + str(exitSlippageX)
+            if 'BarsHeld' in t.columns:
+                barsHeldAvg = round(  t['BarsHeld'].mean(), 1 )  
+                printMe += " -- Average Bars Held: " + str(barsHeldAvg) 
+            print( printMe , file=f )
+
+            print( "\nBiggest Drawdown: " + str(maxNetDrawdown) + "X" , file=f )
+            print( 'Longest 5 Drawdowns' , file=f  )
+            print( maxRecovery.to_string(index=False), file=f  )
+            
+            
             
             print( "\n", "------------------------------------", "\n", file=f )
             
-            i = [ 'Setup','Date','Market','InitStop','PriceIn','Trail','T1','T2','Qty','InitRiskAmt', 'Risk/Ideal', 'TrailX','T1X','T2X','GrossX','ExpenseX','NetX','Capital','SlipEntryX','SlipExitX']
+            t['NetCumulative'] = t['NetX'].cumsum()
+            
+            i = [ 'Setup','Date','Time','Market','InitStop','PriceIn','Trail','T1','T2','Qty','InitRiskAmt', 'Risk/Ideal', 'TrailX','T1X','T2X','GrossX','ExpenseX','NetX','Capital','SlipEntryX','SlipExitX','NetCumulative']
             print("Trades :", file=f )
             print( t[ i ], file=f )
             print( "\nNote : PriceIn Includes Entry Slippage. InitRiskAmt can be more than ideal Risk due to 1) Entry Slippage 2) Multiple open positions. All 'X' items are wrt PriceIn" , file=f )
@@ -304,13 +349,15 @@ class TradeLog():
         plt.clf()        
         plt.close()
 
-        ax = t.plot.bar( y='NetX' )               # Histogram        
         
-        k = plt.gca().xaxis.get_ticklabels()      # Reduce labels on x axis - show labale for every 10th bar  
-        plt.setp(k, visible=False)
-        plt.setp(k[::10], visible=True)
         
-        plt.plot( self._sma( t['NetX'], 20 ) )    # sma        
+        trailingNetX  = t['NetX'].tail(120)                   # Histogram + SMA
+        sma           = self._sma( trailingNetX, 20 )
+        isProfit      = trailingNetX  > 0 
+
+        plt.bar( trailingNetX.index, trailingNetX, color=isProfit.map({True: 'b', False: 'r'}) )
+        plt.plot( sma )
+
         plt.savefig( fn + '-hist.png')
         
         
@@ -373,9 +420,7 @@ if __name__ == '__main__':
 
 
 
-# Import multiple csv
 # More stats
-    # Histogram of wins/losses
     # Grimes - TRADING STRATEGIES:Monitoring Tools, STATISTICAL ANALYSIS OF TRADING RESULTS
     # Max drawdawns, control charts etc, Highest  win/loss streaks
     # Average drawdown size, hit rate, Sharpe ratio, average daily P/L volatility, etc
