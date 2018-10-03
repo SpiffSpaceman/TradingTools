@@ -34,22 +34,6 @@ def setTradeDirection( direction ):
     
 # --------------------------------------------
 
-def signalShort(scrip, bars):
-    sig.scrip = scrip
-    sig.bars  = bars
-
-    signal = sig.trendDown() & sig.newLOD() #& ~sig.spikeDown(4)
-
-    return signal
-
-def signalLong(scrip, bars):
-    sig.scrip = scrip
-    sig.bars  = bars
-
-    signal =  sig.trendUp() & sig.newHOD()  & ~sig.spikeUp(4)
-
-    return signal
-
 def setMechEntry( function, direction, startTime, EndTime  ):
     #s.FILTER_NEAR_SIGNALS = False
     #s.PRICE_CUTOFF
@@ -76,45 +60,54 @@ def filterByTag( tag ):
     
 # --------------------------------------------
 
+def signalShort(scrip, bars):
+    sig.scrip = scrip
+    sig.bars  = bars
 
+    signal = sig.trendDown() & sig.newLOD() #& ~sig.spikeDown(4)
+
+    return signal
+
+def signalLong(scrip, bars):
+    sig.scrip = scrip
+    sig.bars  = bars
+
+    signal =  sig.trendUp() & sig.newHOD()  & ~sig.spikeUp(4)
+
+    return signal
+
+
+def signalLongWithNifty( scrip, bars ):
+    signal = signalLong( scrip, bars ) & p.niftyTrendSignal( "LONG", p.loadNifty()  )
+
+    return signal
+    
+def signalShortWithNifty( scrip, bars ):
+    signal = signalShort( scrip, bars ) & p.niftyTrendSignal( "SHORT", p.loadNifty(),30  )
+
+    return signal
 
  
 # --------------------------------------------
 
-def setConfig(): 
+def setConfig():
     s.MULTIPROC = True
-    
+
     setStopATR( 5 )
     setTargetX( 10 )
-    
-    #'''
-    s.MECHTM_CALLBACK_SCRIP_CHANGE_FN = p.trailTimeStopOnScripChange
-    s.MECHTM_CALLBACK_TRADE_CHANGE_FN = p.trailTimeStopOnTradeChange  
-    s.MECHTM_CALLBACK_STOP_FN         = p.trailOnProfit
-    #'''
-    
-    '''
-    s.MECHTM_CALLBACK_SCRIP_CHANGE_FN = p.trailTimeStopOnScripChange
-    s.MECHTM_CALLBACK_TRADE_CHANGE_FN = p.trailTimeStopOnTradeChange    
-    s.MECHTM_CALLBACK_STOP_FN         = p.trailOnTimeStop
-    '''
 
-    #setYear('2017')
-        
-    
     '''
-    s.MECHTM_ISTRAIL_ENABLED = True
-    s.MECHTM_TRAIL_ATR_MULTIPLIER = 6    
-    #s.MECHTM_TRAIL_MOVE_BACK_STOP = False
+    s.MECHTM_CALLBACK_SCRIP_CHANGE_FN = p.onScripChangeTrailAtr
+    s.MECHTM_CALLBACK_TRADE_CHANGE_FN = p.onTradeChangeRecentExtreme2  
+    s.MECHTM_CALLBACK_STOP_FN         = p.trailOnProfit4
     '''
 
     #setTradeDirection('SHORT')
     #setTradeDirection('LONG')
-
     #setTimeFilter( "10:00", "12:30"  )
     #setTimeFilter( "12:30", "14:30"  )
-    #setDateRange( '2014-08-10', '2014-08-15')
-    #setMonth( '2014-08')
+    #setDateRange( '2017-01-01', '2018-06-30')
+    #setMonth( '2013-07')
     #setYear('2017')
     #s.MECHTM_CLOSING_TIME = (15, 14)
     #filterBySetup( 'BOBase' )
@@ -136,7 +129,11 @@ def setConfig():
     
     #setMechEntry( signalShort, 'SHORT', "10:00", "12:30"  )
     #setMechEntry( signalShort, 'SHORT', "12:30", "14:30"  )
-
+    
+    #setMechEntry( signalLongWithNifty,  'LONG',  "10:00", "14:30"  )
+    #setMechEntry( signalShortWithNifty, 'SHORT', "10:00", "14:30"  )    
+    
+    s.MECHTM_IGNORE_SCRIPS = {'NIFTY'}    
     
     
 # --------------------------------------------
@@ -152,7 +149,7 @@ setConfig()
 
 def run():
     mech = mechTM.MechTM()     
-    #mech.SCRIPS = [ 'HINDALCO' ]
+    #mech.SCRIPS = [ 'SBIN' ]
     mech.processLog()
     
     print( '\nTime Taken:', time.time() - start )

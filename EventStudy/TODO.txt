@@ -1,9 +1,46 @@
+------------------------
+- Trade with Nifty trend
+    - When nifty trending and trades aligned with Nifty trend    
+        - VERIFY trades
+        - add to notes - UT works, DT does not ? shorter Lookback ?
+        - Filter to do same - can use for tradelogs
+    - When Nifty trending and new H/L made in last X bars
+    - Nifty above PDH/below PDL
+    
+- TD yesterday  - morning vs afternoon trades with current TM
+    - Nifty TD yesterday
+        - SS + Good close     
+    - TD in stock yesterday    
+
+
+- Upsampling
+    # Monthly Data to Daily    
+        series.resample('D')    
+    # This will set only the first row
+        Month
+        1901-01-01 266.0
+        1901-01-02 NaN
+        1901-01-03 NaN
+        1901-01-04 NaN
+        1901-01-05 NaN
+        1901-01-06 NaN
+        1901-01-07 NaN
+        ...
+        1901-01-30 NaN
+        1901-01-31 NaN
+        1901-02-01 145.9
+    # Then Fillna using bfill
+        pandas.DataFrame.fillna()
+      Also keep only market time range
+
 
 ---------------------------------------------MECHTM-----------------------------------------------------------------------------------------------------------------------------------------------------
+Prices are not adjusted to TICK, just assuming it will average out - check 
+
 Mechanical - option to remove multiple simultaneous signals
     - Quick fix 
         - Set trade close time in output
-        - before exporting excel, loop row by row. For each trade look ahead and check if future trade is within current trades window. Skip future trade if within window
+        - before exporting csv, loop row by row. For each trade look ahead and check if future trade is within current trades window. Skip future trade if within window
         - maybe can do in array too, similar to signals.signalFilter
 
 Multiple tests in one go

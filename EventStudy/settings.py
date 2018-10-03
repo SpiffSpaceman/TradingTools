@@ -106,6 +106,8 @@ class Settings:
             # Note - set MECHTM_DIRECTION as either LONG_ONLY or SHORT_ONLY. This will be taken as trade direction after mech signal
             #        Stop will then be set using MECHTM_STOP_ATR_MULTIPLIER/MECHTM_STOP_ATR_LOOKBACK
         
+        self.MECHTM_IGNORE_SCRIPS       = {}                            # Ignore trades in these scrips
+        
         self.MECHTM_STOP_OVERRIDE       = False                         # Override InitStop, replacing tradelog data with atr based stops 
         self.MECHTM_STOP_ATR_MULTIPLIER = 5
         self.MECHTM_STOP_ATR_LOOKBACK   = 20

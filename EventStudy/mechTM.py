@@ -153,8 +153,11 @@ class MechTM:
         return False
 
     def _timeIsUp( self, trade, bar ):
+        
+        hr  = bar.Index.hour
+        min = bar.Index.minute
                                                                                            # Exit before 15:20 
-        if( bar.Index.hour == s.MECHTM_CLOSING_TIME[0] and bar.Index.minute >= s.MECHTM_CLOSING_TIME[1]) :
+        if( (hr > s.MECHTM_CLOSING_TIME[0]) or (hr == s.MECHTM_CLOSING_TIME[0] and min >= s.MECHTM_CLOSING_TIME[1]) ):
             return markClosedAtCurrentPrice( trade, bar )
 
         return False
@@ -180,8 +183,8 @@ class MechTM:
         signal = signals.signalFilter( s.SIGNAL_FN( scrip, bars ), bars )               # Get mech signals and filter out some based on config
         signal = signal[ signal == True ]                                               # Filter out False
 
-        if( len(signal) == 0 ):                                                         # No entry signal for scrip, return empty list
-            return pd.DataFrame()                                                       # No signal, return Empty dataframe
+        if( len(signal) == 0 ):                                                         # No entry signal for scrip, return Empty dataframe
+            return pd.DataFrame(columns=['PriceIn','PriceInTrigger','Date','Time','Market','isLong','Qty','ExpenseAmt','Setup' ])
                     
         scripTrades = bars[ bars.index.isin(signal.index) ]                             # Generate Input Trade log from signal
         scripTrades['PriceIn']          = scripTrades['C']
@@ -272,6 +275,9 @@ class MechTM:
     def _processScrip( self, scrip ):
         pd.options.mode.chained_assignment = None                                          # Hide warning on sliced data update. We dont need to update it back to source
 
+        if(  scrip in s.MECHTM_IGNORE_SCRIPS ):                                            # Ignore trades in some scrips
+            return []
+        
         # -- Load Trade Database -- 
         try:
             bars = database.loadScripDB( scrip ) 
@@ -360,10 +366,13 @@ class MechTM:
                         stop = getTrailPrice( trade, bar, initStop, extremePrice, distance  )      # Dont allow moving behind initStop
                     else:
                         stop = getTrailPrice( trade, bar, stop, extremePrice, distance  )          # Dont allow moving behind current stop
-                
+
                 if( stop == bar.C ):                                                          # Trailing Stop went ahead of current price
                     closedTrade = markClosedAtCurrentPrice( trade, bar )
                     break
+
+                if( (trade.isLong and stop < initStop )  or (not trade.isLong and stop > initStop )  ) : 
+                        raise Exception( 'Stop moved behind initStop' )
 
                 if( (trade.isLong and stop > bar.C)  or (not trade.isLong and stop < bar.C )  ) : 
                     raise Exception( 'Stop moved ahead of price' )
@@ -398,9 +407,9 @@ class MechTM:
         
         outputTrades = pd.DataFrame( results )
         
-        if( self.isMechEntry ):                                                                # Sort Trades by Date-Time        
+        if( self.isMechEntry ):                                                                # Sort Trades by Date-Time
             outputTrades.set_index( 'Index', inplace=True)
-            outputTrades.sort_index(inplace=True)
+            outputTrades.sort_index( inplace=True )
         else :
             outputTrades.sort_values( ['Date', 'Time'], ascending=[True,True], inplace=True )
 
