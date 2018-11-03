@@ -248,6 +248,12 @@ class TradeLog():
     # Find max number of trades until a new High is made in Total Net returns
     # Input should have NetX and Date columns
     def  _maxTradesToRecover( self, returnsX  ):
+        
+        # if max Time DD includes 1st trade, 1st trade result is not counted below 
+        # Workaround - Add '0' row in returns at top + use first trade's date
+        dummyRow = pd.DataFrame( data={'NetX': [0], 'Date':  [returnsX.iloc[0].Date]  }   )
+        returnsX = pd.concat( [dummyRow, returnsX], ignore_index=True )        
+        ##
 
         netReturnsSum = returnsX['NetX'].cumsum()                                   # Overall returns upto this row
         netReturnsMax = netReturnsSum.cummax()                                      # Maximum of overall returns till this row
