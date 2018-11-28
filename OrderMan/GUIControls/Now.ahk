@@ -25,6 +25,10 @@ class NowControlsClass{
 	static ORDER_ENTRY_MENU_BUY						:= "Orders and Trades,Buy Order Entry"			// Menu options to open Buy/Sell Window
 	static ORDER_ENTRY_MENU_SELL					:= "Orders and Trades,Sell Order Entry"			// Takes either 2 or 3 comma separated values
 	
+	static ORDER_ENTRY_HK_BUY						:= "{F1}"
+	static ORDER_ENTRY_HK_SELL						:= "{F2}"	
+	static MARKET_WATCH_LIST						:= "SysListView323"
+	
 	static ORDER_ENTRY_EXCHANGE_SEGMENT				:= "ComboBox1"
 	static ORDER_ENTRY_INST_NAME 					:= "ComboBox5"
 	static ORDER_ENTRY_SYMBOL 						:= "ComboBox6"

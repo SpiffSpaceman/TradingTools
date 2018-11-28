@@ -18,7 +18,7 @@ def signal(scrip, bars):
     
     #signal = sig.trendUp() & sig.donchianLong()
 
-    #signal =  sig.trendUp() & sig.newHOD() 
+    signal =  sig.trendUp() & sig.newHOD() 
     #signal = sig.trendDown() & sig.newLOD()
     
     
@@ -32,7 +32,7 @@ def signal(scrip, bars):
     #signal = sig.trendDown() & sig.KBBottomClose();
     #signal = sig.trendDown() & sig.newLOD() & sig.spikeDown( 1 )
     
-    signal = sig.spikeDown( 5 )  
+    #signal = sig.spikeDown( 5 )  
     
     #signal = sig.trendUp() & sig.spikeUp( 5 )    
     #signal = sig.trendDown() & sig.spikeDown( 5 )
@@ -53,9 +53,9 @@ def signal2(scrip, bars):
 def tests():
     s.setSignalFunction(signal)
     
-    s.FILTER_NEAR_SIGNALS = False
+    #s.FILTER_NEAR_SIGNALS = False
     #s.EXPORT_TRADES       = True    
-    s.MULTIPROC           = False
+    #s.MULTIPROC           = False
     
     s.useStocksDB()
     #s.useNiftyIndexDB()

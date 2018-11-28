@@ -42,7 +42,10 @@ try{
   orderbookObj.read()
   createGUI()
   checkForOpenOrders()
-  initializeInputHandler()
+  if( FileIOEnabled )
+    initializeInputHandler()
+  if( HKEnabled )
+      installHotkeys()
   alertsObj.init()
 
 } catch exc {

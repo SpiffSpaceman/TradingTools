@@ -121,6 +121,10 @@ class MechTM:
         
         atr              = indicators.atr( bars, s.MECHTM_STOP_ATR_LOOKBACK )
         previousBarIndex = tradeBarIndex - datetime.timedelta(minutes=5)                 # Use previous bar's ATR
+        
+        if( s.MECHTM_STOP_MAX_ATR_LOOKBACK > 1 ):                                        # Use Highest atr within lookback
+            atr = atr.rolling( s.MECHTM_STOP_MAX_ATR_LOOKBACK, min_periods=s.MECHTM_STOP_MAX_ATR_LOOKBACK ).max()
+
         stopATR          = atr[previousBarIndex]
         entry            = trade.PriceIn
 
@@ -280,7 +284,7 @@ class MechTM:
         
         # -- Load Trade Database -- 
         try:
-            bars = database.loadScripDB( scrip ) 
+            bars = database.loadScripRandomDB( scrip ) if s.DB_RANDOM else database.loadScripDB( scrip )
         except IOError:   
             print( scrip, " Not Found" )
             return None             

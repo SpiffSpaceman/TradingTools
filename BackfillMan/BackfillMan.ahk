@@ -39,7 +39,7 @@ SetControlDelay, -1 														// Without this ControlClick fails sometimes. 
 	Num3		   Select AB Symbol window
 	NumEnter/F5    Send Refresh to Main AB window
 	NumDot		   Run AA and select first row
-	NumDiv		   Update Marketwatch, RTDMan and BackfillMan with Active scrips. TODO also Orderman
+	Cntrl+NumDiv   Update Marketwatch, RTDMan and BackfillMan with Active scrips. TODO also Orderman
 	Num4		   Add/Remove scrip to watchlist + Refresh + select next symbol
 	
 	Simulator
@@ -105,7 +105,7 @@ installHotKeys(){
 	Hotkey, NumpadEnter, hkRefresh
 	
 	Hotkey, NumpadDot, hkSwitchExplore		// Switch between FT and Momentum	
-	Hotkey, NumpadDiv, hkUpdateScrips		// Update RTDMan with scrips from TD watchlist. Also setup Nest Marketwatch
+	Hotkey, ^NumpadDiv, hkUpdateScrips		// Control-NumDiv  Update RTDMan with scrips from TD watchlist. Also setup Nest Marketwatch
 	
 	Hotkey, Numpad4, hkMarkSymbol			// Select chart and passthrough HK back to AB
 }
@@ -161,7 +161,7 @@ explore(){
 		Click 1000,300									// click on center chart
 		Sleep, 100
 		Click 225, 140									// Click Explore
-		Sleep, 500
+		Sleep, 750
 		Click 175,210									// Click first result
 
 		CoordMode, Mouse, Window 

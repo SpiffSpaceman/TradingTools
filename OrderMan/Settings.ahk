@@ -43,22 +43,24 @@ loadSettings(){
     IniRead, DefaultTargetSize, %config%, OrderMan, DefaultTargetSize 
     IniRead, MaxSlippageRisk,   %config%, OrderMan, MaxSlippageRisk
     
-    IniRead, value,     %config%, OrderMan, AlertsEnabled
-    AlertsEnabled := value=="true"
-  
-    IniRead, value, %config%, OrderMan, AutoSubmit
-    AutoSubmit := value=="true"
+    EnablePriceEdit     := iniReadBoolean( config, "EnablePriceEdit" ) 
+    AlertsEnabled       := iniReadBoolean( config, "AlertsEnabled" )
+    AutoSubmit          := iniReadBoolean( config, "AutoSubmit" )
+    TradeLoggingEnabled := iniReadBoolean( config, "TradeLoggingEnabled" )
+    CreateOrderUseHK    := iniReadBoolean( config, "CreateOrderUseHK" )    
+    HKEnabled           := iniReadBoolean( config, "HKEnabled" )    
+    FileIOEnabled       := iniReadBoolean( config, "FileIOEnabled" )    
     
-    IniRead, value, %config%, OrderMan, TradeLoggingEnabled
-    TradeLoggingEnabled := value=="true"
-    
+
     IniRead, DefaultEntryOrderType, %config%, OrderMan, EntryOrderType
     EntryOrderType := DefaultEntryOrderType
 
     IniRead, Server, %config%, OrderMan, Server
     isServerNOW := (Server == "Now")
 
-    INPUT_PATH                    := "R:\OrderMan\"                             // Path for IO with AB
+    IniRead, IOFilePath,  %config%, OrderMan, IOFilePath
+    SplitPath, IOFilePath,, IOFolder
+    
     INPUT_POLL_TIME			      := 1000										// Time between checking for input Prices
 
     ORDERBOOK_POLL_TIME			  := 500										// Time between reading of OrderBook status by Tracker in order to trigger pending orders. In ms
@@ -69,6 +71,15 @@ loadSettings(){
     IniRead, DefaultStopOrderType, %config%, OrderMan, StopOrderType            //      added to accomodate SL-Limit as Default Stop Order
     STOP_ORDER_TYPE := DefaultStopOrderType                                     // Default Stop Order Type
 }
+
+
+iniReadBoolean( config, field ){    
+    IniRead, value, %config%, OrderMan, %field% 
+    StringLower, value, value
+    return (value=="true")
+}
+
+
 
 isValidScrip( alias ){
    ini := "config/scrips/" . alias . ".ini"

@@ -49,9 +49,6 @@ def niftyTrendSignal( direction, niftyBars, lookback=50 ):
 
 
 
-
-
-
 # ---------- TimeStop : Trail by 2 ATR from extreme if below 0X after 20 bars  ---------
     # Trail only as long as trade is below 0X
     # Exits imm if price is behind 2 ATR from extreme
@@ -92,6 +89,19 @@ def trailOnTimeStop( trade, bar, initStop, stop ):
     
     return stop
 # -------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -311,7 +321,26 @@ def donchianTrail( trade, bar, initStop, stop ):
 
 
     
+# ---------- TimeStop : Donchain Trail Stop if current bar below xX. Check every bar after 20 bars  ---------
+''' 
+    s.MECHTM_CALLBACK_SCRIP_CHANGE_FN = p.onScripChangeDonchianStop    
+    s.MECHTM_CALLBACK_TRADE_CHANGE_FN = p.onTradeChangeExtremePrice    
+    s.MECHTM_CALLBACK_STOP_FN         = p.donchianTrailTimeStop
+    p.DONCHIAN_LOOKBACK = 40
+'''  
+def donchianTrailTimeStop( trade, bar, initStop, stop ):
+    global barCount
     
+    barCount += 1
+    
+    TIME_LIMIT = 20
+    MIN_X      = 0
+
+    if( barCount >= TIME_LIMIT   and   mechTM.currentTradeStatus( trade, initStop, bar ) < MIN_X   ):
+        stop = donchianTrail( trade, bar, initStop, stop )
+    
+    return stop
+
     
     
 #  --- Trail on profit + Trail near closing time + initial Donchian Trail --- 
@@ -359,7 +388,11 @@ def trailOnProfit5( trade, bar, initStop, stop ):
     return stop
    
     
-    
+   
+   
+
+
+
     
     
     

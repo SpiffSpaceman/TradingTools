@@ -34,7 +34,7 @@ initGUI(){
 }
 
 createGUI(){
-	global Qty, QtyPerc, TargetQtyPerc, EntryPrice, StopPrice, TargetPrice, Direction, CurrentResult, TargetResult, BtnOrder, BtnUpdate, BtnLink, BtnUnlink, BtnCancel, EntryStatus, StopStatus, TargetStatus, LastWindowPosition, EntryOrderType, EntryUpDown, StopUpDown, TargetUpDown, EntryText, AddText, BtnAdd, SelectedScripText, ScripList, PriceStatus, Button1, Button2, Button3, Button4
+	global EnablePriceEdit, Qty, QtyPerc, TargetQtyPerc, EntryPrice, StopPrice, TargetPrice, Direction, CurrentResult, TargetResult, BtnOrder, BtnUpdate, BtnLink, BtnUnlink, BtnCancel, EntryStatus, StopStatus, TargetStatus, LastWindowPosition, EntryOrderType, EntryUpDown, StopUpDown, TargetUpDown, EntryText, AddText, BtnAdd, SelectedScripText, ScripList, PriceStatus, Button1, Button2, Button3, Button4
 	
 	SetFormat, FloatFast, 0.2
 
@@ -62,9 +62,13 @@ createGUI(){
 	Gui, 1:Add, Text, gTargetClick, Target
 
 // Column 3	
-	Gui, 1:Add, Edit, vEntryPrice  w55 ReadOnly   gonEntryPriceChange ym+25 x+m 
-	Gui, 1:Add, Edit, vStopPrice   w55 ReadOnly   gonStopPriceChange
-	Gui, 1:Add, Edit, vTargetPrice w55 ReadOnly   gupdateCurrentResult
+	readOnlyFlag := ""
+	if( !EnablePriceEdit )
+		readOnlyFlag := "ReadOnly"
+		
+	Gui, 1:Add, Edit, vEntryPrice  w55 %readOnlyFlag%   gonEntryPriceChange ym+25 x+m 
+	Gui, 1:Add, Edit, vStopPrice   w55 %readOnlyFlag%   gonStopPriceChange
+	Gui, 1:Add, Edit, vTargetPrice w55 %readOnlyFlag%   gupdateCurrentResult
 		
 	Gui, 1:Add, Button, gonNew vBtnOrder xp-35 y+m, New								// New or Update
 	Gui, 1:Add, Button, gonUpdate vBtnUpdate  xp+0 yp+0, Update	

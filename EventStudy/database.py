@@ -51,8 +51,15 @@ def loadScripRandomDB( scrip ):
 
     return data
 
-
+def deleteDB():
+    import shutil
+        
+    shutil.rmtree( s.DBPATH )     
+    from time import sleep          # mkdir fails if run immediately after rmtree
+    sleep(0.1)
+    os.mkdir(s.DBPATH)
     
+
     
 # ------------------------------------------------------------------------------------
 

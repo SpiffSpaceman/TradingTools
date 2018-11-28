@@ -1,20 +1,119 @@
-------------------------
-- Trade with Nifty trend
-    - When nifty trending and trades aligned with Nifty trend    
-        - VERIFY trades
-        - add to notes - UT works, DT does not ? shorter Lookback ?
-        - Filter to do same - can use for tradelogs
-    - When Nifty trending and new H/L made in last X bars
-    - Nifty above PDH/below PDL
+
+
+- settings helper ? 
+
+- Multiple Runs
+    - call in a loop?  Pass setting object to mechTM ?  Maybe no need to pass to pool.map. Just that the object used should not be a global variables
+        May need to use this object everwhere         
+    - tradelog as a package and read output array
+    - or call externally
+        - easiest way without making too many changes
+        - option in tradelog to save output as pickle - should be small so no issue 
+        - will need to pass settings ? Also as pickle ?         
+   - check
+        In case your main module imports another module in which global variables or class member variables are defined and initialized to (or using) some new objects, 
+            you may have to condition that import in the same way:
+
+        if __name__ ==  '__main__'':
+          import my_module
+    
+    - Event Study - Multiple tests + aggregate 
+          
+
+- plugins - move each to a separate file within folder. Then can just import   
+
+  
+  
+  
+  
+  
+
+
+
+
+
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+
+
+
+-------------  
+- Option to take tradelog exit using exit time. Then can play with stop distance while keeping discretionary exit
+    - To check if discretionary initstop is harming result        
+    
+- Initial Stop
+    - Use the highest ATR in last 20/30 bars
+    - Add to Notes
+        - seems worse reduces returns without improving max DD. Stop hit reduces but does not help net
+        - probably because it applies to all trades and not selectively to only problem trades
+- Dynamic stop 
+    - Manually look for stops that are too tight and try to find condition to identify. MaybeST vol vs long term vol
+        - Then increase multiple or use LTF vol
+        - ATR(5) / ATR(60)  - or prob 20/50    10/50
+        - Add condition to event itself and check if we can improve it
+        - This might work as it will be targeted to the problem vs apply for all in case of max atr
+    - Trail - identify consolidation   
+        - Say Look at overall range of last 3-5 bars vs some atr
+        
+- approx 1 swing trail
+
+- Compressed - squeeze
+    The “TTM Squeeze” (popularized and marketed by John Carter) can be reduced to the simple ratio of StdDev(Close) / ATR.
+    I think it makes more sense to simply compare StdDev(C,n) to its own longer-term average than to arbitrarily compare it to ATR 
+        Or even simpler, use something like Highest(C,n) / Lowest(C,n) (or use H and L if you prefer)
+		I like to find the simplest way to express a concept
+-------------
+
+- Mech - better - try with entry on touch, ie entry at the level at BO price. Will reduce slippage + better price vs close
+
+
+
+
+
+
+
+
+
+
+-------
+Event Study Nifty, Stocks, Open hour, Close hour - PDH/PDL - Off Open movement
+    Is 1m trending in the Short term ? 
+        So can look at ST momentum on BO and on Failure
+    Futures Premium adjustment using F2
+    Unger style - BO of PDH/PDL to check if MR or Trending
+Currencies
+    - USD/EUR/GBP/JPY + INR
+    - Small contract size + low volatility => large size. So should be able to trade with small capital
+    - 9 to 5
+    - Dont have intraday data - But can test on Daily. Later also try on 4H. Also verify against global pairs
+    - No STT
+-------
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
     
 - TD yesterday  - morning vs afternoon trades with current TM
+    - High SS + Good close vs range
+    - Also check against TD/some trend against  - reversal 
+    - NR7 yesterday etc
+    - TD in stock yesterday
     - Nifty TD yesterday
-        - SS + Good close     
-    - TD in stock yesterday    
+    - Sum(SS) over last 3/4 days
 
 
 - Upsampling
-    # Monthly Data to Daily    
+    # Monthly Data to Daily
         series.resample('D')    
     # This will set only the first row
         Month
@@ -33,6 +132,30 @@
         pandas.DataFrame.fillna()
       Also keep only market time range
 
+     
+    
+    
+------------------------
+- Trade with Nifty trend
+    - When nifty trending and trades aligned with Nifty trend    
+        - VERIFY trades
+        - add to notes - UT works, DT does not ? shorter Lookback ?
+        - Filter to do same - can use for tradelogs
+    - When Nifty trending and new H/L made in last X bars
+    - Nifty above PDH/below PDL
+      Nifty above/below open
+
+- Market Breadth + other aggregate stats    
+
+
+
+
+
+
+
+
+
+
 
 ---------------------------------------------MECHTM-----------------------------------------------------------------------------------------------------------------------------------------------------
 Prices are not adjusted to TICK, just assuming it will average out - check 
@@ -42,6 +165,7 @@ Mechanical - option to remove multiple simultaneous signals
         - Set trade close time in output
         - before exporting csv, loop row by row. For each trade look ahead and check if future trade is within current trades window. Skip future trade if within window
         - maybe can do in array too, similar to signals.signalFilter
+    - Only Add when working ? 
 
 Multiple tests in one go
     - Pass array of setting as input. Can set up first + clone + change some (including output file)
@@ -49,6 +173,7 @@ Multiple tests in one go
     - Add up respective arrays from tuple and call tradelog for each - can maybe call tradelog multiple times in parallel
     - Also, can maybe get Tradelog output as df and then do more stuff on top of it
         - Show results by time of day. separate into shorts, longs. Diff between few settings .. 
+        - Per stock stats - say rank by mean returns
 
 Tradelog - Set Qty to capital%
     - Will probably need loop as qty and capital depend => should be configurable option
@@ -72,8 +197,7 @@ MechSignals
             + high SS BO close ? Seems to help for longs but not for shorts - check mech 5 year
         - Look for good consolidation ? 
         - Filter out if high SS against in say last 10 bars?    
-        - Aligned with index ? - Ex Afternoon short signal in Index
-    - better - try with entry on touch, ie entry at the level at BO price. Will reduce slippage
+        - Aligned with index ? - Ex Afternoon short signal in Index    
     - profile - indicators.atr(ema/ewma) - takes up 40%. can try over numpy ( df.values ) but no ewma
 ---------------------------------------------------------------------------------------------------------------
     

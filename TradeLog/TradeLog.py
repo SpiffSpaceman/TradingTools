@@ -406,9 +406,10 @@ class TradeLog():
         
 if __name__ == '__main__': 
 
-    args = sys.argv
+    args    = sys.argv
+    argslen = len(args)
     
-    if(  len(args) > 1 ):
+    if(  argslen > 1 ):
         log = TradeLog( sys.argv[1] )             # Pass input tradelog file
     else:
         log = TradeLog()
@@ -417,7 +418,7 @@ if __name__ == '__main__':
     log.processLog()
     #log.processLog(0.33, 0.33)
     
-    if( not log.isOpenTrades ):
+    if( not log.isOpenTrades and argslen==1  ):  # Dont update OrderMan if there are open trades. And if we are running over external trade data
         log.updateCapital()
 
 

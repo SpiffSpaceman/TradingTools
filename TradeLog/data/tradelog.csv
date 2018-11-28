@@ -1,2 +1,2 @@
-Index,O,H,L,C,PriceIn,PriceInTrigger,Date,Time,Market,isLong,Qty,ExpenseAmt,Setup,Trail,TrailTrigger,T1,T1Qty,T2,T2Qty,InitStop,BarsHeld
-2015-08-03 10:04:00,277.6,279.0,277.6,278.9,278.9,278.9,2015-08-03,10:04:00,SBIN,True,100,0,Mech,281.5,281.5,0,0,0,0,273.4939620507098,64
+Setup,isNested,Tags,Date,Time,Market,InitStop,PriceIn,Trail,T1,T2,Qty,T1Qty,T2Qty,ExpenseAmt,Mistakes,Comment,TrailTrigger,PriceInTrigger,StopTime,T1Time,T2Time
+Flag,Y,,2018-10-15,10:36:42,SRTRANSFIN-EQ,1050.5,1006.15,1042.55,0,0,4,0,0,4.55500000000001,0,,1042.5,1006.75,14:54:24,,

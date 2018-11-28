@@ -110,14 +110,20 @@ class Settings:
         
         self.MECHTM_STOP_OVERRIDE       = False                         # Override InitStop, replacing tradelog data with atr based stops 
         self.MECHTM_STOP_ATR_MULTIPLIER = 5
-        self.MECHTM_STOP_ATR_LOOKBACK   = 20
-        
+        self.MECHTM_STOP_ATR_LOOKBACK   = 20        
+        self.MECHTM_STOP_MAX_ATR_LOOKBACK = 1                           # Take the Maximum ATR in the lookback to calculate stop. 
+                                                                            # 20 bar lookback => Use the maximum atr of previous 20 bars
+                                                                            # Default of 1 => Use previous bar's ATR
+
+
         self.MECHTM_TARGET_X            = 1                             # Target multiplier
-        
+
+
         self.MECHTM_ISTRAIL_ENABLED      = False                        # Trail by x ATR after very bar. Will not exceed InitStop
         self.MECHTM_TRAIL_MOVE_BACK_STOP = True                         # Allow moving stop back on volatility expansion ( But never more than initStop )
         self.MECHTM_TRAIL_ATR_MULTIPLIER = 6
         self.MECHTM_TRAIL_ATR_LOOKBACK   = 20
+
 
         self.MECHTM_DIRECTION           = self.DIRECTION.BOTH           # Option to retrict to only long/short trades. For mech entry signals, this indicates whether we are testing Longs or Shorts
         

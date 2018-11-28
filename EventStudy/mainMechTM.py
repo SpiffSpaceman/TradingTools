@@ -4,6 +4,7 @@
 import os
 import sys
 import time
+import datetime
 
 import signals as sig
 import mechTM
@@ -90,33 +91,62 @@ def signalShortWithNifty( scrip, bars ):
  
 # --------------------------------------------
 
+def longsToday( date = datetime.datetime.today().strftime('%Y-%m-%d') ):
+    setDateRange( date, date)    
+    setMechEntry( signalLong, 'LONG', "10:00", "14:30"  )
+
+def shortsToday( date = datetime.datetime.today().strftime('%Y-%m-%d')  ):
+    setDateRange( date, date)
+    setMechEntry( signalShort, 'SHORT', "10:00", "14:30"  )
+    
+
+    
+    
+    
+# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 def setConfig():
     s.MULTIPROC = True
+    #s.PROCESS_COUNT = 3
 
     setStopATR( 5 )
     setTargetX( 10 )
 
+    #s.MECHTM_STOP_MAX_ATR_LOOKBACK = 5
+    
     '''
+    s.MECHTM_CALLBACK_SCRIP_CHANGE_FN = p.onScripChangeDonchianStop    
+    s.MECHTM_CALLBACK_TRADE_CHANGE_FN = p.onTradeChangeExtremePrice    
+    s.MECHTM_CALLBACK_STOP_FN         = p.donchianTrailTimeStop
+    p.DONCHIAN_LOOKBACK = 40
+    '''
+    
+    #'''    
     s.MECHTM_CALLBACK_SCRIP_CHANGE_FN = p.onScripChangeTrailAtr
     s.MECHTM_CALLBACK_TRADE_CHANGE_FN = p.onTradeChangeRecentExtreme2  
     s.MECHTM_CALLBACK_STOP_FN         = p.trailOnProfit4
-    '''
-
+    #'''
+    
+    #longsToday()
+    shortsToday()    
+    
+    
     #setTradeDirection('SHORT')
     #setTradeDirection('LONG')
     #setTimeFilter( "10:00", "12:30"  )
     #setTimeFilter( "12:30", "14:30"  )
-    #setDateRange( '2017-01-01', '2018-06-30')
+    #setDateRange( '2018-10-15', '2018-12-31')    
     #setMonth( '2013-07')
     #setYear('2017')
     #s.MECHTM_CLOSING_TIME = (15, 14)
     #filterBySetup( 'BOBase' )
-    #filterByTag('Test')
+    #filterByTag('NiftyAgainstEntry')
 
-    #s.MECHTM_INPUT_LOG = "../TradeLog/data/tradelog.csv" 
-
+    s.MECHTM_INPUT_LOG = "config/tradelogLive.csv" 
     #s.MECHTM_INPUT_LOG = "config/tradelogSim.csv" 
+
     #s.useStocksDB()
+    #s.enableRandomDB()
 
     #s.useNiftyIndexDB()
     #s.useBankNiftyIndexDB()
@@ -133,7 +163,7 @@ def setConfig():
     #setMechEntry( signalLongWithNifty,  'LONG',  "10:00", "14:30"  )
     #setMechEntry( signalShortWithNifty, 'SHORT', "10:00", "14:30"  )    
     
-    s.MECHTM_IGNORE_SCRIPS = {'NIFTY'}    
+    s.MECHTM_IGNORE_SCRIPS = {'NIFTY', 'Nifty50', 'NiftyAuto', 'NiftyBank', 'NiftyEnergy', 'NiftyFMCG', 'NiftyIT', 'NiftyMetal', 'NiftyPharma' }
     
     
 # --------------------------------------------
@@ -142,10 +172,12 @@ if __name__ == '__main__':
     start = time.time()   
 
 s.useStocksCurrentDB()
-s.MULTIPROC = False
-s.createDBIfNeeded()
-
 setConfig()
+
+#s.MULTIPROC = False
+if __name__ == '__main__':    
+    s.createDBIfNeeded()
+
 
 def run():
     mech = mechTM.MechTM()     

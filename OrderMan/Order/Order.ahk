@@ -333,23 +333,30 @@ class OrderClass{
 	/*	Open Buy / Sell Window
 	*/
 	_openOrderForm(){
-		global TITLE_NOW, controlObj
+		global TITLE_NOW, controlObj, CreateOrderUseHK
 		
 		Loop, 5{															// Try upto 5 times
 			if( this._input.direction == "B" ){								// F1 F2 F3 sometimes (rarely) does not work. Menu Does
 				
 				winTitle := % controlObj.ORDER_ENTRY_TITLE_BUY
 				menus 	 := StrSplit( controlObj.ORDER_ENTRY_MENU_BUY , ",")
+				hk 		 := controlObj.ORDER_ENTRY_HK_BUY
 			}
 			else if( this._input.direction == "S" ){
 				winTitle := % controlObj.ORDER_ENTRY_TITLE_SELL
 				menus 	 := StrSplit( controlObj.ORDER_ENTRY_MENU_SELL , ",")
+				hk 		 := controlObj.ORDER_ENTRY_HK_SELL
 			}
 			
-			if( menus.MaxIndex() == 3 )
-				WinMenuSelectItem, %TITLE_NOW%,, % menus[1], % menus[2], % menus[3]
-			else
-				WinMenuSelectItem, %TITLE_NOW%,, % menus[1], % menus[2]
+			if( CreateOrderUseHK ){
+				ControlSend, % controlObj.MARKET_WATCH_LIST, %hk%, %TITLE_NOW%
+			}
+			else{
+				if( menus.MaxIndex() == 3 )
+					WinMenuSelectItem, %TITLE_NOW%,, % menus[1], % menus[2], % menus[3]
+				else
+					WinMenuSelectItem, %TITLE_NOW%,, % menus[1], % menus[2]
+			}
 				
 			WinWait, %winTitle%,,2
 			if !ErrorLevel

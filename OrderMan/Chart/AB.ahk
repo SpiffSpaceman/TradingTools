@@ -18,21 +18,19 @@
 #include Util.ahk
 
 initializeInputHandler(){
-	global INPUT_POLL_TIME, INPUT_PATH
+	global INPUT_POLL_TIME, IOFolder
 	
-	UtilClass.createFileDirectory(  INPUT_PATH )
+	UtilClass.createFileDirectory(  IOFolder )
 	SetTimer, inputHandler, % INPUT_POLL_TIME		
 }
 
 inputHandler(){
-	global INPUT_PATH
+	global IOFilePath
 	
-	inputFileName := INPUT_PATH . "input.csv"
-	
-	if FileExist( inputFileName ){
-		FileReadLine, line, %inputFileName%, 1				// 1 line file with text "SCRIP,ENTRYPRICE,STOPPRICE,TARGETPRICE"
+	if FileExist( IOFilePath ){
+		FileReadLine, line, %IOFilePath%, 1				// 1 line file with text "SCRIP,ENTRYPRICE,STOPPRICE,TARGETPRICE"
 		inputSplit := StrSplit( line, ",")
-		FileDelete, %inputFileName%
+		FileDelete, %IOFilePath%
 
 		scrip  := inputSplit[1]
 		entry  := inputSplit[2]
@@ -52,16 +50,16 @@ inputHandler(){
 }
 
 updateOrderStatusForAB( scrip, inStatus ){
-	global INPUT_PATH
+	global IOFolder
 	
-	filename := INPUT_PATH . scrip . "\" . inStatus
+	filename := IOFolder . "\" . scrip . "\" . inStatus
 	FileAppend,, %filename%								// Create empty file with input filename to set status
 }
 
 updatePricesForAB( scrip, entry, trail, t1, t2 ){
-	global INPUT_PATH
+	global IOFolder
 	
-	filename := INPUT_PATH . scrip . "\FINALPRICES"
+	filename := IOFolder . "\" . scrip . "\FINALPRICES"
 	line     := entry . "," . trail . "," . t1 . "," . t2 
 	
 	file := FileOpen(filename, "w")
@@ -88,8 +86,8 @@ installHotkeys(){
 	if( HKTargetPrice != "" && HKTargetPrice != "ERROR")
 		installHotKey( HKTargetPrice, "getTargetPriceFromAB" )
 	
-	installHotKey( "Numpad9", "hkBuy" )
-	installHotKey( "Numpad6", "hkSell" )
+	//installHotKey( "Numpad9", "hkBuy" )
+	//installHotKey( "Numpad6", "hkSell" )
 	
 	scripControl := "RichEdit20A3"			// Symbol control with one Analysis window open
 }
@@ -120,20 +118,23 @@ abCreateLine(){
 // Erase from AA results and rerun AA
 hkBuy(){	
 	abCreateLine()	
-	//getEntryPriceFromAB()
+	getEntryPriceFromAB()
 }
 
 // Erase from AA results and rerun AA
 hkSell(){
 	abCreateLine()	
-	//getStopPriceFromAB()
+	getStopPriceFromAB()
+}
+
+setABScrip(){
+	scrip := getScripFromAB()
+	return setScrip(  scrip )
 }
 
 setScrip( scrip ){
 	global contextObj
-	
-	//scrip := getScripFromAB()
-	
+
 	if( scrip == "" )
 		return false
 	
@@ -230,14 +231,35 @@ getIntervalLayerName(){
 	return ""
 }
 
+
+
+
+getEntryPriceFromAB(){	
+	if( !setABScrip() )													// For trades with open orders, Only update prices if scrip matches
+		return
+	price := getPriceFromAB()											// Get price 1st to avoid delay, else mouse movement can cause wrong price to be picked up	
+	setEntryPriceFromAB( price  )
+}
+getStopPriceFromAB(){
+	if( !setABScrip() )
+		return
+	price := getPriceFromAB()
+	setStopPriceFromAB( price  )
+}
+
+getTargetPriceFromAB(){
+	if( !setABScrip() )
+		return	
+	price := getPriceFromAB()
+	setTargetPriceFromAB( price )
+}
+ 
+
+
+
+
 setEntryPriceFromAB( price ){
 	global EntryPriceActual, StopPrice, isABPick
-	
-	/*
-	if( !setScrip() )													// For trades with open orders, Only update prices if scrip matches
-		return
-	price := getPriceFromAB()											// Get price 1st to avoid delay, else mouse movement can cause wrong price to be picked up
-	*/
 
 	if( price > 0 ){		
 		EntryPriceActual := price
@@ -250,12 +272,6 @@ setEntryPriceFromAB( price ){
 setStopPriceFromAB( price ){
 	global EntryPrice, StopPriceActual, isABPick
 	
-	/*
-	if( !setScrip() )														// For trades with open orders, Only update prices if scrip matches
-		return
-	price := getPriceFromAB()
-	*/
-	
 	if( price > 0 ){		
 		StopPriceActual := price
 		_guessDirection( EntryPrice, price )
@@ -265,12 +281,6 @@ setStopPriceFromAB( price ){
 }
 
 setTargetPriceFromAB( price ){
-	
-	/*
-	if( !setScrip() )														// For trades with open orders, Only update prices if scrip matches
-		return	
-	price := getPriceFromAB()
-	*/
 
 	if( price > 0 ){		
 		setTargetPrice( UtilClass.roundToTickSize(price) )

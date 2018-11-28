@@ -16,7 +16,14 @@ def barsSince(event):
 # signal within lookback
 def recent(lookback, signal):
     return (signal.rolling(lookback, min_periods=lookback).sum().shift(1) > 0)
+
+def intraToDaily( bars ) :
+    return bars.resample('D') 
     
+def dailyToIntra( bars ):    
+    return  bars.resample( s.DB_RESAMPLE_TF, label ='right', closed='right', base=s.DB_RESAMPLE_BASE ).fillna( method = 'ffill', inplace = True ).between_time( '09:15', '15:30' )
+    
+
 # -----------------------------------     
 
 
@@ -34,6 +41,7 @@ Wilders Smoothing(n) = EMA(2n-1)
         WS has separate logic for initial n bars. Not using it here
         This difference can cause slightly different EMA & atr for initial period
     AB :  _ATR = EMA( ATR(1), 2*Periods-1 )
+    AHG - Trade station - uses simple ma - SMA(ATR(1),20)
 '''
 def atr( bars, n=20  ):
     prevc = bars['C'].shift(1)
