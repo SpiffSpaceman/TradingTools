@@ -1,7 +1,16 @@
 
-Slippage max could also be a % of Risk taken
-    Remove old code - Maxslippage + Max distance. Also from Scrips Importer
-    targetStopDiff ?? 
+- Code to verify orderman.ini capital against Actual - say within x% 
+
+
+
+
+
+
+
+
+
+
+
 
 Bug
     - Update Target sometimes updates stop instead with bad qty

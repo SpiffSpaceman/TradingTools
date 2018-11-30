@@ -254,13 +254,14 @@ class TradeClass{
 		
 		updatePricesForAB( this.scrip.alias, entryFilledPrice, stopFilledPrice, t1Price, t2Price )
 	}
-	
+
+
 	/*
 		Export Trade Data to Trade Log csv
-		Fields - "Setup,isNested,TD,SW,Date,Time,Market,InitStop,PriceIn,Trail,T1,T2,QtyMult,Qty,T1Qty,T2Qty,ExpenseAmt,Mistakes,Comment,TrailTrigger,PriceInTrigger,StopTime,T1Time,T2Time"
+		Fields - "Setup,isNested,TD,SW,Date,Time,Market,InitStop,PriceIn,Trail,T1,T2,QtyMult,Qty,T1Qty,T2Qty,ExpenseAmt,Mistakes,TrailTrigger,PriceInTrigger,StopTime,T1Time,T2Time,Comment"
 	*/
 	logTradeOnClose(){
-		global LogFilePath
+		global LogFilePath, tradebookObj
 
 		line  := ",,"
 		entry := this.executedEntryOrderList[1].getOrderDetails()
@@ -290,20 +291,25 @@ class TradeClass{
 			stop.triggerPrice := stop.averagePrice							// No slippage in Limit exits
 		}
 
+		entryAvgPrice := UtilClass.floatPriceToStr( tradebookObj.getAvgPrice( entry ) )
+		stopAvgPrice  := UtilClass.floatPriceToStr( tradebookObj.getAvgPrice( stop ) )
+		t1AvgPrice	  := isT1 ? UtilClass.floatPriceToStr( tradebookObj.getAvgPrice(t1) ) : "0"
+		t2AvgPrice	  := isT2 ? UtilClass.floatPriceToStr( tradebookObj.getAvgPrice(t2) ) : "0"
+
 		this.appendCsvLine( line,  A_YYYY . "-" . A_MM  . "-" .  A_DD )		// Date
 		this.appendCsvLine( line, entry.getUpdateTime() )					// Time
 		this.appendCsvLine( line, entry.tradingSymbol ) 					// Market
 		this.appendCsvLine( line, initStop )								// Init Stop Price
-		this.appendCsvLine( line, entry.averagePrice )						// Entry Filled Price
-		this.appendCsvLine( line, stop.averagePrice )						// Trailing Stop Filled Price
-		this.appendCsvLine( line, isT1 ? t1.averagePrice : "0" )			// T1 Filled Price
-		this.appendCsvLine( line, isT2 ? t2.averagePrice : "0" )			// T2 Filled Price
+		this.appendCsvLine( line, entryAvgPrice)							// Entry Filled Price
+		this.appendCsvLine( line, stopAvgPrice )							// Trailing Stop Filled Price
+		this.appendCsvLine( line, t1AvgPrice )								// T1 Filled Price
+		this.appendCsvLine( line, t2AvgPrice )								// T2 Filled Price
 		//this.appendCsvLine( line, "1" )										// Qty Multiplier = 1 For Stocks
 		this.appendCsvLine( line, entry.tradedQty )							// Entry Size (Without Adds )		
 		this.appendCsvLine( line, isT1 ? t1.tradedQty : "0" )				// T1 Filled Qty
 		this.appendCsvLine( line, isT2 ? t2.tradedQty : "0" )				// T2 Filled Qty
 		
-		line := line . ",,,"
+		line := line . ",,"
 		
 		this.appendCsvLine( line, stop.triggerPrice )						// Trailing Stop Trigger Price
 		this.appendCsvLine( line, entry.triggerPrice )						// Entry Trigger Price		

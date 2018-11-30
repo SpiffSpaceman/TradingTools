@@ -314,14 +314,14 @@ class OrderbookClass{
 		headers		:= % controlObj.ORDER_BOOK_OPEN_HEADERS_TEXT
 		keys		:= ["orderType",  "buySell",  "tradingSymbol",  "totalQty",  "tradedQty",  "price", "triggerPrice", "averagePrice" , "status", "nowOrderNo", "nowUpdateTime"]			
 		
-		this._extractColumnIndices( "Order Book > Open Orders",  allHeaders, headers, this._openOrdersColumnIndex, keys )
+		this.extractColumnIndices( "Order Book > Open Orders",  allHeaders, headers, this._openOrdersColumnIndex, keys )
 		
 	// Completed Orders
 		allHeaders  := GetExternalHeaderText( controlObj.ORDER_BOOK_TITLE, controlObj.ORDER_BOOK_COMPLETE_LIST_HEADER)
 		headers		:= % controlObj.ORDER_BOOK_COMPLETED_HEADERS_TEXT
 		keys		:= ["orderType",  "buySell",  "tradingSymbol",  "totalQty", "tradedQty", "price", "triggerPrice", "averagePrice" , "status", "nowOrderNo", "nowUpdateTime", "rejectionReason"]
 		
-		this._extractColumnIndices( "Order Book > Completed Orders",  allHeaders, headers, this._completedOrdersColumnIndex, keys )	
+		this.extractColumnIndices( "Order Book > Completed Orders",  allHeaders, headers, this._completedOrdersColumnIndex, keys )	
 		
 		columnsRead := true
 	}
@@ -332,7 +332,7 @@ class OrderbookClass{
 		targetObject  = Object to save positions with key taken from targetKeys and value = Column position
 		Gives Error if Column is not found
 	*/
-	_extractColumnIndices( listIdentifier, allHeaders, targetHeaders, targetObject, targetKeys  ){
+	extractColumnIndices( listIdentifier, allHeaders, targetHeaders, targetObject, targetKeys  ){
 		
 		for index, headertext in allHeaders{
 			Loop % targetHeaders.MaxIndex(){							// Loop through all needed columns and check if headertext is one of them 

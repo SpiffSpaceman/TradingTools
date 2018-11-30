@@ -82,7 +82,17 @@ class NowControlsClass{
 // OrderBook -> Buy/Sell Column
 	static ORDER_DIRECTION_BUY    					:= "BUY"
 	static ORDER_DIRECTION_SELL  					:= "SELL"
+
+// TradeBook
+	static TRADE_BOOK_MENU							:= "Orders and Trades,Trade Book"
+	static TRADE_BOOK_TITLE			  				:= "Trade Book -"
+	static TRADE_BOOK_OPEN_HK						:= "{F8}"	
 	
+	static TRADE_BOOK_LIST			  				:= "SysListView321"
+	static TRADE_BOOK_LIST_HEADER	  				:= "SysHeader321"
+	static TRADE_BOOK_HEADERS_TEXT				    := ["Total Consideration", "NOWOrderNo" ]
+	
+
 // ZT specific
 	static ORDER_ENTRY_CONFIRMATION_TITLE			:= "NA 99999"
 	static ORDER_ENTRY_SUBMITTED_TITLE				:= "NA 99999"

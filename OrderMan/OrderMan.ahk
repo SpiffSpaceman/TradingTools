@@ -35,11 +35,15 @@ try{
   orderbookObj := new OrderbookClass
   controlObj   := isServerNOW  ? new NowControlsClass : new NestControlsClass // Contains All control ids, window titles for Now/Nest
   alertsObj    := new AlertsClass
-
+  tradebookObj := new TradebookClass  
 
   UtilClass.checkNOWOpen()
   initializeStatusTracker()
   orderbookObj.read()
+  
+  if( TradeLoggingEnabled )
+    tradebookObj.init()
+
   createGUI()
   checkForOpenOrders()
   if( FileIOEnabled )
@@ -109,6 +113,7 @@ handleException(e){
 #include Order/Order.ahk
 #include Order/Orderbook.ahk
 #include Order/OrderTracker.ahk
+#include Order/TradeBook.ahk
 #include Trade/Trade.ahk
 #include Trade/Target.ahk
 #include Context.ahk
