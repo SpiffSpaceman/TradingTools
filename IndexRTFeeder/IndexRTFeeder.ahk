@@ -43,10 +43,11 @@ return
 
 
 loadSettings(){
-	global NowWindowTitle, IndexTableID, RTInterval, ABInterval, START_TIME, END_TIME, QuotesFileName, IndexList, IndexCount, Quotes, TickPath
+	global NowWindowTitle, IndexTableID, IndexTableID2, RTInterval, ABInterval, START_TIME, END_TIME, QuotesFileName, IndexList, IndexCount, Quotes, TickPath
 	
 	IniRead, NowWindowTitle,  IndexRTFeeder.ini, IndexRTFeeder, NowWindowTitle		
 	IniRead, IndexTableID,    IndexRTFeeder.ini, IndexRTFeeder, IndexTableID	
+	IniRead, IndexTableID2,   IndexRTFeeder.ini, IndexRTFeeder, IndexTableID2	
 
 	IniRead, RTInterval,   	  IndexRTFeeder.ini, IndexRTFeeder, RTInterval
 	IniRead, ABInterval,   	  IndexRTFeeder.ini, IndexRTFeeder, ABInterval
@@ -108,7 +109,7 @@ updateBar( ByRef scrip, price ){
 */
 readIndices(){
 
-	global  NowWindowTitle, IndexTableID, Quotes
+	global  NowWindowTitle, IndexTableID, IndexTableID2, Quotes
 	
 	time := A_Hour . ":" . A_Min
 	if( isPreMarketOpen( time ) )
@@ -120,6 +121,10 @@ readIndices(){
 	IndexValue  := ""
 	
 	ControlGet, List, List, , %IndexTableID%, %NowWindowTitle%
+	
+	if( List == "" )
+		ControlGet, List, List, , %IndexTableID2%, %NowWindowTitle%			// Switcing marketwatch tab changes control id for index
+	
 	Loop, Parse, List, `n  													// Rows are delimited by linefeeds (`n)
 	{																		// Fields (columns) in each row are delimited by tabs (A_Tab)
 		Loop, Parse, A_LoopField, %A_Tab%  
@@ -138,10 +143,13 @@ readIndices(){
 }
 
 export(){
-	global Quotes, IndexCount, IndexList, QuotesFileName, TickPath, IdleCount
+	global Quotes, IndexCount, IndexList, QuotesFileName, TickPath, IdleCount, NowWindowTitle
+	
+	IfWinNotExist, AmiBroker
+		return
 	
 	time := A_Hour . ":" . A_Min
-	if( isPreMarketOpen( time ) || isPostMarketClose( time ) )
+	if(  isPreMarketOpen( time ) || isPostMarketClose( time )  )
 		return
 	
 	data := ""
@@ -170,15 +178,17 @@ export(){
 	else{
 		IdleCount++
 	
+		wind := "NOW"
+		
 		if( IdleCount >= 2){
-			IfWinExist, NEST Trader, Do you want to Reconcile							// TODO NOW
+			IfWinExist,  %wind%, Do you want to Reconcile
 			{
-				ControlClick, Button1, NEST Trader, Do you want to Reconcile
+				ControlClick, Button1,  %wind%, Do you want to Reconcile
 			}
 			
-			IfWinExist, NEST Trader, The parameter is incorrect
+			IfWinExist,  %wind%, The parameter is incorrect
 			{
-				ControlClick, Button1, NEST Trader, The parameter is incorrect
+				ControlClick, Button1,  %wind%, The parameter is incorrect
 			}
 			
 			IdleCount := 0

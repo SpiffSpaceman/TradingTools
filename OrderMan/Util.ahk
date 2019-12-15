@@ -43,10 +43,14 @@ class UtilClass{
 	}																			// Without Rounding, FloorToTick( 209.45 ) with tick 0.05 returns 209.4
 
 	floatPriceToStr( price ){
+		/*
 		price :=  format("{1:0.15f}", price )
-		price +=  0.00000000000001											// Add some to push 0.XX9999
+		price +=  0.00000000000001											// Add some to push 0.XX9999		
+		price := format("{1:0.12f}", price ) 								// Truncate to remove errors and remove extra 0 at the end
+		*/
+		price := Round( price,  12 )
 		
-		price := RTrim(  format("{1:0.12f}", price ), "0" ) 				// Truncate to remove errors and remove extra 0 at the end
+		price := RTrim(  price, "0" ) 										// Truncate to remove errors and remove extra 0 at the end
 		price := RTrim(  price, "." ) 										// Remove . if no digit afterwards
 		
 		return price

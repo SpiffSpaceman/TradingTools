@@ -31,9 +31,8 @@ class TradebookClass{
 		Avg Price in column is rounded to 2 decimal places
 		Orderbook does not have actual totalConsideration. Instead take from tradebook
 	*/
-	getAvgPrice( order ){		
-		price := this.getOrderAmount( order.nowOrderNo ) / order.tradedQty
-		return price
+	getAvgPrice( order ){
+		return UtilClass.floatPriceToStr( this.getOrderAmount( order.nowOrderNo ) / order.tradedQty )
 	}
 
 	getOrderAmount( nowOrderNo ) {

@@ -291,10 +291,10 @@ class TradeClass{
 			stop.triggerPrice := stop.averagePrice							// No slippage in Limit exits
 		}
 
-		entryAvgPrice := UtilClass.floatPriceToStr( tradebookObj.getAvgPrice( entry ) )
-		stopAvgPrice  := UtilClass.floatPriceToStr( tradebookObj.getAvgPrice( stop ) )
-		t1AvgPrice	  := isT1 ? UtilClass.floatPriceToStr( tradebookObj.getAvgPrice(t1) ) : "0"
-		t2AvgPrice	  := isT2 ? UtilClass.floatPriceToStr( tradebookObj.getAvgPrice(t2) ) : "0"
+		entryAvgPrice := tradebookObj.getAvgPrice( entry )
+		stopAvgPrice  := tradebookObj.getAvgPrice( stop )
+		t1AvgPrice	  := isT1 ? tradebookObj.getAvgPrice(t1) : "0"
+		t2AvgPrice	  := isT2 ? tradebookObj.getAvgPrice(t2) : "0"
 
 		this.appendCsvLine( line,  A_YYYY . "-" . A_MM  . "-" .  A_DD )		// Date
 		this.appendCsvLine( line, entry.getUpdateTime() )					// Time

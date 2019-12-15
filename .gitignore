@@ -21,8 +21,8 @@ ipch
 *.opensdf
 
 #IDL 
-NestTrader_h.h
-NestTrader_i.c
+#NestTrader_h.h
+#NestTrader_i.c
 
 #logs
 errorLog.txt
